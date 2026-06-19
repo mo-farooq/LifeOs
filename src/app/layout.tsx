@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Vector-Verse OS",
+  title: "Life OS",
   description: "A premium, modern Life OS dashboard wrapper.",
 };
 

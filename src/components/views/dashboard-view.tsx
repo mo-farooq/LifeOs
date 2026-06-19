@@ -33,7 +33,7 @@ export default function DashboardView() {
 
   // Task State
   const [tasks, setTasks] = useState<Task[]>([
-    { id: "1", text: "Complete UI shell integration of Vector-Verse OS", completed: false, queued: true, tomorrow: false },
+    { id: "1", text: "Complete UI shell integration of Life OS", completed: false, queued: true, tomorrow: false },
     { id: "2", text: "Log nutritional intake & weight metrics", completed: true, queued: false, tomorrow: false },
     { id: "3", text: "Review weekly portfolio balance sheets", completed: false, queued: false, tomorrow: false },
     { id: "4", text: "Complete daily hypertrophic gym routine", completed: false, queued: true, tomorrow: false },
@@ -244,7 +244,7 @@ export default function DashboardView() {
         </div>
         <div className="max-w-xl space-y-2">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs font-semibold text-purple-400">
-            <Sparkles className="h-3 w-3 animate-spin" /> Vector-Verse OS v1.0
+            <Sparkles className="h-3 w-3 animate-spin" /> Life OS v1.0
           </div>
           <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-zinc-50 via-zinc-100 to-zinc-400 bg-clip-text text-transparent">
             Welcome Back, Commander
