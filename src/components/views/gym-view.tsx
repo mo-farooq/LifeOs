@@ -7,9 +7,7 @@ import {
   Flame, 
   Calendar, 
   Trophy, 
-  CheckCircle2, 
   ArrowRight,
-  Sparkles,
   Plus
 } from "lucide-react";
 
@@ -24,41 +22,36 @@ export default function GymView() {
   ];
 
   const routineStats = [
-    { title: "Current Streak", value: "6 Days", icon: Flame, color: "text-amber-500" },
-    { title: "Total Workouts", value: "48 Sessions", icon: Trophy, color: "text-yellow-500" },
-    { title: "Target Focus", value: "Push (A)", icon: Dumbbell, color: "text-blue-500" }
+    { title: "CURRENT STREAK", value: "6 DAYS", icon: Flame },
+    { title: "TOTAL WORKOUTS", value: "48 SESSIONS", icon: Trophy },
+    { title: "TARGET FOCUS", value: "PUSH (A)", icon: Dumbbell }
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 text-zinc-200">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-50 flex items-center gap-2">
-            <Dumbbell className="h-6 w-6 text-amber-500" /> Gym Performance & Workouts
+      <div className="rounded-md border border-zinc-800 bg-[#0a0a0a] p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-zinc-900 border border-zinc-800 text-[9px] font-mono tracking-widest text-zinc-500 uppercase">
+            Split // Planner
+          </div>
+          <h1 className="text-xl font-mono uppercase tracking-wider font-bold text-zinc-100 flex items-center gap-2">
+            <Dumbbell className="h-5 w-5 text-zinc-300" /> GYM PERFORMANCE & ROUTINES
           </h1>
-          <p className="text-sm text-zinc-400">
-            Log your lifting metrics, streaks, and muscle building metrics.
+          <p className="text-[11px] font-mono text-zinc-500">
+            Log lifting progress metrics, workout splits, and weekly completion tallies.
           </p>
         </div>
         
         <button 
           onClick={() => setCompletedToday(!completedToday)}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-300 ${
+          className={`flex items-center gap-2 px-3 py-2 rounded-md border text-xs font-mono tracking-widest transition-all duration-150 uppercase ${
             completedToday 
-              ? "bg-amber-500/10 border-amber-500/30 text-amber-400" 
-              : "bg-amber-500 text-zinc-950 border-amber-600 hover:bg-amber-400 active:scale-95 shadow-md shadow-amber-500/10"
+              ? "bg-zinc-900 border-zinc-800 text-zinc-400" 
+              : "bg-zinc-100 border-zinc-200 hover:bg-white text-zinc-950 font-bold"
           }`}
         >
-          {completedToday ? (
-            <>
-              <CheckCircle2 className="h-4.5 w-4.5" /> Workout Logged Today!
-            </>
-          ) : (
-            <>
-              <Flame className="h-4.5 w-4.5" /> Log Workout Done
-            </>
-          )}
+          {completedToday ? "Workout Logged" : "Log Workout Done"}
         </button>
       </div>
 
@@ -67,14 +60,14 @@ export default function GymView() {
         {routineStats.map((stat, i) => {
           const Icon = stat.icon;
           return (
-            <Card key={i}>
-              <CardContent className="pt-6 flex items-center justify-between">
+            <Card key={i} className="bg-[#0a0a0a] border-zinc-800 rounded-md">
+              <CardContent className="p-4 flex items-center justify-between">
                 <div className="space-y-1">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{stat.title}</p>
-                  <p className="text-2xl font-bold text-zinc-50">{stat.value}</p>
+                  <p className="text-[9px] font-mono uppercase tracking-widest font-semibold text-zinc-500">{stat.title}</p>
+                  <p className="text-xl font-mono font-bold text-zinc-50">{stat.value}</p>
                 </div>
-                <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800">
-                  <Icon className={`h-6 w-6 ${stat.color}`} />
+                <div className="p-2 rounded-md bg-[#000000] border border-zinc-800">
+                  <Icon className="h-4.5 w-4.5 text-zinc-500" />
                 </div>
               </CardContent>
             </Card>
@@ -83,29 +76,29 @@ export default function GymView() {
       </div>
 
       {/* Workout Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         {/* Daily Plan List */}
-        <Card className="lg:col-span-3">
-          <CardHeader className="flex flex-row items-center justify-between border-b border-zinc-800/40 pb-4">
+        <Card className="lg:col-span-3 bg-[#0a0a0a] border-zinc-800 rounded-md">
+          <CardHeader className="flex flex-row items-center justify-between border-b border-zinc-800 p-4">
             <div>
-              <CardTitle>Push Day (A)</CardTitle>
-              <CardDescription>Targeting Chest, Shoulders, and Triceps</CardDescription>
+              <span className="text-[9px] font-mono uppercase tracking-widest font-semibold text-zinc-500">TODAY SPLIT</span>
+              <h3 className="text-xs font-mono font-bold text-zinc-100 uppercase mt-0.5">Push Day (A)</h3>
             </div>
-            <button className="p-1.5 rounded-lg border border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 transition-colors" title="Add Custom Exercise">
-              <Plus className="h-4 w-4" />
+            <button className="p-1 rounded-md border border-zinc-800 bg-[#000000] text-zinc-400 hover:text-zinc-250 transition-colors" title="Add Custom Exercise">
+              <Plus className="h-3.5 w-3.5" />
             </button>
           </CardHeader>
-          <CardContent className="pt-6">
-            <div className="space-y-4">
+          <CardContent className="p-4">
+            <div className="space-y-2">
               {workouts.map((work, idx) => (
-                <div key={idx} className="flex justify-between items-center p-3 rounded-xl border border-zinc-900 bg-zinc-950/40 hover:bg-zinc-900/20 transition-all">
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold text-zinc-200">{work.name}</p>
-                    <p className="text-xs text-zinc-500">{work.sets} • {work.reps}</p>
+                <div key={idx} className="flex justify-between items-center p-3 rounded-md border border-zinc-800 bg-[#000000]/60 hover:bg-[#0a0a0a] transition-all">
+                  <div className="space-y-0.5">
+                    <p className="text-xs font-mono font-semibold text-zinc-200">{work.name}</p>
+                    <p className="text-[10px] font-mono text-zinc-500 uppercase">{work.sets} • {work.reps}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold text-amber-400">{work.weight}</p>
-                    <p className="text-[10px] text-zinc-600">Prev: {work.weight}</p>
+                    <p className="text-xs font-mono font-bold text-zinc-200">{work.weight}</p>
+                    <p className="text-[9px] font-mono text-zinc-650 uppercase">PREV: {work.weight}</p>
                   </div>
                 </div>
               ))}
@@ -114,28 +107,28 @@ export default function GymView() {
         </Card>
 
         {/* Schedule & Weekly Breakdown */}
-        <Card className="lg:col-span-2 flex flex-col justify-between">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-amber-500" /> Weekly Split
-            </CardTitle>
-            <CardDescription>Your current gym program calendar</CardDescription>
+        <Card className="lg:col-span-2 flex flex-col justify-between bg-[#0a0a0a] border-zinc-800 rounded-md">
+          <CardHeader className="p-4">
+            <span className="text-[9px] font-mono uppercase tracking-widest font-semibold text-zinc-500 flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5 text-zinc-550" /> WEEKLY SPLIT
+            </span>
+            <CardDescription className="text-[10px] font-mono text-zinc-500 uppercase mt-0.5">Split schedule breakdown</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
+          <CardContent className="space-y-2 p-4">
+            <div className="space-y-1.5">
               {[
-                { day: "Monday", routine: "Push Routine", active: true },
-                { day: "Tuesday", routine: "Pull Routine", active: false },
-                { day: "Wednesday", routine: "Active Recovery", active: false },
-                { day: "Thursday", routine: "Legs & Core Routine", active: false },
-                { day: "Friday", routine: "Arm Hypertrophy", active: false }
+                { day: "MON", routine: "PUSH ROUTINE", active: true },
+                { day: "TUE", routine: "PULL ROUTINE", active: false },
+                { day: "WED", routine: "ACTIVE RECOVERY", active: false },
+                { day: "THU", routine: "LEGS & CORE", active: false },
+                { day: "FRI", routine: "ARM HYPERTROPHY", active: false }
               ].map((split, i) => (
                 <div 
                   key={i} 
-                  className={`flex justify-between items-center px-4 py-2.5 rounded-xl border text-xs ${
+                  className={`flex justify-between items-center px-3 py-2 rounded border text-[10px] font-mono ${
                     split.active 
-                      ? "bg-amber-500/10 border-amber-500/30 text-amber-400 font-semibold" 
-                      : "bg-zinc-900/30 border-zinc-900 text-zinc-400"
+                      ? "bg-zinc-900 border-zinc-800 text-zinc-200 font-bold" 
+                      : "bg-[#000000] border-zinc-900/60 text-zinc-500"
                   }`}
                 >
                   <span>{split.day}</span>
@@ -144,10 +137,10 @@ export default function GymView() {
               ))}
             </div>
           </CardContent>
-          <CardFooter className="py-4 border-t border-zinc-800/40">
-            <button className="w-full flex items-center justify-between text-xs text-amber-500 hover:text-amber-400 font-semibold group">
-              Modify Split Planner 
-              <ArrowRight className="h-4 w-4 transform transition-transform group-hover:translate-x-1" />
+          <CardFooter className="py-3 border-t border-zinc-800 p-4">
+            <button className="w-full flex items-center justify-between text-[9px] font-mono font-bold tracking-widest text-zinc-350 hover:text-zinc-100 uppercase transition-all duration-150">
+              MODIFY SPLIT PLANNER 
+              <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </CardFooter>
         </Card>
