@@ -1,163 +1,73 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
-  Heart, 
-  Dumbbell, 
-  Wallet, 
-  Flame, 
   Zap,
   X,
   Loader2,
   Calendar,
-  Check
+  Check,
+  LayoutGrid,
+  List,
+  Sparkles,
+  ChevronRight,
+  TrendingUp,
+  BatteryCharging,
+  Battery,
+  AlertCircle
 } from "lucide-react";
+import { Task } from "@/types";
 
-interface Task {
-  id: string;
-  text: string;
-  completed: boolean;
-  queued: boolean;
-  date: string; // YYYY-MM-DD
+interface DashboardViewProps {
+  tasks: Task[];
+  updateTasks: (tasks: Task[]) => void;
+  activeDate: string;
+  tomorrowDate: string;
 }
 
-export default function DashboardView() {
-  const [mounted, setMounted] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  // Rollover and date logic
-  const getActiveDate = (time: Date) => {
-    const d = new Date(time);
-    if (d.getHours() < 6) {
-      d.setDate(d.getDate() - 1);
-    }
-    return d.toISOString().split("T")[0]; // YYYY-MM-DD
-  };
-
-  const getTomorrowDate = (activeDateStr: string) => {
-    const d = new Date(activeDateStr);
-    d.setDate(d.getDate() + 1);
-    return d.toISOString().split("T")[0];
-  };
-
-  const activeDate = getActiveDate(currentTime);
-  const tomorrowDate = getTomorrowDate(activeDate);
-
-  // Task State (Initialized dynamically based on initial calculated dates)
-  const [tasks, setTasks] = useState<Task[]>([]);
-
+export default function DashboardView({ tasks, updateTasks, activeDate, tomorrowDate }: DashboardViewProps) {
   // Input states
   const [todayInput, setTodayInput] = useState("");
+  const [todayEnergy, setTodayEnergy] = useState<"charging" | "draining">("charging");
+  const [todayRevenue, setTodayRevenue] = useState<"high" | "low">("high");
+  const [todayPriority, setTodayPriority] = useState(false);
+
   const [tomorrowInput, setTomorrowInput] = useState("");
+  const [tomorrowEnergy, setTomorrowEnergy] = useState<"charging" | "draining">("charging");
+  const [tomorrowRevenue, setTomorrowRevenue] = useState<"high" | "low">("high");
+  const [tomorrowPriority, setTomorrowPriority] = useState(false);
+
   const [isPolishing, setIsPolishing] = useState(false);
-
-  // LED Goal Ticker State
-  const [tickerIndex, setTickerIndex] = useState(0);
-
-  // Quick Finance State Mock
-  const [balance, setBalance] = useState(12450.80);
-
-  // Hydration safety & running clock
-  useEffect(() => {
-    setMounted(true);
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Initialize tasks state once mounted to prevent server/client mismatch
-  useEffect(() => {
-    if (mounted) {
-      const initActive = getActiveDate(new Date());
-      const initTomorrow = getTomorrowDate(initActive);
-      setTasks([
-        { id: "1", text: "Complete UI shell integration of Life OS", completed: false, queued: true, date: initActive },
-        { id: "2", text: "Log nutritional intake & weight metrics", completed: true, queued: false, date: initActive },
-        { id: "3", text: "Review weekly portfolio balance sheets", completed: false, queued: false, date: initActive },
-        { id: "4", text: "Complete daily hypertrophic gym routine", completed: false, queued: true, date: initActive },
-        { id: "5", text: "Setup sleep environment: dim lights & meditate", completed: false, queued: false, date: initActive },
-        { id: "6", text: "Prepare healthy breakfast bowls for the week", completed: false, queued: false, date: initTomorrow },
-        { id: "7", text: "Sync smart watch with dashboard databases", completed: false, queued: false, date: initTomorrow },
-      ]);
-    }
-  }, [mounted]);
+  const [isGridView, setIsGridView] = useState(false); // Toggle DRIP Grid Matrix
 
   // Filter Tasks by Active Dates
   const todayTasks = tasks.filter((t) => t.date === activeDate);
   const tomorrowTasks = tasks.filter((t) => t.date === tomorrowDate);
-  const pendingGoals = todayTasks.filter((t) => !t.completed);
   const completedCount = todayTasks.filter((t) => t.completed).length;
   const totalCount = todayTasks.length;
-  const uncheckedTodayTasks = todayTasks.filter(t => !t.completed);
 
-  // Cycle Goal Ticker every 5 seconds
-  useEffect(() => {
-    if (pendingGoals.length === 0) return;
-    const interval = setInterval(() => {
-      setTickerIndex((prev) => (prev + 1) % pendingGoals.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [pendingGoals.length]);
-
-  // Reset ticker index if it overflows due to tasks being checked off
-  useEffect(() => {
-    if (tickerIndex >= pendingGoals.length && pendingGoals.length > 0) {
-      setTickerIndex(0);
-    }
-  }, [pendingGoals.length, tickerIndex]);
-
-  // Calculate awake window percent (8:00 AM to 12:00 AM Midnight = 16 hours)
-  const getAwakeProgress = () => {
-    const hour = currentTime.getHours();
-    const min = currentTime.getMinutes();
-    const decimalTime = hour + min / 60;
-
-    if (decimalTime < 8) return { percent: 0, sleeping: true };
-    if (decimalTime >= 24) return { percent: 100, sleeping: true };
-
-    const elapsed = decimalTime - 8;
-    const total = 16; // 16 hours
-    const percent = Math.min(Math.round((elapsed / total) * 100), 100);
-    return { percent, sleeping: false };
-  };
-
-  const awakeStatus = getAwakeProgress();
-
-  const getActivePhase = () => {
-    const hour = currentTime.getHours();
-    if (hour < 8) return "SLEEPING";
-    if (hour >= 8 && hour < 12) return "MORNING";
-    if (hour >= 12 && hour < 15) return "MIDDAY";
-    if (hour >= 15 && hour < 18) return "AFTERNOON";
-    if (hour >= 18 && hour < 21) return "EVENING";
-    if (hour >= 21 && hour < 24) return "BEDTIME";
-    return "SLEEPING";
-  };
-
-  const format12HourClock = () => {
-    let hours = currentTime.getHours();
-    const minutes = currentTime.getMinutes().toString().padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    return `${hours}:${minutes} ${ampm}`;
-  };
-
-  // Actions
+  // Task Actions
   const toggleComplete = (id: string) => {
-    setTasks(tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t));
+    updateTasks(
+      tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
+    );
   };
 
-  const toggleQueue = (id: string) => {
-    setTasks(tasks.map(t => t.id === id ? { ...t, queued: !t.queued } : t));
+  const togglePriority = (id: string) => {
+    updateTasks(
+      tasks.map((t) => (t.id === id ? { ...t, priority: !t.priority } : t))
+    );
   };
 
   const updateTaskText = (id: string, text: string) => {
-    setTasks(tasks.map(t => t.id === id ? { ...t, text } : t));
+    updateTasks(
+      tasks.map((t) => (t.id === id ? { ...t, text } : t))
+    );
   };
 
   const deleteTask = (id: string) => {
-    setTasks(tasks.filter(t => t.id !== id));
+    updateTasks(tasks.filter((t) => t.id !== id));
   };
 
   const handleAddTodayTask = () => {
@@ -167,10 +77,14 @@ export default function DashboardView() {
       text: todayInput.trim(),
       completed: false,
       queued: false,
-      date: activeDate
+      date: activeDate,
+      energy: todayEnergy,
+      revenue: todayRevenue,
+      priority: todayPriority
     };
-    setTasks([...tasks, newTask]);
+    updateTasks([...tasks, newTask]);
     setTodayInput("");
+    setTodayPriority(false);
   };
 
   const handleAddTomorrowTask = () => {
@@ -180,27 +94,33 @@ export default function DashboardView() {
       text: tomorrowInput.trim(),
       completed: false,
       queued: false,
-      date: tomorrowDate
+      date: tomorrowDate,
+      energy: tomorrowEnergy,
+      revenue: tomorrowRevenue,
+      priority: tomorrowPriority
     };
-    setTasks([...tasks, newTask]);
+    updateTasks([...tasks, newTask]);
     setTomorrowInput("");
+    setTomorrowPriority(false);
   };
 
   const pushRemainingToTomorrow = () => {
-    setTasks(prev => prev.map(t => {
-      if (t.date === activeDate && !t.completed) {
-        return { ...t, date: tomorrowDate };
-      }
-      return t;
-    }));
+    updateTasks(
+      tasks.map((t) => {
+        if (t.date === activeDate && !t.completed) {
+          return { ...t, date: tomorrowDate };
+        }
+        return t;
+      })
+    );
   };
 
-  // AI Polish Input Mock
+  // AI Polish Handler (capitalizes and adds professional prefix)
   const handlePolish = async () => {
     if (!todayInput.trim()) return;
     setIsPolishing(true);
 
-    // Simulate network delay
+    // Simulate 1-second API call loading state
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     let text = todayInput.trim();
@@ -228,458 +148,388 @@ export default function DashboardView() {
     setIsPolishing(false);
   };
 
-  const formatHeaderDate = () => {
-    const d = new Date(activeDate);
-    return d.toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "short",
-      day: "numeric",
-      year: "numeric"
-    }).toUpperCase();
+  // 4-Quadrant Filter Helpers
+  const geniusTasks = todayTasks.filter(t => t.energy === "charging" && t.revenue === "high");
+  const passionTasks = todayTasks.filter(t => t.energy === "charging" && t.revenue === "low");
+  const leverageTasks = todayTasks.filter(t => t.energy === "draining" && t.revenue === "high");
+  const delegateTasks = todayTasks.filter(t => t.energy === "draining" && t.revenue === "low");
+
+  const renderTaskRow = (task: Task, isReadOnly = false) => {
+    return (
+      <div 
+        key={task.id} 
+        className={`group flex items-center gap-3 py-2.5 px-3 border-b border-zinc-900 bg-[#000000]/40 hover:bg-[#0a0a0a] transition-all rounded duration-150 ${
+          task.completed ? "opacity-40" : ""
+        }`}
+      >
+        {/* Custom Checkbox */}
+        <button
+          onClick={() => !isReadOnly && toggleComplete(task.id)}
+          disabled={isReadOnly}
+          className={`w-4 h-4 border flex items-center justify-center rounded-sm transition-all duration-150 cursor-pointer ${
+            task.completed 
+              ? "bg-zinc-50 border-zinc-150 text-zinc-950" 
+              : "border-zinc-800 bg-transparent hover:border-zinc-650"
+          }`}
+        >
+          {task.completed && <Check className="h-3 w-3 stroke-[3.5] text-zinc-950" />}
+        </button>
+
+        {/* Task Text Input (Editable inline if not read-only) */}
+        <input
+          type="text"
+          value={task.text}
+          disabled={isReadOnly}
+          onChange={(e) => updateTaskText(task.id, e.target.value)}
+          className={`flex-grow bg-transparent outline-none text-xs font-mono transition-all duration-150 ${
+            task.completed ? "line-through text-zinc-500" : "text-zinc-200 focus:text-zinc-50"
+          }`}
+        />
+
+        {/* Task Metadata Indicator Pills */}
+        <div className="flex items-center gap-1.5">
+          <span className={`text-[8px] font-mono px-1 rounded border uppercase ${
+            task.energy === "charging" 
+              ? "border-emerald-900/30 text-emerald-500 bg-emerald-950/10" 
+              : "border-zinc-850 text-zinc-500"
+          }`}>
+            {task.energy}
+          </span>
+          <span className={`text-[8px] font-mono px-1 rounded border uppercase ${
+            task.revenue === "high" 
+              ? "border-amber-900/30 text-amber-500 bg-amber-950/10" 
+              : "border-zinc-850 text-zinc-500"
+          }`}>
+            {task.revenue}
+          </span>
+        </div>
+
+        {/* Lightning Bolt Toggle */}
+        <button
+          onClick={() => !isReadOnly && togglePriority(task.id)}
+          disabled={isReadOnly}
+          className={`p-0.5 rounded transition-all duration-150 ${
+            task.priority 
+              ? "text-yellow-400 bg-yellow-950/20" 
+              : "text-zinc-700 hover:text-zinc-500"
+          }`}
+        >
+          <Zap className={`h-3.5 w-3.5 ${task.priority ? "fill-yellow-400" : ""}`} />
+        </button>
+
+        {/* Delete Trigger */}
+        {!isReadOnly && (
+          <button
+            onClick={() => deleteTask(task.id)}
+            className="text-zinc-600 hover:text-zinc-300 opacity-0 group-hover:opacity-100 transition-all duration-150"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+    );
   };
 
-  if (!mounted) {
-    return null;
-  }
-
-  // Health and Gym stats
-  const stats = [
-    { title: "VITALITY INDEX", value: "64 BPM", desc: "RESTING RATE OPTIMAL", icon: Heart },
-    { title: "CALORIC INTAKE", value: "1840 KCAL", desc: "76% OF DAILY BUDGET", icon: Dumbbell },
-    { title: "NET SAVINGS", value: "57.9%", desc: "SURPLUS LEDGER ACTIVE", icon: Wallet }
-  ];
+  const renderQuadrant = (title: string, subtitle: string, list: Task[], energyLabel: string, revenueLabel: string) => {
+    return (
+      <div className="border border-zinc-800 rounded-md p-4 bg-[#0a0a0a] flex flex-col h-full min-h-[180px]">
+        <div className="flex justify-between items-center mb-3 pb-1.5 border-b border-zinc-900 flex-shrink-0">
+          <div className="space-y-0.5">
+            <span className="text-[10px] font-mono font-bold tracking-widest text-zinc-200 uppercase">{title}</span>
+            <p className="text-[7.5px] font-mono text-zinc-500 uppercase tracking-widest font-bold">{subtitle}</p>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-[8px] font-mono bg-zinc-900 text-zinc-400 border border-zinc-800 px-1.5 py-0.5 rounded uppercase font-bold">{energyLabel}</span>
+            <span className="text-[8px] font-mono bg-zinc-900 text-zinc-400 border border-zinc-800 px-1.5 py-0.5 rounded uppercase font-bold">{revenueLabel}</span>
+          </div>
+        </div>
+        <div className="flex-grow space-y-1.5 overflow-y-auto max-h-[220px]">
+          {list.map(t => renderTaskRow(t))}
+          {list.length === 0 && (
+            <div className="h-full flex items-center justify-center py-6 text-center text-[9px] font-mono uppercase tracking-widest text-zinc-650">
+              Empty quadrant.
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <div className="space-y-4 select-none text-zinc-200">
-      
-      {/* Module 1 — The Ledger Ticker Strip */}
-      <div className="rounded-md border border-zinc-800 bg-[#000000] px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3 overflow-hidden flex-1">
-          <div className="bg-emerald-500 h-2 w-2 rounded-full flex-shrink-0" />
-          <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 flex-shrink-0 font-bold">
-            GOALS
-          </span>
-          <span className="text-zinc-800 font-mono text-xs flex-shrink-0">|</span>
-          <div className="text-xs text-zinc-350 font-mono tracking-wide truncate flex-1">
-            {pendingGoals.length > 0 ? (
-              pendingGoals[tickerIndex]?.text
-            ) : (
-              "✓ All goals done — solid day."
-            )}
-          </div>
+    <div className="space-y-5 text-zinc-200 font-mono">
+      {/* View Toggle Bar */}
+      <div className="flex justify-between items-center bg-[#0a0a0a] border border-zinc-800 px-5 py-3 rounded-md">
+        <div className="space-y-0.5">
+          <span className="text-[9px] font-mono uppercase tracking-widest font-semibold text-zinc-500">TASK HUB</span>
+          <h1 className="text-sm font-mono tracking-widest font-bold text-zinc-150 uppercase">THE DRIP MATRIX</h1>
         </div>
 
-        {/* Counter */}
-        <div className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded border border-zinc-800 bg-[#0a0a0a] text-zinc-400 ml-4 flex-shrink-0">
-          {totalCount > 0 ? `${completedCount}/${totalCount}` : "-/-"}
-        </div>
-      </div>
-
-      {/* Main Branding Header */}
-      <div className="rounded-md border border-zinc-800 bg-[#0a0a0a] p-5">
-        <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#000000] border border-zinc-800 text-[9px] font-mono tracking-widest text-zinc-500 uppercase">
-            LIFE OS // MODULE // CORE
-          </div>
-          <h1 className="text-xl font-mono uppercase tracking-wider font-bold text-zinc-150">
-            SYSTEM CONTROL
-          </h1>
-          <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wide">
-            Dynamic rollover: 06:00 AM • Active date target: {activeDate}
-          </p>
+        {/* Toggle between standard list and 4-quadrant grid */}
+        <div className="flex items-center border border-zinc-800 bg-[#000000] p-1 rounded-md">
+          <button
+            onClick={() => setIsGridView(false)}
+            className={`px-3 py-1 text-[9px] font-mono font-bold tracking-wider uppercase rounded flex items-center gap-1.5 transition-all duration-150 ${
+              !isGridView ? "bg-zinc-50 text-zinc-950" : "text-zinc-400 hover:text-zinc-250"
+            }`}
+          >
+            <List className="h-3 w-3" /> List View
+          </button>
+          <button
+            onClick={() => setIsGridView(true)}
+            className={`px-3 py-1 text-[9px] font-mono font-bold tracking-wider uppercase rounded flex items-center gap-1.5 transition-all duration-150 ${
+              isGridView ? "bg-zinc-50 text-zinc-950" : "text-zinc-400 hover:text-zinc-250"
+            }`}
+          >
+            <LayoutGrid className="h-3 w-3" /> Grid Matrix
+          </button>
         </div>
       </div>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {stats.map((stat, i) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={i} className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 p-4 border-b-0">
-                <span className="text-[9px] font-mono uppercase tracking-widest font-semibold text-zinc-500">{stat.title}</span>
-                <Icon className="h-3.5 w-3.5 text-zinc-500" />
-              </CardHeader>
-              <CardContent className="space-y-1 px-4 pb-4">
-                <div className="text-xl font-mono font-bold tracking-tight text-zinc-100">{stat.value}</div>
-                <p className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest">{stat.desc}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Bento Layout Grid Overhaul (12-Column Grid) */}
-      <div className="grid grid-cols-12 gap-4">
-        
-        {/* Module 2 — The Analytical SVG Day Progress Ring (col-span-12 md:col-span-4 lg:col-span-3) */}
-        <div className="col-span-12 md:col-span-4 lg:col-span-3 space-y-4">
-          <Card className="flex flex-col items-center justify-between p-4 bg-[#0a0a0a] border-zinc-800 rounded-md">
-            <div className="w-full text-left space-y-0.5">
-              <span className="text-[9px] font-mono uppercase tracking-widest font-semibold text-zinc-500">AWAKE MONITOR</span>
-              <p className="text-[10px] font-mono text-zinc-550 uppercase">08:00 AM - 12:00 AM</p>
-            </div>
-            
-            {/* SVG Progress Ring */}
-            <div className="relative flex items-center justify-center my-6">
-              <svg className="w-36 h-36 transform -rotate-90">
-                <circle
-                  cx="72"
-                  cy="72"
-                  r="56"
-                  className="stroke-zinc-900"
-                  strokeWidth="3.5"
-                  fill="transparent"
-                />
-                {!awakeStatus.sleeping && (
-                  <circle
-                    cx="72"
-                    cy="72"
-                    r="56"
-                    className="stroke-zinc-100 transition-all duration-500 ease-in-out"
-                    strokeWidth="3.5"
-                    fill="transparent"
-                    strokeDasharray={352}
-                    strokeDashoffset={352 - (352 * awakeStatus.percent) / 100}
-                    strokeLinecap="square"
-                  />
-                )}
-              </svg>
-
-              {/* Dynamic Center Text */}
-              <div className="absolute flex flex-col items-center justify-center text-center">
-                <span className="text-lg font-mono font-bold tracking-tight text-zinc-50">
-                  {format12HourClock()}
-                </span>
-                <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest font-semibold mt-0.5">
-                  {getActivePhase()}
-                </span>
-                <span className="text-xs font-mono font-bold text-zinc-300">
-                  {awakeStatus.sleeping ? "😴 STILL SLEEPING" : `${awakeStatus.percent}%`}
-                </span>
-              </div>
-            </div>
-
-            <div className="w-full text-center py-1.5 px-3 border border-zinc-800 bg-[#000000] text-[9px] font-mono text-zinc-500 uppercase tracking-widest">
-              Rollover target {24 - currentTime.getHours() + 6}H remaining
-            </div>
-          </Card>
-
-          {/* Active Habit Grid */}
-          <Card className="bg-[#0a0a0a] border-zinc-800 p-4 space-y-3 rounded-md">
-            <div className="space-y-0.5">
-              <span className="text-[9px] font-mono uppercase tracking-widest font-semibold text-zinc-500">STREAK LOGS</span>
-              <p className="text-[10px] font-mono text-zinc-500 uppercase">HABIT GRID COMPILATION</p>
-            </div>
-            
-            <div className="grid grid-cols-7 gap-1">
-              {["M", "T", "W", "T", "F", "S", "S"].map((day, idx) => {
-                const completed = idx < 5;
-                return (
-                  <div key={idx} className="flex flex-col items-center gap-1">
-                    <span className="text-[9px] font-mono text-zinc-500">{day}</span>
-                    <div 
-                      className={`w-4 h-4 border transition-colors duration-150 flex items-center justify-center rounded-sm ${
-                        completed 
-                          ? "bg-zinc-100 border-zinc-200 text-zinc-950 font-mono text-[8px] font-bold" 
-                          : "bg-transparent border-zinc-800"
-                      }`}
-                    >
-                      {completed ? "✓" : ""}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
-        </div>
-
-        {/* Module 3 — Today & Tomorrow Matrices (col-span-12 md:col-span-8 lg:col-span-6) */}
-        <div className="col-span-12 md:col-span-8 lg:col-span-6 space-y-4">
-          
-          {/* Today Priority Card */}
+      {/* Main Task List Area */}
+      {!isGridView ? (
+        <div className="space-y-4">
           <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-            <CardHeader className="flex flex-col border-b border-zinc-800 p-4 space-y-3">
-              <div className="flex flex-row items-start justify-between w-full">
-                <div className="space-y-0.5">
-                  <span className="text-[9px] font-mono uppercase tracking-widest font-semibold text-zinc-500">TODAY SPLIT REGISTER</span>
-                  <CardTitle className="text-xs font-mono tracking-widest text-zinc-100">{formatHeaderDate()}</CardTitle>
-                </div>
-
-                {/* Day Streak badge */}
-                <div className="flex flex-col items-end gap-1">
-                  <span className="text-[9px] font-mono uppercase tracking-widest font-semibold px-2 py-0.5 rounded border border-zinc-800 bg-[#000000] text-zinc-300 flex items-center gap-1">
-                    🔥 6 DAY STREAK
-                  </span>
-                  <span className="text-[9px] font-mono text-zinc-550">
-                    {completedCount}/{totalCount} COMPLETED
-                  </span>
-                </div>
+            <CardHeader className="p-4 border-b border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 font-bold">TODAY</span>
+                <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-widest">ACTIVE EXECUTION BUFFER</CardTitle>
               </div>
 
               {/* Segmented Progress Tracker Bar */}
-              {todayTasks.length === 0 ? (
-                <div className="w-full h-1 bg-zinc-900 rounded-sm" />
-              ) : (
-                <div className="flex gap-1 w-full h-1">
+              <div className="w-full sm:w-48 space-y-1">
+                <div className="flex justify-between text-[8px] font-mono text-zinc-500 uppercase tracking-wider font-semibold">
+                  <span>PROGRESS</span>
+                  <span>{todayTasks.length > 0 ? `${completedCount}/${totalCount}` : "0/0"}</span>
+                </div>
+                {/* Horizontal dashes representation */}
+                <div className="flex gap-1 w-full">
                   {todayTasks.map((t) => (
                     <div 
                       key={t.id} 
-                      className={`flex-1 h-full rounded-sm transition-all duration-200 ${
-                        t.completed ? "bg-zinc-100" : "bg-zinc-900"
+                      className={`h-1.5 flex-1 rounded-sm transition-all duration-300 ${
+                        t.completed ? "bg-zinc-100" : "bg-zinc-800"
                       }`} 
                     />
                   ))}
+                  {todayTasks.length === 0 && (
+                    <div className="h-1.5 w-full rounded-sm bg-zinc-850" />
+                  )}
                 </div>
-              )}
+              </div>
             </CardHeader>
-            
-            <CardContent className="pt-4 space-y-3 p-4">
-              {/* Task Row items */}
-              <div className="space-y-0.5 max-h-[300px] overflow-y-auto pr-1">
-                {todayTasks.length > 0 ? (
-                  todayTasks.map((task) => (
-                    <div 
-                      key={task.id} 
-                      className="group flex items-center gap-3 px-2 py-2 border-b border-zinc-900 bg-transparent hover:bg-[#0a0a0a] transition-all duration-150"
-                    >
-                      {/* Checkbox (ticked: solid white, black check icon) */}
-                      <button
-                        onClick={() => toggleComplete(task.id)}
-                        className={`w-3.5 h-3.5 border transition-all duration-150 flex items-center justify-center rounded-sm ${
-                          task.completed 
-                            ? "bg-zinc-50 border-zinc-100 text-zinc-950 font-bold" 
-                            : "border-zinc-800 bg-transparent hover:border-zinc-650"
-                        }`}
-                      >
-                        {task.completed && <Check className="h-2.5 w-2.5 stroke-[3.5] text-zinc-950" />}
-                      </button>
 
-                      {/* Inline Editable Text Block */}
-                      <input
-                        type="text"
-                        value={task.text}
-                        onChange={(e) => updateTaskText(task.id, e.target.value)}
-                        className={`flex-1 bg-transparent border-0 outline-none text-xs font-mono transition-all duration-150 focus:text-zinc-50 ${
-                          task.completed ? "text-zinc-600 line-through opacity-40" : "text-zinc-300"
-                        }`}
-                      />
-
-                      {/* Queue priority */}
-                      <button
-                        onClick={() => toggleQueue(task.id)}
-                        className={`p-1 rounded transition-all duration-150 ${
-                          task.queued 
-                            ? "text-zinc-100" 
-                            : "text-zinc-600 hover:text-zinc-300"
-                        }`}
-                        title="Priority Queue"
-                      >
-                        <Zap className="h-3.5 w-3.5" />
-                      </button>
-
-                      {/* Delete button (revealed on hover) */}
-                      <button
-                        onClick={() => deleteTask(task.id)}
-                        className="p-1 rounded text-zinc-600 hover:text-zinc-100 opacity-0 group-hover:opacity-100 transition-all duration-150"
-                        title="Delete Goal"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-6 text-[9px] font-mono uppercase tracking-widest text-zinc-600 border border-dashed border-zinc-800 rounded">
-                    No priorities cataloged.
+            <CardContent className="p-4 space-y-4">
+              {/* Task list list */}
+              <div className="space-y-1">
+                {todayTasks.map((t) => renderTaskRow(t))}
+                {todayTasks.length === 0 && (
+                  <div className="text-center py-6 text-[10px] font-mono uppercase tracking-widest text-zinc-600 border border-dashed border-zinc-850 rounded">
+                    No active objectives registered for today.
                   </div>
                 )}
               </div>
 
-              {/* Add Task Area */}
-              <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-zinc-800">
-                <input
-                  type="text"
-                  value={todayInput}
-                  onChange={(e) => setTodayInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAddTodayTask()}
-                  placeholder="CAPTURE NEW PRIORITY LOG..."
-                  className="flex-1 bg-transparent border border-zinc-800 rounded-md px-3 py-2 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-600 transition-all"
-                />
-                
+              {/* Add today task Form */}
+              <div className="flex flex-col gap-2 pt-3 border-t border-zinc-900 mt-2">
                 <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={todayInput}
+                    onChange={(e) => setTodayInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleAddTodayTask()}
+                    placeholder="ENTER TODAY'S TASK..."
+                    className="flex-1 bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all duration-150"
+                  />
+                  
+                  {/* AI Polish Button */}
                   <button
                     onClick={handlePolish}
                     disabled={isPolishing || !todayInput.trim()}
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-md border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-zinc-400 font-mono text-[9px] tracking-wider transition-all disabled:opacity-40"
+                    className="px-3 rounded-md border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-zinc-400 hover:text-zinc-200 disabled:opacity-40 flex items-center justify-center transition-colors"
+                    title="Polish Task with AI"
                   >
                     {isPolishing ? (
-                      <>
-                        <Loader2 className="h-3 w-3 animate-spin text-zinc-400" /> POLISHING...
-                      </>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : (
-                      <>
-                        ✨ POLISH
-                      </>
+                      <Sparkles className="h-3.5 w-3.5" />
                     )}
                   </button>
+                </div>
 
+                <div className="flex flex-wrap items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2">
+                    {/* Energy Selector */}
+                    <div className="flex items-center gap-1 bg-[#000000] border border-zinc-900 p-0.5 rounded">
+                      <button
+                        onClick={() => setTodayEnergy("charging")}
+                        className={`px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
+                          todayEnergy === "charging" ? "bg-zinc-800 text-zinc-100" : "text-zinc-650"
+                        }`}
+                      >
+                        Charging
+                      </button>
+                      <button
+                        onClick={() => setTodayEnergy("draining")}
+                        className={`px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
+                          todayEnergy === "draining" ? "bg-zinc-800 text-zinc-100" : "text-zinc-650"
+                        }`}
+                      >
+                        Draining
+                      </button>
+                    </div>
+
+                    {/* Revenue Selector */}
+                    <div className="flex items-center gap-1 bg-[#000000] border border-zinc-900 p-0.5 rounded">
+                      <button
+                        onClick={() => setTodayRevenue("high")}
+                        className={`px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
+                          todayRevenue === "high" ? "bg-zinc-800 text-zinc-100" : "text-zinc-650"
+                        }`}
+                      >
+                        High Return
+                      </button>
+                      <button
+                        onClick={() => setTodayRevenue("low")}
+                        className={`px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
+                          todayRevenue === "low" ? "bg-zinc-800 text-zinc-100" : "text-zinc-650"
+                        }`}
+                      >
+                        Low Return
+                      </button>
+                    </div>
+
+                    {/* Priority Toggle */}
+                    <button
+                      onClick={() => setTodayPriority(!todayPriority)}
+                      className={`px-2 py-1 text-[8px] font-mono font-bold tracking-widest uppercase rounded border transition-colors ${
+                        todayPriority ? "border-yellow-900/40 text-yellow-500 bg-yellow-950/10" : "border-zinc-900 text-zinc-500"
+                      }`}
+                    >
+                      Priority
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={pushRemainingToTomorrow}
+                      disabled={todayTasks.filter(t => !t.completed).length === 0}
+                      className="px-3 py-1.5 rounded-md border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-zinc-400 hover:text-zinc-100 text-[9px] font-mono font-bold tracking-widest uppercase disabled:opacity-40 transition-all cursor-pointer"
+                    >
+                      Push Remaining
+                    </button>
+                    <button
+                      onClick={handleAddTodayTask}
+                      className="px-4 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-widest uppercase transition-all cursor-pointer"
+                    >
+                      Add Today
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        /* Grid 4-Quadrant Drip Matrix */
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {renderQuadrant("ZONE OF GENIUS", "CHARGING ENERGY // HIGH REVENUE", geniusTasks, "charging", "high")}
+          {renderQuadrant("PASSIONS & GROWTH", "CHARGING ENERGY // LOW REVENUE", passionTasks, "charging", "low")}
+          {renderQuadrant("HIGH LEVERAGE", "DRAINING ENERGY // HIGH REVENUE", leverageTasks, "draining", "high")}
+          {renderQuadrant("DELEGATE / ELIMINATE", "DRAINING ENERGY // LOW REVENUE", delegateTasks, "draining", "low")}
+        </div>
+      )}
+
+      {/* Plan Tomorrow Card */}
+      <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
+        <CardHeader className="p-4 border-b border-zinc-800">
+          <div className="flex justify-between items-center">
+            <div className="space-y-0.5">
+              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 font-bold">TOMORROW</span>
+              <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-widest">NEXT DAY STRATEGY BUFFER</CardTitle>
+            </div>
+            <div className="px-2.5 py-0.5 rounded border border-zinc-900 bg-[#000000] text-[8px] font-mono text-zinc-500 uppercase tracking-widest font-bold">
+              ACTIVATES AT 6 AM TOMORROW
+            </div>
+          </div>
+        </CardHeader>
+        
+        <CardContent className="p-4 space-y-4">
+          {/* Read Only Tasks list */}
+          <div className="space-y-1">
+            {tomorrowTasks.map((t) => renderTaskRow(t, true))}
+            {tomorrowTasks.length === 0 && (
+              <div className="text-center py-6 text-[10px] font-mono uppercase tracking-widest text-zinc-600 border border-dashed border-zinc-850 rounded">
+                No next-day strategy registered.
+              </div>
+            )}
+          </div>
+
+          {/* Add tomorrow task form (unlocked inputs, but tasks rendered will be read-only in this screen context) */}
+          <div className="flex flex-col gap-2 pt-3 border-t border-zinc-900 mt-2">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={tomorrowInput}
+                onChange={(e) => setTomorrowInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddTomorrowTask()}
+                placeholder="ENTER TOMORROW'S TASK OBJECTIVE..."
+                className="flex-1 bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all duration-150"
+              />
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-2.5">
+              <div className="flex items-center gap-2">
+                {/* Energy */}
+                <div className="flex items-center gap-1 bg-[#000000] border border-zinc-900 p-0.5 rounded">
                   <button
-                    onClick={handleAddTodayTask}
-                    className="px-4 py-2 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[10px] tracking-wider transition-all"
+                    onClick={() => setTomorrowEnergy("charging")}
+                    className={`px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
+                      tomorrowEnergy === "charging" ? "bg-zinc-800 text-zinc-100" : "text-zinc-650"
+                    }`}
                   >
-                    ADD
+                    Charging
+                  </button>
+                  <button
+                    onClick={() => setTomorrowEnergy("draining")}
+                    className={`px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
+                      tomorrowEnergy === "draining" ? "bg-zinc-800 text-zinc-100" : "text-zinc-650"
+                    }`}
+                  >
+                    Draining
+                  </button>
+                </div>
+
+                {/* Revenue */}
+                <div className="flex items-center gap-1 bg-[#000000] border border-zinc-900 p-0.5 rounded">
+                  <button
+                    onClick={() => setTomorrowRevenue("high")}
+                    className={`px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
+                      tomorrowRevenue === "high" ? "bg-zinc-800 text-zinc-100" : "text-zinc-650"
+                    }`}
+                  >
+                    High
+                  </button>
+                  <button
+                    onClick={() => setTomorrowRevenue("low")}
+                    className={`px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
+                      tomorrowRevenue === "low" ? "bg-zinc-800 text-zinc-100" : "text-zinc-650"
+                    }`}
+                  >
+                    Low
                   </button>
                 </div>
               </div>
 
-              {/* Push remaining goals button (visible only when unchecked goals exist) */}
-              {uncheckedTodayTasks.length > 0 && (
-                <button
-                  onClick={pushRemainingToTomorrow}
-                  className="w-full flex items-center justify-center gap-1.5 py-2 mt-2 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[9px] font-mono tracking-widest text-zinc-350 transition-all uppercase duration-150"
-                >
-                  Push Remaining Tasks to Tomorrow →
-                </button>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Plan Tomorrow Card */}
-          <Card className="bg-[#0a0a0a] border-zinc-800 border-dashed rounded-md">
-            <CardHeader className="pb-2 border-b border-zinc-800 p-4">
-              <div className="flex justify-between items-center w-full">
-                <span className="text-[9px] font-mono uppercase tracking-widest font-semibold text-zinc-500">PLAN TOMORROW</span>
-                <span className="text-[8px] font-mono text-zinc-600 uppercase">Activates at 6 AM tomorrow</span>
-              </div>
-            </CardHeader>
-            
-            <CardContent className="pt-3 space-y-3 p-4">
-              {/* Tomorrow read-only list */}
-              <div className="space-y-1 max-h-[140px] overflow-y-auto">
-                {tomorrowTasks.length > 0 ? (
-                  tomorrowTasks.map((task) => (
-                    <div 
-                      key={task.id} 
-                      className="group flex items-center gap-3 px-3 py-1.5 border-b border-zinc-800/40 bg-transparent opacity-60"
-                    >
-                      {/* Locked checkbox */}
-                      <div className="w-3.5 h-3.5 border border-zinc-800 bg-transparent flex items-center justify-center opacity-30 cursor-not-allowed rounded-sm">
-                        <span className="text-[6px] text-transparent">•</span>
-                      </div>
-                      
-                      {/* Text (Inline editable still enabled, but checkboxes locked) */}
-                      <input
-                        type="text"
-                        value={task.text}
-                        onChange={(e) => updateTaskText(task.id, e.target.value)}
-                        className="flex-1 bg-transparent border-0 outline-none text-xs font-mono text-zinc-400"
-                      />
-
-                      {/* Locked Queue Priority key */}
-                      <button
-                        disabled
-                        className="p-1 rounded cursor-not-allowed opacity-30 text-zinc-600"
-                      >
-                        <Zap className="h-3.5 w-3.5" />
-                      </button>
-
-                      {/* Delete button (still allowed to clear out planned items) */}
-                      <button
-                        onClick={() => deleteTask(task.id)}
-                        className="p-1 rounded text-zinc-700 hover:text-zinc-150 opacity-0 group-hover:opacity-100 transition-all duration-150"
-                        title="Delete Plan"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-3 text-[9px] font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-800 rounded">
-                    No tomorrow plans queued.
-                  </div>
-                )}
-              </div>
-
-              {/* Tomorrow Input */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={tomorrowInput}
-                  onChange={(e) => setTomorrowInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleAddTomorrowTask()}
-                  placeholder="QUEUE TOMORROW PLAN..."
-                  className="flex-1 bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
-                />
-                
-                <button
-                  onClick={handleAddTomorrowTask}
-                  className="px-3 py-1.5 rounded-md bg-[#000000] border border-zinc-800/80 hover:bg-[#0a0a0a] text-zinc-300 font-mono text-[9px] tracking-wider transition-all"
-                >
-                  PLAN
-                </button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Finance Column (col-span-12 lg:col-span-3) */}
-        <div className="col-span-12 lg:col-span-3 space-y-4">
-          {/* Account Balance Widget */}
-          <Card className="bg-[#0a0a0a] border-zinc-800 p-4 space-y-4 rounded-md">
-            <div className="space-y-0.5">
-              <span className="text-[9px] font-mono uppercase tracking-widest font-semibold text-zinc-500">LIQUID RESERVES</span>
-              <p className="text-[10px] font-mono text-zinc-550 uppercase">TOTAL CAPITAL</p>
+              <button
+                onClick={handleAddTomorrowTask}
+                className="px-4 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-widest uppercase transition-all cursor-pointer"
+              >
+                Plan Tomorrow
+              </button>
             </div>
-
-            <div className="space-y-1">
-              <h2 className="text-2xl font-mono font-bold tracking-tight text-zinc-50">
-                ${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-              </h2>
-              <div className="flex items-center gap-1.5 text-[9px] text-zinc-500 font-mono uppercase">
-                <span className="text-zinc-300 font-semibold">+12.4%</span>
-                <span>VS LAST CYCLE</span>
-              </div>
-            </div>
-
-            <button 
-              onClick={() => setBalance(prev => prev + 1000)}
-              className="w-full py-2 rounded-md border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[9px] font-mono font-semibold tracking-widest text-zinc-300 transition-all uppercase"
-            >
-              DEPOSIT $1,000
-            </button>
-          </Card>
-
-          {/* Quick Stats list */}
-          <Card className="bg-[#0a0a0a] border-zinc-800 p-4 space-y-3 rounded-md">
-            <div className="space-y-0.5">
-              <span className="text-[9px] font-mono uppercase tracking-widest font-semibold text-zinc-500">BUDGET LIMITS</span>
-              <p className="text-[10px] font-mono text-zinc-550 uppercase">RECONCILED ALLOCATIONS</p>
-            </div>
-
-            <div className="space-y-3">
-              {[
-                { category: "Housing", spent: 100 },
-                { category: "Groceries", spent: 68 },
-                { category: "Subscriptions", spent: 45 }
-              ].map((budget, i) => (
-                <div key={i} className="space-y-1">
-                  <div className="flex justify-between text-[9px] font-mono text-zinc-500 uppercase tracking-wider">
-                    <span>{budget.category}</span>
-                    <span className="font-semibold text-zinc-300">{budget.spent}%</span>
-                  </div>
-                  <div className="w-full bg-[#000000] border border-zinc-900 h-1.5 rounded-sm overflow-hidden">
-                    <div 
-                      className="h-full bg-zinc-200 transition-all duration-500"
-                      style={{ width: `${budget.spent}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
-        
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

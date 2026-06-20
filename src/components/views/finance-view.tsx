@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { 
   Wallet, 
@@ -12,502 +12,384 @@ import {
   RefreshCw,
   Calendar,
   Layers,
-  ArrowRight
+  ArrowRight,
+  ShoppingBag,
+  Bell,
+  Check,
+  TrendingDown,
+  DollarSign
 } from "lucide-react";
+import { Asset, Subscription, PurchaseOrder } from "@/types";
 
-interface AssetItem {
-  name: string;
-  amount: number; // Stored in base USD
+interface FinanceViewProps {
+  assets: Asset[];
+  updateAssets: (assets: Asset[]) => void;
+  subscriptions: Subscription[];
+  updateSubscriptions: (subs: Subscription[]) => void;
+  orders: PurchaseOrder[];
+  updateOrders: (orders: PurchaseOrder[]) => void;
+  activeDate: string;
 }
 
-interface Subscription {
-  id: string;
-  name: string;
-  amount: number; // in USD
-  period: "monthly" | "yearly";
-  active: boolean;
-}
-
-interface WishItem {
-  id: string;
-  name: string;
-  cost: number;
-}
-
-export default function FinanceView() {
-  const [mounted, setMounted] = useState(false);
-
-  // --- STATE ---
-  const [currency, setCurrency] = useState<"USD" | "EUR" | "GBP" | "CHF">("USD");
-  const [exchangeRates, setExchangeRates] = useState<Record<string, number>>({
-    USD: 1, EUR: 0.93, GBP: 0.79, CHF: 0.89
-  });
-
-  // Ledgers State
-  const [bankList, setBankList] = useState<AssetItem[]>([]);
-  const [stocksList, setStocksList] = useState<AssetItem[]>([]);
-  const [cryptoList, setCryptoList] = useState<AssetItem[]>([]);
-  const [otherList, setOtherList] = useState<AssetItem[]>([]);
-
-  // Subscriptions & Wishlists
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [wishlist, setWishlist] = useState<WishItem[]>([]);
-
+export default function FinanceView({
+  assets,
+  updateAssets,
+  subscriptions,
+  updateSubscriptions,
+  orders,
+  updateOrders,
+  activeDate
+}: FinanceViewProps) {
   // Input states for adding
-  const [selectedCategory, setSelectedCategory] = useState<"bank" | "stocks" | "crypto" | "other">("bank");
-  const [newItemName, setNewItemName] = useState("");
-  const [newItemAmount, setNewItemAmount] = useState<number | "">("");
+  const [newAssetName, setNewAssetName] = useState("");
+  const [newAssetAmount, setNewAssetAmount] = useState<number | "">("");
+  const [newAssetCategory, setNewAssetCategory] = useState<"bank" | "stocks" | "crypto" | "other">("bank");
 
   const [newSubName, setNewSubName] = useState("");
-  const [newSubAmount, setNewSubAmount] = useState<number | "">("");
+  const [newSubCost, setNewSubCost] = useState<number | "">("");
   const [newSubPeriod, setNewSubPeriod] = useState<"monthly" | "yearly">("monthly");
+  const [newSubRenewal, setNewSubRenewal] = useState("");
+  const [newSubLinkedAsset, setNewSubLinkedAsset] = useState("");
 
-  const [newWishName, setNewWishName] = useState("");
-  const [newWishCost, setNewWishCost] = useState<number | "">("");
+  const [newOrderName, setNewOrderName] = useState("");
+  const [newOrderCost, setNewOrderCost] = useState<number | "">("");
+  const [newOrderLinkedAsset, setNewOrderLinkedAsset] = useState("");
 
-  // Editing helpers
-  const [editingKey, setEditingKey] = useState<string | null>(null); // "category-index-field"
-  const [editVal, setEditVal] = useState("");
+  // Editing state helpers
+  const [editingAssetId, setEditingAssetId] = useState<string | null>(null);
+  const [editAssetVal, setEditAssetVal] = useState("");
 
-  // Lifecycle
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (mounted) {
-      // Fetch live rates
-      const loadRates = async () => {
-        try {
-          const res = await fetch("https://open.er-api.com/v6/latest/USD");
-          const data = await res.json();
-          if (data && data.rates) {
-            setExchangeRates({
-              USD: 1,
-              EUR: data.rates.EUR || 0.93,
-              GBP: data.rates.GBP || 0.79,
-              CHF: data.rates.CHF || 0.89
-            });
-          }
-        } catch (e) {}
-      };
-      loadRates();
-
-      // Load items
-      setBankList(loadLocal("nw:bank", [
-        { name: "Checking Account", amount: 4850 },
-        { name: "Emergency Vault", amount: 2000 }
-      ]));
-      setStocksList(loadLocal("nw:stocks", [
-        { name: "S&P 500 Index Fund", amount: 4500 }
-      ]));
-      setCryptoList(loadLocal("nw:crypto", [
-        { name: "Bitcoin (BTC)", amount: 1100 }
-      ]));
-      setOtherList(loadLocal("nw:other", [
-        { name: "Collector Coins", amount: 0 }
-      ]));
-
-      setSubscriptions(loadLocal("finance:subs", [
-        { id: "sub_1", name: "Gym Membership", amount: 50, period: "monthly", active: true },
-        { id: "sub_2", name: "Life OS Cloud Server", amount: 15, period: "monthly", active: true },
-        { id: "sub_3", name: "Professional Dev Licenses", amount: 120, period: "yearly", active: true }
-      ]));
-
-      setWishlist(loadLocal("finance:wish", [
-        { id: "w_1", name: "Mechanical Ergonomic Keyboard", cost: 240 },
-        { id: "w_2", name: "Premium Noise-Cancelling Headphones", cost: 350 }
-      ]));
-    }
-  }, [mounted]);
-
-  const loadLocal = <T,>(key: string, fallback: T): T => {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  };
-
-  const saveLocal = (key: string, data: any) => {
-    localStorage.setItem(key, JSON.stringify(data));
-  };
-
-  // --- CALCULATORS ---
-  const formatMoney = (amountUSD: number) => {
-    const rate = exchangeRates[currency] || 1;
-    const value = amountUSD * rate;
-    const symbol = currency === "USD" ? "$" : currency === "EUR" ? "€" : currency === "GBP" ? "£" : "Fr ";
-    return `${symbol}${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
-
-  const getCategoryTotal = (list: AssetItem[]) => {
-    return list.reduce((sum, item) => sum + item.amount, 0);
-  };
-
-  const bankTotal = getCategoryTotal(bankList);
-  const stocksTotal = getCategoryTotal(stocksList);
-  const cryptoTotal = getCategoryTotal(cryptoList);
-  const otherTotal = getCategoryTotal(otherList);
+  // Subtotal Calculators
+  const bankTotal = assets.filter(a => a.category === "bank").reduce((sum, a) => sum + a.amount, 0);
+  const stocksTotal = assets.filter(a => a.category === "stocks").reduce((sum, a) => sum + a.amount, 0);
+  const cryptoTotal = assets.filter(a => a.category === "crypto").reduce((sum, a) => sum + a.amount, 0);
+  const otherTotal = assets.filter(a => a.category === "other").reduce((sum, a) => sum + a.amount, 0);
   const netWorthTotal = bankTotal + stocksTotal + cryptoTotal + otherTotal;
 
-  // Monthly subscription total expense helper
-  const getSubsMonthlyTotal = () => {
-    return subscriptions
-      .filter(s => s.active)
-      .reduce((sum, s) => sum + (s.period === "monthly" ? s.amount : s.amount / 12), 0);
+  // Pie chart variables
+  const radius = 30;
+  const circ = 2 * Math.PI * radius; // ~188.5
+  
+  const bankPct = netWorthTotal ? (bankTotal / netWorthTotal) * 100 : 0;
+  const stocksPct = netWorthTotal ? (stocksTotal / netWorthTotal) * 100 : 0;
+  const cryptoPct = netWorthTotal ? (cryptoTotal / netWorthTotal) * 100 : 0;
+  const otherPct = netWorthTotal ? (otherTotal / netWorthTotal) * 100 : 0;
+
+  // Subscription warnings calculations (flash red if due in 3 days)
+  const isSubscriptionWarning = (subDateStr: string) => {
+    if (!subDateStr) return false;
+    const subDate = new Date(subDateStr);
+    const currDate = new Date(activeDate);
+    const diffTime = subDate.getTime() - currDate.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays >= 0 && diffDays <= 3;
   };
 
-  const monthlySubs = getSubsMonthlyTotal();
-
-  // Parse inline equations like +500 or -200
-  const parseAmountExpression = (currentVal: number, expr: string): number => {
-    const trimmed = expr.trim();
-    if (trimmed.startsWith("+")) {
-      const addon = Number(trimmed.slice(1));
-      return Number.isNaN(addon) ? currentVal : currentVal + addon;
-    }
-    if (trimmed.startsWith("-")) {
-      const sub = Number(trimmed.slice(1));
-      return Number.isNaN(sub) ? currentVal : Math.max(0, currentVal - sub);
-    }
-    const val = Number(trimmed);
-    return Number.isNaN(val) ? currentVal : val;
+  // Asset Actions
+  const handleAddAsset = () => {
+    if (!newAssetName.trim() || newAssetAmount === "") return;
+    const newAs: Asset = {
+      id: "as_" + Date.now(),
+      name: newAssetName.trim(),
+      category: newAssetCategory,
+      amount: Number(newAssetAmount)
+    };
+    updateAssets([...assets, newAs]);
+    setNewAssetName("");
+    setNewAssetAmount("");
   };
 
-  // --- ACTIONS ---
-  const handleAddAssetItem = () => {
-    if (!newItemName.trim() || newItemAmount === "") return;
-    const amount = Number(newItemAmount);
-    if (Number.isNaN(amount)) return;
+  const handleDeleteAsset = (id: string) => {
+    updateAssets(assets.filter(a => a.id !== id));
+  };
 
-    const newItem: AssetItem = { name: newItemName.trim(), amount };
+  const handleEditAssetCommit = (id: string) => {
+    if (!editAssetVal.trim()) return;
+    
+    // Parse expression (+500 / -200)
+    const currentAsset = assets.find(a => a.id === id);
+    if (!currentAsset) return;
 
-    if (selectedCategory === "bank") {
-      const updated = [...bankList, newItem];
-      setBankList(updated);
-      saveLocal("nw:bank", updated);
-    } else if (selectedCategory === "stocks") {
-      const updated = [...stocksList, newItem];
-      setStocksList(updated);
-      saveLocal("nw:stocks", updated);
-    } else if (selectedCategory === "crypto") {
-      const updated = [...cryptoList, newItem];
-      setCryptoList(updated);
-      saveLocal("nw:crypto", updated);
+    let finalVal = currentAsset.amount;
+    const expr = editAssetVal.trim();
+    if (expr.startsWith("+")) {
+      const addon = Number(expr.slice(1));
+      if (!Number.isNaN(addon)) finalVal += addon;
+    } else if (expr.startsWith("-")) {
+      const sub = Number(expr.slice(1));
+      if (!Number.isNaN(sub)) finalVal = Math.max(0, finalVal - sub);
     } else {
-      const updated = [...otherList, newItem];
-      setOtherList(updated);
-      saveLocal("nw:other", updated);
+      const val = Number(expr);
+      if (!Number.isNaN(val)) finalVal = val;
     }
 
-    setNewItemName("");
-    setNewItemAmount("");
+    updateAssets(
+      assets.map(a => a.id === id ? { ...a, amount: finalVal } : a)
+    );
+    setEditingAssetId(null);
+    setEditAssetVal("");
   };
 
-  const handleDeleteAssetItem = (cat: "bank" | "stocks" | "crypto" | "other", idx: number) => {
-    if (cat === "bank") {
-      const updated = bankList.filter((_, i) => i !== idx);
-      setBankList(updated);
-      saveLocal("nw:bank", updated);
-    } else if (cat === "stocks") {
-      const updated = stocksList.filter((_, i) => i !== idx);
-      setStocksList(updated);
-      saveLocal("nw:stocks", updated);
-    } else if (cat === "crypto") {
-      const updated = cryptoList.filter((_, i) => i !== idx);
-      setCryptoList(updated);
-      saveLocal("nw:crypto", updated);
-    } else {
-      const updated = otherList.filter((_, i) => i !== idx);
-      setOtherList(updated);
-      saveLocal("nw:other", updated);
-    }
-  };
+  // Purchase Deduction Action
+  const handleLogPurchase = () => {
+    if (!newOrderName.trim() || newOrderCost === "" || !newOrderLinkedAsset) return;
+    const costVal = Number(newOrderCost);
+    if (Number.isNaN(costVal)) return;
 
-  const handleEditCommit = (cat: "bank" | "stocks" | "crypto" | "other", idx: number, field: "name" | "amount") => {
-    let list: AssetItem[];
-    if (cat === "bank") list = [...bankList];
-    else if (cat === "stocks") list = [...stocksList];
-    else if (cat === "crypto") list = [...cryptoList];
-    else list = [...otherList];
-
-    if (field === "name") {
-      if (editVal.trim()) {
-        list[idx].name = editVal.trim();
+    // Deduct amount from linked asset
+    const updatedAssets = assets.map((asset) => {
+      if (asset.id === newOrderLinkedAsset) {
+        return {
+          ...asset,
+          amount: Math.max(0, asset.amount - costVal)
+        };
       }
-    } else {
-      list[idx].amount = parseAmountExpression(list[idx].amount, editVal);
-    }
+      return asset;
+    });
 
-    if (cat === "bank") {
-      setBankList(list);
-      saveLocal("nw:bank", list);
-    } else if (cat === "stocks") {
-      setStocksList(list);
-      saveLocal("nw:stocks", list);
-    } else if (cat === "crypto") {
-      setCryptoList(list);
-      saveLocal("nw:crypto", list);
-    } else {
-      setOtherList(list);
-      saveLocal("nw:other", list);
-    }
+    // Create purchase order entry
+    const newOrder: PurchaseOrder = {
+      id: "ord_" + Date.now(),
+      name: newOrderName.trim(),
+      cost: costVal,
+      date: activeDate,
+      linkedAssetId: newOrderLinkedAsset
+    };
 
-    setEditingKey(null);
-    setEditVal("");
+    updateAssets(updatedAssets);
+    updateOrders([newOrder, ...orders]);
+
+    setNewOrderName("");
+    setNewOrderCost("");
+    setNewOrderLinkedAsset("");
   };
 
-  // Subscriptions Actions
-  const handleAddSubscription = () => {
-    if (!newSubName.trim() || newSubAmount === "") return;
-    const amount = Number(newSubAmount);
-    if (Number.isNaN(amount)) return;
+  const handleDeleteOrder = (id: string) => {
+    updateOrders(orders.filter(o => o.id !== id));
+  };
 
+  // Subscription Actions
+  const handleAddSubscription = () => {
+    if (!newSubName.trim() || newSubCost === "" || !newSubRenewal || !newSubLinkedAsset) return;
     const newSub: Subscription = {
       id: "sub_" + Date.now(),
       name: newSubName.trim(),
-      amount,
+      cost: Number(newSubCost),
       period: newSubPeriod,
-      active: true
+      nextRenewalDate: newSubRenewal,
+      linkedAssetId: newSubLinkedAsset
     };
-
-    const updated = [...subscriptions, newSub];
-    setSubscriptions(updated);
-    saveLocal("finance:subs", updated);
-
+    updateSubscriptions([...subscriptions, newSub]);
     setNewSubName("");
-    setNewSubAmount("");
-  };
-
-  const toggleSubActive = (id: string) => {
-    const updated = subscriptions.map(s => s.id === id ? { ...s, active: !s.active } : s);
-    setSubscriptions(updated);
-    saveLocal("finance:subs", updated);
+    setNewSubCost("");
+    setNewSubRenewal("");
+    setNewSubLinkedAsset("");
   };
 
   const handleDeleteSubscription = (id: string) => {
-    const updated = subscriptions.filter(s => s.id !== id);
-    setSubscriptions(updated);
-    saveLocal("finance:subs", updated);
+    updateSubscriptions(subscriptions.filter(s => s.id !== id));
   };
 
-  // Wishlist Actions
-  const handleAddWishItem = () => {
-    if (!newWishName.trim() || newWishCost === "") return;
-    const cost = Number(newWishCost);
-    if (Number.isNaN(cost)) return;
+  // Log Expense Macro (deducts sub cost and advances renewal date by 1 month)
+  const handleLogSubExpense = (sub: Subscription) => {
+    // Deduct cost from linked account
+    const updatedAssets = assets.map((asset) => {
+      if (asset.id === sub.linkedAssetId) {
+        return {
+          ...asset,
+          amount: Math.max(0, asset.amount - sub.cost)
+        };
+      }
+      return asset;
+    });
 
-    const newWish: WishItem = {
-      id: "wish_" + Date.now(),
-      name: newWishName.trim(),
-      cost
+    // Advance renewal date by 1 month
+    const renewal = new Date(sub.nextRenewalDate);
+    renewal.setMonth(renewal.getMonth() + 1);
+    const nextRenewalStr = renewal.toISOString().split("T")[0];
+
+    const updatedSubs = subscriptions.map((s) => {
+      if (s.id === sub.id) {
+        return {
+          ...s,
+          nextRenewalDate: nextRenewalStr
+        };
+      }
+      return s;
+    });
+
+    // Write a purchase log matching subscription outflow
+    const newOrder: PurchaseOrder = {
+      id: "ord_sub_" + Date.now(),
+      name: `Sub: ${sub.name}`,
+      cost: sub.cost,
+      date: activeDate,
+      linkedAssetId: sub.linkedAssetId
     };
 
-    const updated = [...wishlist, newWish];
-    setWishlist(updated);
-    saveLocal("finance:wish", updated);
-
-    setNewWishName("");
-    setNewWishCost("");
+    updateAssets(updatedAssets);
+    updateSubscriptions(updatedSubs);
+    updateOrders([newOrder, ...orders]);
   };
 
-  const handleDeleteWishItem = (id: string) => {
-    const updated = wishlist.filter(w => w.id !== id);
-    setWishlist(updated);
-    saveLocal("finance:wish", updated);
-  };
-
-  if (!mounted) {
-    return null;
-  }
-
-  const renderCategoryList = (catKey: "bank" | "stocks" | "crypto" | "other", list: AssetItem[]) => {
-    return (
-      <div className="space-y-1.5 pt-1.5">
-        {list.map((item, idx) => {
-          const nameKey = `${catKey}-${idx}-name`;
-          const amtKey = `${catKey}-${idx}-amount`;
-
-          return (
-            <div 
-              key={idx} 
-              className="group flex justify-between items-center px-3 py-2 border border-zinc-900 bg-[#000000]/60 hover:bg-[#0a0a0a] rounded text-xs font-mono"
-            >
-              {/* Editable Name */}
-              {editingKey === nameKey ? (
-                <input
-                  type="text"
-                  value={editVal}
-                  onChange={(e) => setEditVal(e.target.value)}
-                  onBlur={() => handleEditCommit(catKey, idx, "name")}
-                  onKeyDown={(e) => e.key === "Enter" && handleEditCommit(catKey, idx, "name")}
-                  className="bg-transparent border-b border-zinc-700 outline-none text-zinc-200 w-32 py-0.5"
-                  autoFocus
-                />
-              ) : (
-                <span 
-                  onClick={() => {
-                    setEditingKey(nameKey);
-                    setEditVal(item.name);
-                  }}
-                  className="cursor-pointer text-zinc-300 hover:text-zinc-50 transition-colors"
-                  title="Click to rename"
-                >
-                  {item.name}
-                </span>
-              )}
-
-              <div className="flex items-center gap-3">
-                {/* Editable Amount */}
-                {editingKey === amtKey ? (
-                  <input
-                    type="text"
-                    value={editVal}
-                    onChange={(e) => setEditVal(e.target.value)}
-                    onBlur={() => handleEditCommit(catKey, idx, "amount")}
-                    onKeyDown={(e) => e.key === "Enter" && handleEditCommit(catKey, idx, "amount")}
-                    placeholder="+500 or -200"
-                    className="bg-transparent border-b border-zinc-700 outline-none text-zinc-200 text-right w-24 py-0.5"
-                    autoFocus
-                  />
-                ) : (
-                  <span 
-                    onClick={() => {
-                      setEditingKey(amtKey);
-                      setEditVal(item.amount.toString());
-                    }}
-                    className="cursor-pointer font-bold text-zinc-200 hover:text-zinc-50 transition-colors"
-                    title="Click to edit balance"
-                  >
-                    {formatMoney(item.amount)}
-                  </span>
-                )}
-
-                <button 
-                  onClick={() => handleDeleteAssetItem(catKey, idx)}
-                  className="text-zinc-600 hover:text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-          );
-        })}
-
-        {list.length === 0 && (
-          <div className="text-center py-2 text-[9px] font-mono uppercase tracking-widest text-zinc-650">Empty category ledger.</div>
-        )}
-      </div>
-    );
+  // Format Helper
+  const formatMoney = (amount: number) => {
+    return `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   return (
     <div className="space-y-4 text-zinc-200">
       
-      {/* Header */}
+      {/* Net Worth Summary Panel */}
       <div className="rounded-md border border-zinc-800 bg-[#0a0a0a] p-5">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#000000] border border-zinc-800 text-[9px] font-mono tracking-widest text-zinc-500 uppercase">
-              LEDGERS // RESERVES
-            </div>
-            <h1 className="text-xl font-mono uppercase tracking-wider font-bold text-zinc-150 flex items-center gap-2">
-              <Wallet className="h-5 w-5 text-zinc-300" /> WEALTH & FINANCIAL LEDGERS
-            </h1>
-            <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wide">
-              Track net worth reserves, auto exchange conversions, and active subscriptions.
-            </p>
-          </div>
-
-          {/* Currency Selector */}
-          <div className="flex items-center gap-2 bg-[#000000] border border-zinc-800 p-1.5 rounded-md">
-            <span className="text-[9px] font-mono uppercase tracking-wider text-zinc-500 font-bold pl-1.5">CURRENCY</span>
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value as any)}
-              className="bg-[#000000] border border-zinc-900 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none"
-            >
-              <option value="USD">USD ($)</option>
-              <option value="EUR">EUR (€)</option>
-              <option value="GBP">GBP (£)</option>
-              <option value="CHF">CHF (Fr)</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* Net Worth Summary banner */}
-      <div className="rounded-md border border-zinc-800 bg-[#0a0a0a] p-5">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="space-y-0.5">
-            <span className="text-[9px] font-mono uppercase tracking-widest font-semibold text-zinc-500">NET WORTH STACK</span>
+            <span className="text-[9px] font-mono uppercase tracking-widest font-semibold text-zinc-500">LIQUID LEDGER</span>
             <h2 className="text-3xl font-mono font-bold tracking-tight text-zinc-50">
               {formatMoney(netWorthTotal)}
             </h2>
             <div className="flex items-center gap-1.5 text-[9px] font-mono text-zinc-500 uppercase tracking-wide">
               <TrendingUp className="h-3.5 w-3.5 text-zinc-400" />
-              <span>Converted at live rates</span>
+              <span>Global reserves tracking active</span>
             </div>
           </div>
-          <div className="text-right space-y-1">
-            <div className="px-3 py-1.5 rounded-md border border-zinc-850 bg-[#000000] text-[10px] font-mono text-zinc-400">
-              EXPENSES: {formatMoney(monthlySubs)}/MO
+
+          {/* SVG concentric donut diagram */}
+          {netWorthTotal > 0 && (
+            <div className="flex items-center gap-4 bg-[#000000] border border-zinc-900 px-4 py-2 rounded-md">
+              <div className="relative w-16 h-16 flex items-center justify-center">
+                <svg className="-rotate-90 w-full h-full" viewBox="0 0 80 80">
+                  {/* Bank slice */}
+                  <circle
+                    cx="40"
+                    cy="40"
+                    r={radius}
+                    className="stroke-zinc-100 fill-none stroke-[6]"
+                    strokeDasharray={`${(bankPct / 100) * circ} ${circ}`}
+                    strokeDashoffset="0"
+                  />
+                  {/* Stocks slice */}
+                  <circle
+                    cx="40"
+                    cy="40"
+                    r={radius}
+                    className="stroke-zinc-400 fill-none stroke-[6]"
+                    strokeDasharray={`${(stocksPct / 100) * circ} ${circ}`}
+                    strokeDashoffset={`-${(bankPct / 100) * circ}`}
+                  />
+                  {/* Crypto slice */}
+                  <circle
+                    cx="40"
+                    cy="40"
+                    r={radius}
+                    className="stroke-zinc-650 fill-none stroke-[6]"
+                    strokeDasharray={`${(cryptoPct / 100) * circ} ${circ}`}
+                    strokeDashoffset={`-${((bankPct + stocksPct) / 100) * circ}`}
+                  />
+                  {/* Other slice */}
+                  <circle
+                    cx="40"
+                    cy="40"
+                    r={radius}
+                    className="stroke-zinc-800 fill-none stroke-[6]"
+                    strokeDasharray={`${(otherPct / 100) * circ} ${circ}`}
+                    strokeDashoffset={`-${((bankPct + stocksPct + cryptoPct) / 100) * circ}`}
+                  />
+                </svg>
+              </div>
+
+              {/* Legends list */}
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[8.5px] font-mono">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-100" />
+                  <span className="text-zinc-400 uppercase">BANK: {Math.round(bankPct)}%</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+                  <span className="text-zinc-400 uppercase">STOCKS: {Math.round(stocksPct)}%</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-650" />
+                  <span className="text-zinc-400 uppercase">CRYPTO: {Math.round(cryptoPct)}%</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-800" />
+                  <span className="text-zinc-400 uppercase">OTHER: {Math.round(otherPct)}%</span>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Main Grid split */}
-      <div className="grid grid-cols-12 gap-4">
+      {/* Main split view grids */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         
-        {/* Left column: Asset Ledger groups (col-span-12 lg:col-span-8) */}
-        <div className="col-span-12 lg:col-span-8 space-y-4">
+        {/* Left Column: Asset Allocations & direct deduction form (7 cols) */}
+        <div className="lg:col-span-7 space-y-4">
+          
+          {/* Asset reserves card */}
           <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
             <CardHeader className="p-4 border-b border-zinc-800">
-              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">NET WORTH CATEGORIES</span>
-              <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase">ASSET ALLOCATIONS</CardTitle>
+              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">CAPITAL RESERVES</span>
+              <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-widest">
+                NET WORTH ASSET ALLOCATIONS
+              </CardTitle>
             </CardHeader>
             <CardContent className="p-4 space-y-4">
               
-              {/* Bank accounts */}
               <div className="space-y-1">
-                <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500 uppercase tracking-widest border-b border-zinc-900 pb-1">
-                  <span className="font-bold text-zinc-400">BANK RESERVES</span>
-                  <span>SUBTOTAL: {formatMoney(bankTotal)}</span>
-                </div>
-                {renderCategoryList("bank", bankList)}
+                {assets.map((item) => (
+                  <div key={item.id} className="group flex justify-between items-center px-3 py-2 border border-zinc-900 bg-[#000000]/60 hover:bg-[#0a0a0a] rounded text-xs font-mono transition-colors duration-150">
+                    <div className="space-y-0.5">
+                      <span className="text-zinc-200 font-semibold">{item.name}</span>
+                      <p className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest">{item.category}</p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      {editingAssetId === item.id ? (
+                        <input
+                          type="text"
+                          value={editAssetVal}
+                          onChange={(e) => setEditAssetVal(e.target.value)}
+                          onBlur={() => handleEditAssetCommit(item.id)}
+                          onKeyDown={(e) => e.key === "Enter" && handleEditAssetCommit(item.id)}
+                          className="bg-[#000000] border border-zinc-800 rounded text-right outline-none text-zinc-200 w-24 py-0.5 px-2 font-bold"
+                          placeholder="+500 or -200"
+                          autoFocus
+                        />
+                      ) : (
+                        <span 
+                          onClick={() => {
+                            setEditingAssetId(item.id);
+                            setEditAssetVal(item.amount.toString());
+                          }}
+                          className="font-bold text-zinc-150 hover:text-zinc-50 cursor-pointer font-mono"
+                          title="Edit balance (supports math expressions like +500)"
+                        >
+                          {formatMoney(item.amount)}
+                        </span>
+                      )}
+
+                      <button
+                        onClick={() => handleDeleteAsset(item.id)}
+                        className="text-zinc-650 hover:text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {assets.length === 0 && (
+                  <div className="text-center py-4 text-[9px] font-mono uppercase tracking-widest text-zinc-650">Empty asset registry.</div>
+                )}
               </div>
 
-              {/* Stocks accounts */}
-              <div className="space-y-1">
-                <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500 uppercase tracking-widest border-b border-zinc-900 pb-1">
-                  <span className="font-bold text-zinc-400">STOCKS & INDEXES</span>
-                  <span>SUBTOTAL: {formatMoney(stocksTotal)}</span>
-                </div>
-                {renderCategoryList("stocks", stocksList)}
-              </div>
-
-              {/* Crypto accounts */}
-              <div className="space-y-1">
-                <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500 uppercase tracking-widest border-b border-zinc-900 pb-1">
-                  <span className="font-bold text-zinc-400">CRYPTO WALLETS</span>
-                  <span>SUBTOTAL: {formatMoney(cryptoTotal)}</span>
-                </div>
-                {renderCategoryList("crypto", cryptoList)}
-              </div>
-
-              {/* Other accounts */}
-              <div className="space-y-1">
-                <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500 uppercase tracking-widest border-b border-zinc-900 pb-1">
-                  <span className="font-bold text-zinc-400">OTHER RESERVES</span>
-                  <span>SUBTOTAL: {formatMoney(otherTotal)}</span>
-                </div>
-                {renderCategoryList("other", otherList)}
-              </div>
-
-              {/* Add AssetItem Form */}
-              <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-zinc-800 mt-2">
+              {/* Add asset form */}
+              <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-zinc-900 mt-2">
                 <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value as any)}
+                  value={newAssetCategory}
+                  onChange={(e) => setNewAssetCategory(e.target.value as any)}
                   className="bg-[#000000] border border-zinc-800 rounded px-2 py-1.5 text-xs font-mono text-zinc-400 outline-none"
                 >
                   <option value="bank">BANK</option>
@@ -515,26 +397,23 @@ export default function FinanceView() {
                   <option value="crypto">CRYPTO</option>
                   <option value="other">OTHER</option>
                 </select>
-
                 <input
                   type="text"
-                  value={newItemName}
-                  onChange={(e) => setNewItemName(e.target.value)}
-                  placeholder="ASSET/ACCOUNT NAME..."
+                  value={newAssetName}
+                  onChange={(e) => setNewAssetName(e.target.value)}
+                  placeholder="ASSET NAME..."
                   className="flex-1 bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
                 />
-
                 <input
                   type="number"
-                  value={newItemAmount}
-                  onChange={(e) => setNewItemAmount(e.target.value === "" ? "" : Number(e.target.value))}
-                  placeholder="AMOUNT (USD)..."
-                  className="w-32 bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                  value={newAssetAmount}
+                  onChange={(e) => setNewAssetAmount(e.target.value === "" ? "" : Number(e.target.value))}
+                  placeholder="AMOUNT..."
+                  className="w-24 bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
                 />
-
                 <button
-                  onClick={handleAddAssetItem}
-                  className="px-4 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[10px] tracking-wider uppercase transition-all"
+                  onClick={handleAddAsset}
+                  className="px-4 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-widest uppercase transition-all"
                 >
                   Add
                 </button>
@@ -542,158 +421,221 @@ export default function FinanceView() {
 
             </CardContent>
           </Card>
-        </div>
 
-        {/* Right column: Subscriptions & Wishlists (col-span-12 lg:col-span-4) */}
-        <div className="col-span-12 lg:col-span-4 space-y-4">
-          
-          {/* Subscriptions */}
+          {/* Balance Deduction Purchase Form */}
           <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
             <CardHeader className="p-4 border-b border-zinc-800">
-              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">RECURRING OUTFLOWS</span>
-              <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase">SUBSCRIPTIONS</CardTitle>
+              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">DEBIT LEDGER ENGINE</span>
+              <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-widest">
+                LOG ORDER PURCHASE (DIRECT BALANCE DEDUCTION)
+              </CardTitle>
             </CardHeader>
-            
             <CardContent className="p-4 space-y-4">
-              <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
-                {subscriptions.map((sub) => (
-                  <div 
-                    key={sub.id} 
-                    className={`group flex items-center justify-between px-3 py-2 border border-zinc-900 bg-[#000000]/60 hover:bg-[#0a0a0a] rounded text-[10px] font-mono transition-all ${
-                      sub.active ? "" : "opacity-40"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => toggleSubActive(sub.id)}
-                        className={`w-3 h-3 border flex items-center justify-center rounded-sm transition-all ${
-                          sub.active ? "bg-zinc-100 border-zinc-250 text-zinc-950" : "border-zinc-800 bg-transparent"
-                        }`}
-                      >
-                        {sub.active && <span className="text-[7px]">✓</span>}
-                      </button>
-                      <span className="text-zinc-300 font-semibold">{sub.name}</span>
-                    </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                <input
+                  type="text"
+                  placeholder="PURCHASE ITEM NAME (e.g. Mechanical Keyboard)..."
+                  value={newOrderName}
+                  onChange={(e) => setNewOrderName(e.target.value)}
+                  className="sm:col-span-6 bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                />
+                <input
+                  type="number"
+                  placeholder="COST..."
+                  value={newOrderCost}
+                  onChange={(e) => setNewOrderCost(e.target.value === "" ? "" : Number(e.target.value))}
+                  className="sm:col-span-3 bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                />
+                <select
+                  value={newOrderLinkedAsset}
+                  onChange={(e) => setNewOrderLinkedAsset(e.target.value)}
+                  className="sm:col-span-3 bg-[#000000] border border-zinc-800 rounded px-2.5 py-1.5 text-xs font-mono text-zinc-400 outline-none focus:border-zinc-700"
+                >
+                  <option value="">DEDUCT FROM...</option>
+                  {assets.filter(a => a.category === "bank" || a.category === "crypto").map((asset) => (
+                    <option key={asset.id} value={asset.id}>
+                      {asset.name} ({formatMoney(asset.amount)})
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-zinc-400">
-                        {formatMoney(sub.amount)}/{sub.period === "monthly" ? "mo" : "yr"}
-                      </span>
-                      <button 
-                        onClick={() => handleDeleteSubscription(sub.id)}
-                        className="text-zinc-600 hover:text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        ×
-                      </button>
-                    </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={handleLogPurchase}
+                  disabled={!newOrderName.trim() || newOrderCost === "" || !newOrderLinkedAsset}
+                  className="px-4 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-widest uppercase transition-all disabled:opacity-40"
+                >
+                  Deduct and Log Order
+                </button>
+              </div>
+
+              {/* Purchase history list */}
+              {orders.length > 0 && (
+                <div className="space-y-1.5 border-t border-zinc-900 pt-3">
+                  <span className="text-[8px] font-mono text-zinc-600 uppercase font-semibold">TRANSACTION PURCHASE LOGS:</span>
+                  <div className="space-y-1 max-h-[140px] overflow-y-auto pr-1">
+                    {orders.map((ord) => {
+                      const linked = assets.find(a => a.id === ord.linkedAssetId);
+                      return (
+                        <div key={ord.id} className="flex justify-between items-center px-2 py-1 rounded bg-[#000000] border border-zinc-950 text-[10px] font-mono">
+                          <div className="space-y-0.5">
+                            <span className="text-zinc-300 font-bold">{ord.name}</span>
+                            <p className="text-[7.5px] text-zinc-550 uppercase">Deducted from {linked?.name || "Asset"}</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-red-500 font-bold">-{formatMoney(ord.cost)}</span>
+                            <button 
+                              onClick={() => handleDeleteOrder(ord.id)}
+                              className="text-zinc-700 hover:text-zinc-500"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
+                </div>
+              )}
+
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column: Subscriptions & warning registry (5 cols) */}
+        <div className="lg:col-span-5 space-y-4">
+          <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
+            <CardHeader className="p-4 border-b border-zinc-800">
+              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">AUTO-DEBITS</span>
+              <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-widest">
+                RECURRING SUBSCRIPTIONS WARNING
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              
+              {/* List subscriptions with warnings */}
+              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                {subscriptions.map((sub) => {
+                  const isWarning = isSubscriptionWarning(sub.nextRenewalDate);
+                  const linked = assets.find(a => a.id === sub.linkedAssetId);
+
+                  return (
+                    <div 
+                      key={sub.id} 
+                      className={`group flex flex-col gap-2 p-3 border rounded text-xs font-mono transition-all duration-150 ${
+                        isWarning 
+                          ? "bg-red-955/20 border-red-900/40 text-red-200 animate-pulse" 
+                          : "bg-[#000000]/60 border-zinc-900 hover:bg-[#0a0a0a]"
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-0.5">
+                          <span className="font-bold text-zinc-200 uppercase tracking-wide">{sub.name}</span>
+                          <div className="flex items-center gap-1.5 text-[8.5px] font-mono text-zinc-500 uppercase tracking-wide">
+                            <span>Cost: {formatMoney(sub.cost)}/{sub.period === "monthly" ? "mo" : "yr"}</span>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => handleDeleteSubscription(sub.id)}
+                          className="text-zinc-650 hover:text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          ×
+                        </button>
+                      </div>
+
+                      {/* Warning indicator + macro script */}
+                      <div className="flex justify-between items-center border-t border-zinc-900/60 pt-2 mt-0.5">
+                        <div className="flex flex-col text-[8.5px] font-mono">
+                          <span className="text-zinc-500">RENEW DATE:</span>
+                          <span className={`${isWarning ? "text-red-500 font-bold" : "text-zinc-400"}`}>
+                            {sub.nextRenewalDate} {isWarning && "(DUE)"}
+                          </span>
+                        </div>
+                        
+                        <button
+                          onClick={() => handleLogSubExpense(sub)}
+                          className="px-2.5 py-1 bg-zinc-50 hover:bg-white text-zinc-950 rounded text-[8.5px] font-mono font-bold uppercase tracking-wider transition-all"
+                        >
+                          Log Expense
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
 
                 {subscriptions.length === 0 && (
-                  <div className="text-center py-4 text-[9px] font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-800 rounded">
-                    No active subscriptions logged.
+                  <div className="text-center py-4 text-[9px] font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-850 rounded">
+                    No active auto-debits cataloged.
                   </div>
                 )}
               </div>
 
               {/* Add Subscription Form */}
-              <div className="flex flex-col gap-2 pt-3 border-t border-zinc-800 mt-2">
+              <div className="flex flex-col gap-2 pt-3 border-t border-zinc-900 mt-2">
+                <span className="text-[9px] font-mono uppercase tracking-widest font-semibold text-zinc-500">REGISTER NEW AUTO-DEBIT</span>
                 <input
                   type="text"
+                  placeholder="SUBSCRIPTION SERVICE (e.g. Netflix)..."
                   value={newSubName}
                   onChange={(e) => setNewSubName(e.target.value)}
-                  placeholder="SUBSCRIPTION NAME..."
-                  className="bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-250 outline-none focus:border-zinc-700 transition-all"
+                  className="bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
                 />
                 
-                <div className="flex gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <input
                     type="number"
-                    value={newSubAmount}
-                    onChange={(e) => setNewSubAmount(e.target.value === "" ? "" : Number(e.target.value))}
-                    placeholder="AMOUNT..."
-                    className="flex-1 bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-250 outline-none focus:border-zinc-700 transition-all"
+                    placeholder="COST..."
+                    value={newSubCost}
+                    onChange={(e) => setNewSubCost(e.target.value === "" ? "" : Number(e.target.value))}
+                    className="bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
                   />
                   <select
                     value={newSubPeriod}
                     onChange={(e) => setNewSubPeriod(e.target.value as any)}
-                    className="bg-[#000000] border border-zinc-800 rounded px-2 py-1.5 text-xs font-mono text-zinc-400 outline-none"
+                    className="bg-[#000000] border border-zinc-800 rounded px-2.5 py-1.5 text-xs font-mono text-zinc-400 outline-none focus:border-zinc-700"
                   >
                     <option value="monthly">MONTHLY</option>
                     <option value="yearly">YEARLY</option>
                   </select>
-                  <button
-                    onClick={handleAddSubscription}
-                    className="px-3.5 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-wider uppercase transition-all"
-                  >
-                    Add
-                  </button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
 
-          {/* Wishlist */}
-          <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-            <CardHeader className="p-4 border-b border-zinc-800">
-              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">WISHLIST LEDGERS</span>
-              <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase">SAVINGS TARGETS</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 space-y-4">
-              <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
-                {wishlist.map((w) => (
-                  <div 
-                    key={w.id} 
-                    className="group flex justify-between items-center px-3 py-2 border border-zinc-900 bg-[#000000]/60 hover:bg-[#0a0a0a] rounded text-[10px] font-mono transition-all"
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="date"
+                    value={newSubRenewal}
+                    onChange={(e) => setNewSubRenewal(e.target.value)}
+                    className="bg-[#000000] border border-zinc-800 rounded px-2.5 py-1.5 text-xs font-mono text-zinc-400 outline-none focus:border-zinc-700"
+                  />
+                  <select
+                    value={newSubLinkedAsset}
+                    onChange={(e) => setNewSubLinkedAsset(e.target.value)}
+                    className="bg-[#000000] border border-zinc-800 rounded px-2.5 py-1.5 text-xs font-mono text-zinc-400 outline-none focus:border-zinc-700"
                   >
-                    <span className="text-zinc-300 font-semibold">{w.name}</span>
-                    
-                    <div className="flex items-center gap-2">
-                      <span className="text-zinc-400">{formatMoney(w.cost)}</span>
-                      <button 
-                        onClick={() => handleDeleteWishItem(w.id)}
-                        className="text-zinc-600 hover:text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                    <option value="">DEBIT FROM...</option>
+                    {assets.filter(a => a.category === "bank").map((asset) => (
+                      <option key={asset.id} value={asset.id}>
+                        {asset.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                {wishlist.length === 0 && (
-                  <div className="text-center py-4 text-[9px] font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-800 rounded">
-                    Wishlist empty.
-                  </div>
-                )}
-              </div>
-
-              {/* Add Wish Item Form */}
-              <div className="flex gap-2 pt-3 border-t border-zinc-800 mt-2">
-                <input
-                  type="text"
-                  value={newWishName}
-                  onChange={(e) => setNewWishName(e.target.value)}
-                  placeholder="ITEM NAME..."
-                  className="flex-1 bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-250 outline-none focus:border-zinc-700 transition-all"
-                />
-                <input
-                  type="number"
-                  value={newWishCost}
-                  onChange={(e) => setNewWishCost(e.target.value === "" ? "" : Number(e.target.value))}
-                  placeholder="COST..."
-                  className="w-20 bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
-                />
                 <button
-                  onClick={handleAddWishItem}
-                  className="px-3 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-wider uppercase transition-all"
+                  onClick={handleAddSubscription}
+                  disabled={!newSubName.trim() || newSubCost === "" || !newSubRenewal || !newSubLinkedAsset}
+                  className="px-4 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-widest uppercase transition-all disabled:opacity-40 mt-1 cursor-pointer"
                 >
-                  Plan
+                  Register Auto-Debit
                 </button>
               </div>
+
             </CardContent>
           </Card>
         </div>
-        
+
       </div>
     </div>
   );

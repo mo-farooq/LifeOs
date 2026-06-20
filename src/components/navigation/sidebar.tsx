@@ -16,9 +16,10 @@ export type NavTab = "dashboard" | "health" | "gym" | "finance";
 interface SidebarProps {
   activeTab: NavTab;
   setActiveTab: (tab: NavTab) => void;
+  currentTime: Date;
 }
 
-export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
+export default function Sidebar({ activeTab, setActiveTab, currentTime }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const navItems = [
@@ -27,6 +28,48 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
     { id: "gym" as NavTab, label: "WORKOUT", icon: Dumbbell },
     { id: "finance" as NavTab, label: "FINANCE", icon: Wallet },
   ];
+
+  // Awake Progress calculations (8:00 AM to 12:00 Midnight = 16 hours)
+  const getAwakeProgress = () => {
+    const hour = currentTime.getHours();
+    const min = currentTime.getMinutes();
+    const decimalTime = hour + min / 60;
+
+    if (decimalTime < 8) return { percent: 0, sleeping: true };
+    if (decimalTime >= 24) return { percent: 100, sleeping: true };
+
+    const elapsed = decimalTime - 8;
+    const total = 16;
+    const percent = Math.min(Math.round((elapsed / total) * 100), 100);
+    return { percent, sleeping: false };
+  };
+
+  const awakeStatus = getAwakeProgress();
+
+  const getActivePhase = () => {
+    const hour = currentTime.getHours();
+    if (hour < 8) return "SLEEPING";
+    if (hour >= 8 && hour < 12) return "MORNING";
+    if (hour >= 12 && hour < 15) return "MIDDAY";
+    if (hour >= 15 && hour < 18) return "AFTERNOON";
+    if (hour >= 18 && hour < 21) return "EVENING";
+    if (hour >= 21 && hour < 24) return "BEDTIME";
+    return "SLEEPING";
+  };
+
+  const format12HourClock = () => {
+    let hours = currentTime.getHours();
+    const minutes = currentTime.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    return `${hours}:${minutes} ${ampm}`;
+  };
+
+  // SVG calculations for Ring
+  const radius = 35;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (awakeStatus.percent / 100) * circumference;
 
   return (
     <aside
@@ -59,7 +102,7 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
       </div>
 
       {/* Navigation List */}
-      <nav className="flex-1 px-2.5 py-4 space-y-1.5 overflow-y-auto">
+      <nav className="flex-grow px-2.5 py-4 space-y-1.5 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -102,6 +145,50 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
           );
         })}
       </nav>
+
+      {/* Mechanical SVG Awake Progress Ring Section (Persistent at bottom) */}
+      {!isCollapsed && (
+        <div className="p-4 border-t border-zinc-900 bg-[#000000] flex flex-col items-center gap-3">
+          <div className="relative w-28 h-28 flex items-center justify-center">
+            {/* SVG Progress Circle */}
+            <svg className="absolute w-full h-full -rotate-90 origin-center" viewBox="0 0 80 80">
+              <circle
+                cx="40"
+                cy="40"
+                r={radius}
+                className="stroke-zinc-900 fill-none stroke-[2]"
+              />
+              <circle
+                cx="40"
+                cy="40"
+                r={radius}
+                className="stroke-zinc-100 fill-none stroke-[2] transition-all duration-500"
+                strokeDasharray={circumference}
+                strokeDashoffset={awakeStatus.sleeping ? circumference : strokeDashoffset}
+                strokeLinecap="round"
+              />
+            </svg>
+            
+            {/* Text center stack */}
+            <div className="text-center z-10 flex flex-col items-center justify-center space-y-0.5">
+              <span className="text-[10px] font-mono font-bold tracking-tight text-zinc-100">
+                {awakeStatus.sleeping ? "0%" : `${awakeStatus.percent}%`}
+              </span>
+              <span className="text-[7px] font-mono text-zinc-500 uppercase tracking-widest font-bold">
+                {getActivePhase()}
+              </span>
+              <span className="text-[8px] font-mono text-zinc-300 font-bold whitespace-nowrap">
+                {format12HourClock()}
+              </span>
+            </div>
+          </div>
+          <div className="text-center">
+            <span className="text-[8px] font-mono uppercase tracking-widest text-zinc-500 font-bold">
+              {awakeStatus.sleeping ? "AWAKE WINDOW DEACTIVATED" : "AWAKE WINDOW ACTIVE"}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Footer Toggle button when collapsed */}
       {isCollapsed && (

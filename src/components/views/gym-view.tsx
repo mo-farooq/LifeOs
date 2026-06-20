@@ -1,716 +1,409 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { 
   Dumbbell, 
-  Flame, 
-  Calendar, 
-  Trophy, 
-  Plus,
+  Plus, 
+  Minus,
   X,
   TrendingUp,
-  AlertTriangle,
-  RotateCcw
+  Camera,
+  Calendar,
+  AlertCircle,
+  Award,
+  Settings,
+  MapPin
 } from "lucide-react";
+import { GymExercise, GymPhoto } from "@/types";
 
-interface Exercise {
-  id: string;
-  name: string;
-  gym: "comm" | "home" | "both";
-  day: "push" | "pull" | "legs";
-  repMin: number;
-  repMax: number;
-  step: number;
-  startWeight: number;
-  bw?: boolean;
+interface GymViewProps {
+  gymType: "home" | "commercial" | "both";
+  gymSplit: "push" | "pull" | "legs" | "rest";
+  updateGymSettings: (fields: { gymType?: "home" | "commercial" | "both"; gymSplit?: "push" | "pull" | "legs" | "rest" }) => void;
+  gymExercises: GymExercise[];
+  updateGymExercises: (exercises: GymExercise[]) => void;
+  gymPhotos: GymPhoto[];
+  updateGymPhotos: (photos: GymPhoto[]) => void;
+  activeDate: string;
 }
 
-interface SetLog {
-  timestamp: number;
-  weight: number;
-  reps: number;
-}
-
-export default function GymView() {
-  const [mounted, setMounted] = useState(false);
-
-  // --- STATE ---
-  const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [logsMap, setLogsMap] = useState<Record<string, SetLog[]>>({});
-  const [filterGym, setFilterGym] = useState<"comm" | "home" | "both">("comm");
-  const [filterDay, setFilterDay] = useState<"push" | "pull" | "legs">("push");
-  const [selectedExId, setSelectedExId] = useState<string | null>(null);
-
-  // Form Inputs
-  const [logWeight, setLogWeight] = useState<number>(0);
-  const [logReps, setLogReps] = useState<number>(8);
-
+export default function GymView({
+  gymType,
+  gymSplit,
+  updateGymSettings,
+  gymExercises,
+  updateGymExercises,
+  gymPhotos,
+  updateGymPhotos,
+  activeDate
+}: GymViewProps) {
+  // Input helpers for adding exercises
   const [newExName, setNewExName] = useState("");
-  const [newExGym, setNewExGym] = useState<"comm" | "home" | "both">("comm");
-  const [newExDay, setNewExDay] = useState<"push" | "pull" | "legs">("push");
-  const [newExRepMin, setNewExRepMin] = useState(5);
-  const [newExRepMax, setNewExRepMax] = useState(8);
-  const [newExStep, setNewExStep] = useState(2.5);
-  const [newExStartWeight, setNewExStartWeight] = useState(40);
-  const [newExBw, setNewExBw] = useState(false);
-  const [isAddingEx, setIsAddingEx] = useState(false);
+  const [newExWeight, setNewExWeight] = useState<number | "">("");
+  const [newExReps, setNewExReps] = useState<number | "">("");
+  const [newExTarget, setNewExTarget] = useState<number | "">("");
 
-  // Constants
-  const DEFAULT_EXERCISES: Exercise[] = [
-    { id: "seed_0", name: "Bench press", gym: "comm", day: "push", repMin: 5, repMax: 8, step: 2.5, startWeight: 60 },
-    { id: "seed_1", name: "Overhead press", gym: "comm", day: "push", repMin: 5, repMax: 8, step: 2.5, startWeight: 35 },
-    { id: "seed_2", name: "Tricep pushdown", gym: "comm", day: "push", repMin: 8, repMax: 12, step: 2.5, startWeight: 25 },
-    { id: "seed_3", name: "Pull-ups", gym: "both", day: "pull", repMin: 5, repMax: 10, step: 1.0, startWeight: 0, bw: true },
-    { id: "seed_4", name: "Barbell row", gym: "comm", day: "pull", repMin: 6, repMax: 10, step: 2.5, startWeight: 50 },
-    { id: "seed_5", name: "Bicep curl", gym: "comm", day: "pull", repMin: 8, repMax: 12, step: 1.25, startWeight: 15 },
-    { id: "seed_6", name: "Back squat", gym: "comm", day: "legs", repMin: 5, repMax: 8, step: 5.0, startWeight: 80 },
-    { id: "seed_7", name: "Romanian deadlift", gym: "comm", day: "legs", repMin: 6, repMax: 10, step: 5.0, startWeight: 60 },
-    { id: "seed_8", name: "Leg press", gym: "comm", day: "legs", repMin: 8, repMax: 12, step: 5.0, startWeight: 100 }
-  ];
+  // Photo helpers
+  const [newPhotoUrl, setNewPhotoUrl] = useState("");
+  const [newPhotoLabel, setNewPhotoLabel] = useState("");
 
-  // Lifecycle
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Log active state
+  const [loggingWeights, setLoggingWeights] = useState<Record<string, number>>({});
+  const [loggingReps, setLoggingReps] = useState<Record<string, number>>({});
 
-  useEffect(() => {
-    if (mounted) {
-      const savedState = localStorage.getItem("po_coach_v1");
-      if (savedState) {
-        const parsed = JSON.parse(savedState);
-        setExercises(parsed.exercises || DEFAULT_EXERCISES);
-        setLogsMap(parsed.logs || {});
-        setFilterGym(parsed.filterGym || "comm");
-        setFilterDay(parsed.filterDay || "push");
-        setSelectedExId(parsed.selectedExId || null);
-      } else {
-        setExercises(DEFAULT_EXERCISES);
-        localStorage.setItem("po_coach_v1", JSON.stringify({
-          exercises: DEFAULT_EXERCISES,
-          logs: {},
-          filterGym: "comm",
-          filterDay: "push",
-          selectedExId: null
-        }));
-      }
-    }
-  }, [mounted]);
-
-  // Synchronize helper
-  const syncState = (updatedExs: Exercise[], updatedLogs: Record<string, SetLog[]>, gym: typeof filterGym, day: typeof filterDay, currentExId: string | null) => {
-    setExercises(updatedExs);
-    setLogsMap(updatedLogs);
-    setFilterGym(gym);
-    setFilterDay(day);
-    setSelectedExId(currentExId);
-    localStorage.setItem("po_coach_v1", JSON.stringify({
-      exercises: updatedExs,
-      logs: updatedLogs,
-      filterGym: gym,
-      filterDay: day,
-      selectedExId: currentExId
-    }));
-  };
-
-  // Filter Exercises
-  const filteredExercises = exercises.filter(
-    (e) => (e.gym === filterGym || e.gym === "both") && e.day === filterDay
-  );
-
-  const activeEx = filteredExercises.find((e) => e.id === selectedExId) || filteredExercises[0] || null;
-
-  // Sync log inputs on active exercise changes or prescription calculation
-  useEffect(() => {
-    if (activeEx) {
-      const logs = logsMap[activeEx.id] || [];
-      const rx = getPrescription(activeEx, logs);
-      if (rx) {
-        setLogWeight(rx.weight);
-        setLogReps(rx.reps);
-      } else {
-        setLogWeight(activeEx.bw ? 0 : activeEx.startWeight);
-        setLogReps(activeEx.repMin);
-      }
-    }
-  }, [selectedExId, activeEx, logsMap]);
-
-  // Helper calculation rounder
-  const roundToStep = (val: number, step: number) => {
-    return Math.round(val / step) * step;
-  };
-
-  // --- PRESCRIPTION ENGINE ---
-  // Calculates weight & reps for next set based on previous logged session logs
-  interface Prescription {
-    type: "up" | "hold" | "down";
-    weight: number;
-    reps: number;
-    tag: string;
-    reason: string;
-  }
-
-  const getPrescription = (ex: Exercise, logs: SetLog[]): Prescription | null => {
-    if (!logs || logs.length === 0) return null;
-    const last = logs[logs.length - 1];
-    const { weight, reps } = last;
-    const { repMin, repMax, step, bw } = ex;
-    
-    // Default threshold is min of 8 or repMax
-    const upgradeAt = Math.min(8, repMax);
-
-    // Stuck check: count consecutive logs at this weight
-    let stuckCount = 0;
-    for (let i = logs.length - 1; i >= 0; i--) {
-      if (logs[i].weight === weight) stuckCount++;
-      else break;
-    }
-
-    // Bodyweight movements
-    if (bw) {
-      if (reps >= upgradeAt) {
-        return {
-          type: "up",
-          weight: 0,
-          reps: reps + 1,
-          tag: "PUSH FOR MORE",
-          reason: `${reps} reps recorded last session. Target is now ${reps + 1} reps.`
-        };
-      }
-      if (reps >= repMin) {
-        return {
-          type: "hold",
-          weight: 0,
-          reps: reps + 1,
-          tag: "ADD A REP",
-          reason: `${reps} reps recorded last session. Push for ${reps + 1} next workout.`
-        };
-      }
-      return {
-        type: "hold",
-        weight: 0,
-        reps: repMin,
-        tag: "REPEAT",
-        reason: `${reps} reps fell short of target (${repMin}). Repeat set window.`
-      };
-    }
-
-    // Stuck check trigger: 3 consecutive sets without progress -> Deload
-    if (stuckCount >= 3 && reps < repMin) {
-      const deloadWeight = roundToStep(weight * 0.9, step);
-      return {
-        type: "down",
-        weight: deloadWeight,
-        reps: repMax,
-        tag: "DELOAD PRESCRIBED",
-        reason: `Stuck at ${weight} units for ${stuckCount} sessions. Drop weight by 10% to reset form.`
-      };
-    }
-
-    // Target rep threshold matched -> Add weight
-    if (reps >= upgradeAt) {
-      return {
-        type: "up",
-        weight: weight + step,
-        reps: repMin,
-        tag: "UPGRADE WEIGHT",
-        reason: `Hit target ${reps} reps. Upgrade weight by +${step} units. Target ${repMin} reps.`
-      };
-    }
-
-    // Inside target window -> Push reps
-    if (reps >= repMin && reps < upgradeAt) {
-      return {
-        type: "hold",
-        weight: weight,
-        reps: reps + 1,
-        tag: "ADD A REP",
-        reason: `${reps} reps logged. Stay at ${weight} units and push for ${reps + 1} reps next session.`
-      };
-    }
-
-    // Below rep target range -> Repeat
-    return {
-      type: "hold",
-      weight: weight,
-      reps: repMin,
-      tag: "REPEAT WEIGHT",
-      reason: `Logged ${reps} reps. Repeat ${weight} units until you can complete ${repMin}+ clean.`
-    };
-  };
-
-  const rx = activeEx ? getPrescription(activeEx, logsMap[activeEx.id] || []) : null;
-
-  // --- ACTIONS ---
-  const handleLogSet = () => {
-    if (!activeEx) return;
-
-    const newLog: SetLog = {
-      timestamp: Date.now(),
-      weight: activeEx.bw ? 0 : logWeight,
-      reps: logReps
-    };
-
-    const exLogs = logsMap[activeEx.id] || [];
-    const updatedLogs = {
-      ...logsMap,
-      [activeEx.id]: [...exLogs, newLog]
-    };
-
-    syncState(exercises, updatedLogs, filterGym, filterDay, activeEx.id);
-  };
-
-  const handleDeleteLog = (timestamp: number) => {
-    if (!activeEx) return;
-    const exLogs = logsMap[activeEx.id] || [];
-    const updatedLogs = {
-      ...logsMap,
-      [activeEx.id]: exLogs.filter(l => l.timestamp !== timestamp)
-    };
-    syncState(exercises, updatedLogs, filterGym, filterDay, activeEx.id);
-  };
-
-  const handleClearLogs = () => {
-    if (!activeEx) return;
-    const updatedLogs = {
-      ...logsMap,
-      [activeEx.id]: []
-    };
-    syncState(exercises, updatedLogs, filterGym, filterDay, activeEx.id);
-  };
-
+  // Exercise Actions
   const handleAddExercise = () => {
-    if (!newExName.trim()) return;
-
-    const newEx: Exercise = {
-      id: "custom_ex_" + Date.now(),
+    if (!newExName.trim() || newExWeight === "" || newExReps === "" || newExTarget === "") return;
+    const newEx: GymExercise = {
+      id: "ex_" + Date.now(),
       name: newExName.trim(),
-      gym: newExGym,
-      day: newExDay,
-      repMin: newExRepMin,
-      repMax: newExRepMax,
-      step: newExStep,
-      startWeight: newExStartWeight,
-      bw: newExBw
+      weight: Number(newExWeight),
+      reps: Number(newExReps),
+      targetReps: Number(newExTarget),
+      history: []
     };
-
-    const updated = [...exercises, newEx];
-    syncState(updated, logsMap, filterGym, filterDay, newEx.id);
-
-    // Clear and toggle
+    updateGymExercises([...gymExercises, newEx]);
     setNewExName("");
-    setIsAddingEx(false);
+    setNewExWeight("");
+    setNewExReps("");
+    setNewExTarget("");
   };
 
-  if (!mounted) {
-    return null;
-  }
+  const handleDeleteExercise = (id: string) => {
+    updateGymExercises(gymExercises.filter(ex => ex.id !== id));
+  };
 
-  // Active exercises logs
-  const activeLogs = activeEx ? (logsMap[activeEx.id] || []) : [];
+  const handleLogSet = (id: string) => {
+    const logW = loggingWeights[id] ?? 0;
+    const logR = loggingReps[id] ?? 0;
+    if (logW <= 0 || logR <= 0) return;
+
+    const updated = gymExercises.map((ex) => {
+      if (ex.id === id) {
+        // Save current into history and set new values
+        const newHistory = [
+          { date: activeDate, weight: ex.weight, reps: ex.reps },
+          ...ex.history
+        ].slice(0, 8); // Keep 8 historical entries max
+
+        // Apply weight upgrade if reps >= targetReps is hit
+        let nextWeight = logW;
+        if (logR >= ex.targetReps) {
+          nextWeight = logW + 2; // Progressive overload increase by +2kg next session
+        }
+
+        return {
+          ...ex,
+          weight: nextWeight,
+          reps: logR,
+          history: newHistory
+        };
+      }
+      return ex;
+    });
+
+    updateGymExercises(updated);
+    
+    // Clear log input states
+    setLoggingWeights(prev => { const c = { ...prev }; delete c[id]; return c; });
+    setLoggingReps(prev => { const c = { ...prev }; delete c[id]; return c; });
+  };
+
+  // Photo actions
+  const handleAddPhoto = () => {
+    if (!newPhotoUrl.trim() || !newPhotoLabel.trim()) return;
+    const newPhoto: GymPhoto = {
+      id: "ph_" + Date.now(),
+      date: activeDate,
+      url: newPhotoUrl.trim(),
+      label: newPhotoLabel.trim()
+    };
+    updateGymPhotos([...gymPhotos, newPhoto]);
+    setNewPhotoUrl("");
+    setNewPhotoLabel("");
+  };
+
+  const handleDeletePhoto = (id: string) => {
+    updateGymPhotos(gymPhotos.filter(p => p.id !== id));
+  };
 
   return (
     <div className="space-y-4 text-zinc-200">
       
-      {/* Header with quick location & split selectors */}
-      <div className="rounded-md border border-zinc-800 bg-[#0a0a0a] p-5 space-y-4">
+      {/* Gym Settings & splits Selection Header */}
+      <div className="rounded-md border border-zinc-800 bg-[#0a0a0a] p-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#000000] border border-zinc-800 text-[9px] font-mono tracking-widest text-zinc-500 uppercase">
-              WORKOUTS // COACH
-            </div>
-            <h1 className="text-xl font-mono uppercase tracking-wider font-bold text-zinc-150 flex items-center gap-2">
-              <Dumbbell className="h-5 w-5 text-zinc-300" /> PROGRESSIVE OVERLOAD CONSOLE
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#000000] border border-zinc-800 text-[9px] font-mono tracking-widest text-zinc-500 uppercase font-semibold">
+              PRESCRIPTION ENGINE
+            </span>
+            <h1 className="text-sm font-mono tracking-widest font-bold text-zinc-150 uppercase flex items-center gap-2">
+              <Dumbbell className="h-4.5 w-4.5" /> GYM SCHEDULE & WORKOUT CONFIG
             </h1>
-            <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-wide">
-              Calculate prescriptive weight increases and stuck deload benchmarks automatically.
-            </p>
           </div>
 
-          <button 
-            onClick={() => setIsAddingEx(!isAddingEx)}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[10px] tracking-wider transition-all uppercase"
-          >
-            <Plus className="h-3.5 w-3.5" /> Add Exercise
-          </button>
-        </div>
-
-        {/* Location & Day Selection (Monochrome buttons) */}
-        <div className="flex flex-wrap gap-4 pt-1.5 border-t border-zinc-900">
-          <div className="flex rounded-md border border-zinc-850 p-0.5 bg-[#000000]">
-            {[
-              { id: "comm" as const, label: "COMMERCIAL" },
-              { id: "home" as const, label: "HOME" },
-              { id: "both" as const, label: "BOTH" }
-            ].map(g => (
-              <button
-                key={g.id}
-                onClick={() => syncState(exercises, logsMap, g.id, filterDay, null)}
-                className={`px-3 py-1 rounded text-[9px] font-mono font-semibold tracking-wider uppercase transition-colors ${
-                  filterGym === g.id 
-                    ? "bg-[#0a0a0a] border border-zinc-800 text-zinc-100" 
-                    : "text-zinc-500 hover:text-zinc-350"
-                }`}
+          <div className="flex flex-wrap items-center gap-3 bg-[#000000] border border-zinc-900 p-1 rounded-md">
+            {/* Gym Location Selector */}
+            <div className="flex items-center gap-1.5 border-r border-zinc-900 pr-2">
+              <MapPin className="h-3 w-3 text-zinc-500" />
+              <select
+                value={gymType}
+                onChange={(e) => updateGymSettings({ gymType: e.target.value as any })}
+                className="bg-[#000000] text-[9.5px] font-mono text-zinc-300 outline-none border-none cursor-pointer font-bold uppercase"
               >
-                {g.label}
-              </button>
-            ))}
-          </div>
+                <option value="both">BOTH GYMS</option>
+                <option value="home">HOME CAGE</option>
+                <option value="commercial">COMMERCIAL</option>
+              </select>
+            </div>
 
-          <div className="flex rounded-md border border-zinc-850 p-0.5 bg-[#000000]">
-            {[
-              { id: "push" as const, label: "PUSH split" },
-              { id: "pull" as const, label: "PULL split" },
-              { id: "legs" as const, label: "LEGS split" }
-            ].map(d => (
-              <button
-                key={d.id}
-                onClick={() => syncState(exercises, logsMap, filterGym, d.id, null)}
-                className={`px-3 py-1 rounded text-[9px] font-mono font-semibold tracking-wider uppercase transition-colors ${
-                  filterDay === d.id 
-                    ? "bg-[#0a0a0a] border border-zinc-800 text-zinc-100" 
-                    : "text-zinc-500 hover:text-zinc-350"
-                }`}
-              >
-                {d.label}
-              </button>
-            ))}
+            {/* Split selector */}
+            <div className="flex items-center gap-1">
+              {(["push", "pull", "legs", "rest"] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => updateGymSettings({ gymSplit: s })}
+                  className={`px-3 py-1 text-[9.5px] font-mono font-bold tracking-wider uppercase rounded transition-all duration-150 ${
+                    gymSplit === s ? "bg-zinc-50 text-zinc-950" : "text-zinc-550 hover:text-zinc-350"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Add Exercise Panel */}
-      {isAddingEx && (
-        <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md p-4">
-          <CardHeader className="p-0 pb-3 mb-3 border-b border-zinc-800">
-            <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">EXERCISE WIZARD</span>
-            <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase">Create New Movement</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-[8px] font-mono text-zinc-500 uppercase">Movement Name</label>
+      {/* Main Grid: Exercises & Photos */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        
+        {/* Left Column: Workout Routine List (8 cols) */}
+        <div className="lg:col-span-8 space-y-4">
+          <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
+            <CardHeader className="p-4 border-b border-zinc-800">
+              <div className="flex justify-between items-center">
+                <div>
+                  <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 font-bold">ROUTINE TRACKER</span>
+                  <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-widest">
+                    ACTIVE {gymSplit} EXERCISES
+                  </CardTitle>
+                </div>
+                <div className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider font-bold">
+                  {gymExercises.length} Total Exercises
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              
+              {/* List Exercises */}
+              <div className="space-y-3.5">
+                {gymExercises.map((ex) => {
+                  const loggedW = loggingWeights[ex.id] ?? ex.weight;
+                  const loggedR = loggingReps[ex.id] ?? ex.reps;
+                  const isUpgraded = ex.reps >= ex.targetReps;
+
+                  return (
+                    <div key={ex.id} className="group border border-zinc-900 bg-[#000000]/60 p-4 rounded-md flex flex-col gap-3">
+                      <div className="flex justify-between items-start border-b border-zinc-900 pb-2">
+                        <div className="space-y-0.5">
+                          <h3 className="text-xs font-bold font-mono text-zinc-150 uppercase tracking-wide">{ex.name}</h3>
+                          <div className="flex items-center gap-2 text-[8px] font-mono text-zinc-500 uppercase">
+                            <span>CURRENT SET: <span className="font-bold text-zinc-300 font-mono">{ex.weight}kg × {ex.reps} reps</span></span>
+                            <span>Target: <span className="font-bold text-zinc-400 font-mono">{ex.targetReps} reps</span></span>
+                          </div>
+                        </div>
+
+                        <button 
+                          onClick={() => handleDeleteExercise(ex.id)}
+                          className="text-zinc-650 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          ×
+                        </button>
+                      </div>
+
+                      {/* Progressive Overload prescriptions */}
+                      {isUpgraded && (
+                        <div className="flex items-center gap-2 bg-emerald-950/15 border border-emerald-900/40 rounded px-2.5 py-1.5 text-[9px] font-mono text-emerald-500 uppercase font-semibold">
+                          <Award className="h-3.5 w-3.5 flex-shrink-0" />
+                          <span>Overload Target Met! Upgrade weight by +2kg next session (Prescribed: {ex.weight}kg)</span>
+                        </div>
+                      )}
+
+                      {/* Logging input row */}
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 grid grid-cols-2 gap-2">
+                          <div className="flex items-center gap-1.5 bg-[#000000] border border-zinc-900 rounded-md px-2 py-1">
+                            <span className="text-[8px] font-mono text-zinc-600 uppercase font-bold">KG</span>
+                            <input
+                              type="number"
+                              placeholder={ex.weight.toString()}
+                              value={loggingWeights[ex.id] ?? ""}
+                              onChange={(e) => setLoggingWeights({ ...loggingWeights, [ex.id]: Number(e.target.value) })}
+                              className="w-full bg-transparent text-xs font-mono outline-none text-zinc-200"
+                            />
+                          </div>
+                          <div className="flex items-center gap-1.5 bg-[#000000] border border-zinc-900 rounded-md px-2 py-1">
+                            <span className="text-[8px] font-mono text-zinc-600 uppercase font-bold">REPS</span>
+                            <input
+                              type="number"
+                              placeholder={ex.reps.toString()}
+                              value={loggingReps[ex.id] ?? ""}
+                              onChange={(e) => setLoggingReps({ ...loggingReps, [ex.id]: Number(e.target.value) })}
+                              className="w-full bg-transparent text-xs font-mono outline-none text-zinc-200"
+                            />
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => handleLogSet(ex.id)}
+                          className="px-3.5 py-1.5 bg-zinc-50 hover:bg-white text-zinc-950 rounded text-[9.5px] font-mono font-bold tracking-widest uppercase transition-all"
+                        >
+                          Log Set
+                        </button>
+                      </div>
+
+                      {/* Render history logs */}
+                      {ex.history.length > 0 && (
+                        <div className="space-y-1 mt-1">
+                          <span className="text-[8px] font-mono text-zinc-600 uppercase font-semibold tracking-wider">LOG HISTORY:</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {ex.history.map((hist, hidx) => (
+                              <div key={hidx} className="bg-[#000000] border border-zinc-950 px-2 py-0.5 rounded text-[8px] font-mono text-zinc-400">
+                                {hist.date}: {hist.weight}kg × {hist.reps}r
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {gymExercises.length === 0 && (
+                  <div className="text-center py-6 text-[10px] font-mono uppercase tracking-widest text-zinc-600 border border-dashed border-zinc-850 rounded">
+                    No active gym split logs.
+                  </div>
+                )}
+              </div>
+
+              {/* Add Exercise form */}
+              <div className="flex flex-col gap-2 pt-3 border-t border-zinc-900 mt-2">
                 <input
                   type="text"
                   value={newExName}
                   onChange={(e) => setNewExName(e.target.value)}
-                  placeholder="e.g. Incline Bench Press..."
-                  className="w-full bg-transparent border border-zinc-800 rounded px-2.5 py-1.5 text-xs font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                  placeholder="EXERCISE NAME (e.g. Overhead Press)..."
+                  className="bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
                 />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[8px] font-mono text-zinc-500 uppercase">Window Setup</label>
-                <div className="flex gap-2">
-                  <select
-                    value={newExGym}
-                    onChange={(e) => setNewExGym(e.target.value as any)}
-                    className="flex-1 bg-[#000000] border border-zinc-800 rounded px-2 py-1.5 text-xs font-mono text-zinc-400 outline-none"
-                  >
-                    <option value="comm">COMMERCIAL</option>
-                    <option value="home">HOME</option>
-                    <option value="both">BOTH</option>
-                  </select>
-                  <select
-                    value={newExDay}
-                    onChange={(e) => setNewExDay(e.target.value as any)}
-                    className="flex-1 bg-[#000000] border border-zinc-800 rounded px-2 py-1.5 text-xs font-mono text-zinc-400 outline-none"
-                  >
-                    <option value="push">PUSH</option>
-                    <option value="pull">PULL</option>
-                    <option value="legs">LEGS</option>
-                  </select>
+                <div className="grid grid-cols-3 gap-2">
+                  <input
+                    type="number"
+                    value={newExWeight}
+                    onChange={(e) => setNewExWeight(e.target.value === "" ? "" : Number(e.target.value))}
+                    placeholder="WEIGHT (KG)..."
+                    className="bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                  />
+                  <input
+                    type="number"
+                    value={newExReps}
+                    onChange={(e) => setNewExReps(e.target.value === "" ? "" : Number(e.target.value))}
+                    placeholder="REPS..."
+                    className="bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                  />
+                  <input
+                    type="number"
+                    value={newExTarget}
+                    onChange={(e) => setNewExTarget(e.target.value === "" ? "" : Number(e.target.value))}
+                    placeholder="TARGET REPS..."
+                    className="bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                  />
                 </div>
+                <button
+                  onClick={handleAddExercise}
+                  className="px-4 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-widest uppercase transition-all mt-1"
+                >
+                  Add Exercise
+                </button>
               </div>
-            </div>
 
-            <div className="grid grid-cols-4 gap-2">
-              <div className="space-y-1">
-                <label className="text-[8px] font-mono text-zinc-500 uppercase">Min Reps</label>
-                <input
-                  type="number"
-                  value={newExRepMin}
-                  onChange={(e) => setNewExRepMin(Number(e.target.value))}
-                  className="w-full bg-transparent border border-zinc-800 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[8px] font-mono text-zinc-500 uppercase">Max Reps</label>
-                <input
-                  type="number"
-                  value={newExRepMax}
-                  onChange={(e) => setNewExRepMax(Number(e.target.value))}
-                  className="w-full bg-transparent border border-zinc-800 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[8px] font-mono text-zinc-500 uppercase">Step Increase</label>
-                <input
-                  type="number"
-                  step="0.5"
-                  value={newExStep}
-                  onChange={(e) => setNewExStep(Number(e.target.value))}
-                  className="w-full bg-transparent border border-zinc-800 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[8px] font-mono text-zinc-500 uppercase">Start Weight</label>
-                <input
-                  type="number"
-                  value={newExStartWeight}
-                  onChange={(e) => setNewExStartWeight(Number(e.target.value))}
-                  disabled={newExBw}
-                  className="w-full bg-transparent border border-zinc-800 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none disabled:opacity-40"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 pt-1">
-              <input
-                type="checkbox"
-                id="newExBw"
-                checked={newExBw}
-                onChange={(e) => setNewExBw(e.target.checked)}
-                className="w-3.5 h-3.5 border border-zinc-800 rounded-sm bg-transparent"
-              />
-              <label htmlFor="newExBw" className="text-[9px] font-mono text-zinc-400 uppercase cursor-pointer">
-                Bodyweight exercise (tracks reps only)
-              </label>
-            </div>
-          </CardContent>
-          <CardFooter className="p-0 pt-3 border-t border-zinc-900 mt-3 flex justify-end gap-2">
-            <button
-              onClick={() => setIsAddingEx(false)}
-              className="px-3 py-1.5 rounded-md border border-zinc-800 bg-[#000000] text-zinc-400 hover:text-zinc-200 font-mono text-[9px] tracking-wider uppercase"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleAddExercise}
-              className="px-3 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-wider uppercase"
-            >
-              Save Exercise
-            </button>
-          </CardFooter>
-        </Card>
-      )}
-
-      {/* Main Grid View */}
-      <div className="grid grid-cols-12 gap-4">
-        
-        {/* Left Side: Exercises List (col-span-12 lg:col-span-4) */}
-        <div className="col-span-12 lg:col-span-4 space-y-4">
-          <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-            <CardHeader className="p-4 border-b border-zinc-800">
-              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">PROGRAM MOVEMENTS</span>
-              <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase">ACTIVE SPLIT LIST</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="space-y-1 max-h-[360px] overflow-y-auto pr-1">
-                {filteredExercises.map((e) => {
-                  const isActive = activeEx?.id === e.id;
-                  const logs = logsMap[e.id] || [];
-                  const lastLog = logs[logs.length - 1];
-
-                  return (
-                    <button
-                      key={e.id}
-                      onClick={() => syncState(exercises, logsMap, filterGym, filterDay, e.id)}
-                      className={`w-full flex items-center justify-between p-3 rounded-md border text-left transition-all ${
-                        isActive 
-                          ? "bg-[#000000] border-zinc-700 text-zinc-100" 
-                          : "bg-transparent border-transparent text-zinc-500 hover:text-zinc-300 hover:bg-[#000000]/30"
-                      }`}
-                    >
-                      <div className="space-y-0.5">
-                        <p className="text-xs font-mono font-semibold">{e.name}</p>
-                        <p className="text-[9px] font-mono text-zinc-500 uppercase">
-                          TARGET: {e.repMin}-{e.repMax} REPS
-                        </p>
-                      </div>
-
-                      <div className="text-right">
-                        {lastLog ? (
-                          <>
-                            <p className="text-xs font-mono font-bold text-zinc-300">
-                              {e.bw ? "" : `${lastLog.weight} `}{e.bw ? `${lastLog.reps} Reps` : `× ${lastLog.reps}`}
-                            </p>
-                            <p className="text-[8px] font-mono text-zinc-600 uppercase">LOGGED</p>
-                          </>
-                        ) : (
-                          <p className="text-[9px] font-mono text-zinc-600 uppercase">NO LOGS</p>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-
-                {filteredExercises.length === 0 && (
-                  <div className="text-center py-6 text-[9px] font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-800 rounded">
-                    No movements in split.
-                  </div>
-                )}
-              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Right Side: Active Workout Panel (col-span-12 lg:col-span-8) */}
-        <div className="col-span-12 lg:col-span-8">
-          {activeEx ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Right Column: Comparative Progress Photos Panel (4 cols) */}
+        <div className="lg:col-span-4 space-y-4">
+          <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
+            <CardHeader className="p-4 border-b border-zinc-800">
+              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">VISUAL COMPARISON</span>
+              <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-widest">
+                PROGRESS PHOTOS MATRIX
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
               
-              {/* Prescription Engine block */}
-              <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md p-4 space-y-4 flex flex-col justify-between">
-                <div className="space-y-2">
-                  <div className="border-b border-zinc-800 pb-2 flex justify-between items-center">
-                    <div>
-                      <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">PRESCRIPTION METRIC</span>
-                      <h3 className="text-xs font-mono font-bold text-zinc-100 uppercase">{activeEx.name}</h3>
-                    </div>
-                    {activeEx.bw && (
-                      <span className="text-[9px] font-mono px-2 py-0.5 rounded border border-zinc-800 bg-[#000000] text-zinc-400">BODYWEIGHT</span>
-                    )}
-                  </div>
-
-                  {/* Calculations details */}
-                  <div className="space-y-2 font-mono text-[10px] text-zinc-500 uppercase tracking-widest pt-1">
-                    <div className="flex justify-between">
-                      <span>Target Reps:</span>
-                      <span className="text-zinc-350">{activeEx.repMin}-{activeEx.repMax} Reps</span>
-                    </div>
-                    {!activeEx.bw && (
-                      <>
-                        <div className="flex justify-between">
-                          <span>Increment Step:</span>
-                          <span className="text-zinc-350">+{activeEx.step} units</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Starter Weight:</span>
-                          <span className="text-zinc-350">{activeEx.startWeight} units</span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Prescription Output block */}
-                  <div className="border border-zinc-800 rounded bg-[#000000] p-3 space-y-2.5">
-                    <div className="flex justify-between items-baseline">
-                      <span className="text-[8px] font-mono text-zinc-500 uppercase font-bold">PRESCRIBED SET</span>
-                      <span className="text-[9px] font-mono px-1.5 py-0.5 rounded border border-zinc-850 bg-zinc-950 text-zinc-300 font-bold">
-                        {rx ? rx.tag : "FIRST SESSION"}
+              {/* Comparative side-by-side list */}
+              <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto pr-1">
+                {gymPhotos.map((photo) => (
+                  <div key={photo.id} className="group border border-zinc-900 bg-[#000000]/60 p-2.5 rounded relative flex flex-col gap-2">
+                    <img 
+                      src={photo.url} 
+                      alt={photo.label}
+                      className="w-full h-28 object-cover rounded bg-zinc-950 border border-zinc-900 grayscale brightness-75 contrast-125"
+                    />
+                    <div className="flex justify-between items-center text-[9px] font-mono">
+                      <span className="font-bold text-zinc-300 uppercase tracking-wider">{photo.label}</span>
+                      <span className="text-zinc-550 flex items-center gap-1">
+                        <Calendar className="h-3 w-3" /> {photo.date}
                       </span>
                     </div>
 
-                    <div className="space-y-0.5">
-                      <div className="text-xl font-mono font-bold text-zinc-50">
-                        {rx ? (
-                          activeEx.bw ? `${rx.reps} reps` : `${rx.weight} units × ${rx.reps} reps`
-                        ) : (
-                          activeEx.bw ? `${activeEx.repMin} reps` : `${activeEx.startWeight} units × ${activeEx.repMin} reps`
-                        )}
-                      </div>
-                      <p className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider mt-1">
-                        {rx ? rx.reason : "Log your first set to start overload prescriptions."}
-                      </p>
-                    </div>
+                    <button
+                      onClick={() => handleDeletePhoto(photo.id)}
+                      className="absolute top-4 right-4 bg-zinc-950/80 hover:bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
                   </div>
-                </div>
+                ))}
 
-                {/* Log form fields */}
-                <div className="space-y-3 pt-3 border-t border-zinc-900">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <label className="text-[8px] font-mono text-zinc-500 uppercase">Weight</label>
-                      <input 
-                        type="number"
-                        value={logWeight}
-                        onChange={(e) => setLogWeight(Number(e.target.value))}
-                        disabled={activeEx.bw}
-                        className="w-full bg-transparent border border-zinc-800 rounded px-2.5 py-1.5 text-xs font-mono text-zinc-200 outline-none disabled:opacity-40"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[8px] font-mono text-zinc-500 uppercase">Reps</label>
-                      <input 
-                        type="number"
-                        value={logReps}
-                        onChange={(e) => setLogReps(Number(e.target.value))}
-                        className="w-full bg-transparent border border-zinc-800 rounded px-2.5 py-1.5 text-xs font-mono text-zinc-200 outline-none"
-                      />
-                    </div>
+                {gymPhotos.length === 0 && (
+                  <div className="text-center py-6 text-[9px] font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-850 rounded">
+                    No visual logs.
                   </div>
+                )}
+              </div>
 
+              {/* Add photo mockup input form */}
+              <div className="flex flex-col gap-2 pt-3 border-t border-zinc-900 mt-2">
+                <span className="text-[9px] font-mono uppercase tracking-widest font-semibold text-zinc-500">MOCK UPLOAD PANEL</span>
+                <input
+                  type="text"
+                  value={newPhotoUrl}
+                  onChange={(e) => setNewPhotoUrl(e.target.value)}
+                  placeholder="IMAGE URL..."
+                  className="bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-[10px] font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newPhotoLabel}
+                    onChange={(e) => setNewPhotoLabel(e.target.value)}
+                    placeholder="LABEL (e.g. Current)..."
+                    className="flex-grow bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                  />
                   <button
-                    onClick={handleLogSet}
-                    className="w-full py-2.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[10px] tracking-wider uppercase transition-all"
+                    onClick={handleAddPhoto}
+                    className="px-4 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-widest uppercase transition-all"
                   >
-                    Log Set Done
+                    Add
                   </button>
                 </div>
-              </Card>
+              </div>
 
-              {/* History logs block */}
-              <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md p-4 flex flex-col justify-between">
-                <div className="space-y-2">
-                  <div className="border-b border-zinc-800 pb-2 flex justify-between items-center">
-                    <div>
-                      <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">HISTORY LOGS</span>
-                      <h3 className="text-xs font-mono font-bold text-zinc-100 uppercase">PERFORMANCE LEDGER</h3>
-                    </div>
-
-                    {activeLogs.length > 0 && (
-                      <button 
-                        onClick={handleClearLogs}
-                        className="text-[8px] font-mono text-rose-500 hover:text-rose-400 uppercase tracking-widest flex items-center gap-1"
-                      >
-                        <RotateCcw className="h-3 w-3" /> Clear
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Logs list */}
-                  <div className="space-y-1.5 max-h-[280px] overflow-y-auto pr-1">
-                    {activeLogs.map((log, idx) => (
-                      <div 
-                        key={log.timestamp} 
-                        className="group flex justify-between items-center px-3 py-2 border border-zinc-900 bg-[#000000]/60 hover:bg-[#0a0a0a] rounded text-[10px] font-mono"
-                      >
-                        <div className="space-y-0.5">
-                          <span className="text-zinc-500">#{activeLogs.length - idx}</span>
-                          <span className="text-zinc-650 ml-1.5">
-                            {new Date(log.timestamp).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false })}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-zinc-250">
-                            {activeEx.bw ? "" : `${log.weight} × `}{log.reps} reps
-                          </span>
-                          
-                          <button 
-                            onClick={() => handleDeleteLog(log.timestamp)}
-                            className="text-zinc-600 hover:text-zinc-250 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-
-                    {activeLogs.length === 0 && (
-                      <div className="text-center py-8 text-[9px] font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-800 rounded">
-                        No history records registered.
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Card>
-
-            </div>
-          ) : (
-            <div className="text-center py-16 border border-dashed border-zinc-800 rounded-md bg-[#0a0a0a] text-[10px] font-mono uppercase tracking-widest text-zinc-600">
-              No exercise selected. Select or add one.
-            </div>
-          )}
+            </CardContent>
+          </Card>
         </div>
 
       </div>
