@@ -16,7 +16,9 @@ import {
   Check,
   RefreshCw,
   Sliders,
-  Sparkles
+  Sparkles,
+  TrendingUp,
+  BrainCircuit
 } from "lucide-react";
 import { CharacterStats, Skill, Supplement, WaterConfig } from "@/types";
 
@@ -157,7 +159,6 @@ export default function HealthView({
 
   // Water Coach Math
   const getWaterTargetMl = () => {
-    // Math formula: Target (ml) = (WeightKg * 35) + (TrainingHrs * 500) + (CaffeineMg * 1.5) + (MedsCount * 250)
     const base = water.weightKg * 35;
     const exercise = water.trainingHrs * 500;
     const caffeine = water.caffeineMg * 1.5;
@@ -180,10 +181,25 @@ export default function HealthView({
     });
   };
 
+  // Radar chart coordinates (Center 40,40 Radius 30)
+  const W_y = 40 - 3 * stats.willpower;
+  const F_x = 40 + 3 * stats.focus;
+  const C_y = 40 + 3 * stats.clarity;
+  const E_x = 40 - 3 * stats.energy;
+
   return (
     <div className="space-y-4 text-zinc-200">
+      <style jsx global>{`
+        @keyframes pageFade {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-page-fade {
+          animation: pageFade 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+      `}</style>
       
-      {/* Supplement Window Warning Banner (Flashes Red if windows passed without take confirmation) */}
+      {/* Supplement Warning Banner */}
       {missedSups.length > 0 && (
         <div className="bg-red-950/20 border border-red-900/50 rounded-md p-3.5 flex items-center justify-between animate-pulse">
           <div className="flex items-center gap-3">
@@ -201,13 +217,13 @@ export default function HealthView({
         </div>
       )}
 
-      {/* Main Grid Structure: Left side stats, Right side supplement and water */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      {/* Main Grid Structure */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 animate-page-fade">
         
-        {/* Left Column: Character Stats & Skills (6 cols) */}
+        {/* Left Column: Character Stats & Skills */}
         <div className="lg:col-span-6 space-y-4">
           
-          {/* Character Stats Matrix */}
+          {/* Character Stats & Radar Matrix */}
           <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
             <CardHeader className="p-4 border-b border-zinc-800">
               <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">CHARACTER CORE</span>
@@ -215,72 +231,116 @@ export default function HealthView({
             </CardHeader>
             <CardContent className="p-4 space-y-4">
               
-              {/* WILLPOWER */}
-              <div className="space-y-1">
-                <div className="flex justify-between items-center text-[9px] font-mono uppercase font-semibold text-zinc-400">
-                  <span>WILLPOWER</span>
-                  <span className="font-bold text-zinc-200">{stats.willpower}/10</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex-grow bg-[#000000] border border-zinc-850 h-2 rounded-sm overflow-hidden">
-                    <div className="bg-zinc-200 h-full transition-all duration-300" style={{ width: `${stats.willpower * 10}%` }} />
+              {/* Double sub-panel split: left sliders, right SVG radar */}
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+                
+                {/* Sliders (7 cols) */}
+                <div className="sm:col-span-7 space-y-3.5">
+                  {/* WILLPOWER */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center text-[9px] font-mono uppercase font-semibold text-zinc-400">
+                      <span>WILLPOWER</span>
+                      <span className="font-bold text-zinc-250">{stats.willpower}/10</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-grow bg-[#000000] border border-zinc-850 h-2 rounded-sm overflow-hidden">
+                        <div className="bg-zinc-200 h-full transition-all duration-500" style={{ width: `${stats.willpower * 10}%` }} />
+                      </div>
+                      <div className="flex gap-1.5 flex-shrink-0">
+                        <button onClick={() => adjustStat("willpower", -1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono active:scale-90 transition-transform">-</button>
+                        <button onClick={() => adjustStat("willpower", 1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono active:scale-90 transition-transform">+</button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-1.5 flex-shrink-0">
-                    <button onClick={() => adjustStat("willpower", -1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono">-</button>
-                    <button onClick={() => adjustStat("willpower", 1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono">+</button>
-                  </div>
-                </div>
-              </div>
 
-              {/* FOCUS */}
-              <div className="space-y-1">
-                <div className="flex justify-between items-center text-[9px] font-mono uppercase font-semibold text-zinc-400">
-                  <span>FOCUS METRIC</span>
-                  <span className="font-bold text-zinc-200">{stats.focus}/10</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex-grow bg-[#000000] border border-zinc-850 h-2 rounded-sm overflow-hidden">
-                    <div className="bg-zinc-200 h-full transition-all duration-300" style={{ width: `${stats.focus * 10}%` }} />
+                  {/* FOCUS */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center text-[9px] font-mono uppercase font-semibold text-zinc-400">
+                      <span>FOCUS METRIC</span>
+                      <span className="font-bold text-zinc-250">{stats.focus}/10</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-grow bg-[#000000] border border-zinc-850 h-2 rounded-sm overflow-hidden">
+                        <div className="bg-zinc-200 h-full transition-all duration-500" style={{ width: `${stats.focus * 10}%` }} />
+                      </div>
+                      <div className="flex gap-1.5 flex-shrink-0">
+                        <button onClick={() => adjustStat("focus", -1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono active:scale-90 transition-transform">-</button>
+                        <button onClick={() => adjustStat("focus", 1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono active:scale-90 transition-transform">+</button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-1.5 flex-shrink-0">
-                    <button onClick={() => adjustStat("focus", -1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono">-</button>
-                    <button onClick={() => adjustStat("focus", 1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono">+</button>
-                  </div>
-                </div>
-              </div>
 
-              {/* CLARITY */}
-              <div className="space-y-1">
-                <div className="flex justify-between items-center text-[9px] font-mono uppercase font-semibold text-zinc-400">
-                  <span>CLARITY LEVEL</span>
-                  <span className="font-bold text-zinc-200">{stats.clarity}/10</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex-grow bg-[#000000] border border-zinc-850 h-2 rounded-sm overflow-hidden">
-                    <div className="bg-zinc-200 h-full transition-all duration-300" style={{ width: `${stats.clarity * 10}%` }} />
+                  {/* CLARITY */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center text-[9px] font-mono uppercase font-semibold text-zinc-400">
+                      <span>CLARITY LEVEL</span>
+                      <span className="font-bold text-zinc-250">{stats.clarity}/10</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-grow bg-[#000000] border border-zinc-850 h-2 rounded-sm overflow-hidden">
+                        <div className="bg-zinc-200 h-full transition-all duration-500" style={{ width: `${stats.clarity * 10}%` }} />
+                      </div>
+                      <div className="flex gap-1.5 flex-shrink-0">
+                        <button onClick={() => adjustStat("clarity", -1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono active:scale-90 transition-transform">-</button>
+                        <button onClick={() => adjustStat("clarity", 1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono active:scale-90 transition-transform">+</button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-1.5 flex-shrink-0">
-                    <button onClick={() => adjustStat("clarity", -1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono">-</button>
-                    <button onClick={() => adjustStat("clarity", 1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono">+</button>
-                  </div>
-                </div>
-              </div>
 
-              {/* ENERGY */}
-              <div className="space-y-1">
-                <div className="flex justify-between items-center text-[9px] font-mono uppercase font-semibold text-zinc-400">
-                  <span>ADAPTOGEN ENERGY</span>
-                  <span className="font-bold text-zinc-200">{stats.energy}/10</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex-grow bg-[#000000] border border-zinc-850 h-2 rounded-sm overflow-hidden">
-                    <div className="bg-zinc-200 h-full transition-all duration-300" style={{ width: `${stats.energy * 10}%` }} />
+                  {/* ENERGY */}
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center text-[9px] font-mono uppercase font-semibold text-zinc-400">
+                      <span>ADAPTOGEN ENERGY</span>
+                      <span className="font-bold text-zinc-250">{stats.energy}/10</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-grow bg-[#000000] border border-zinc-850 h-2 rounded-sm overflow-hidden">
+                        <div className="bg-zinc-200 h-full transition-all duration-500" style={{ width: `${stats.energy * 10}%` }} />
+                      </div>
+                      <div className="flex gap-1.5 flex-shrink-0">
+                        <button onClick={() => adjustStat("energy", -1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono active:scale-90 transition-transform">-</button>
+                        <button onClick={() => adjustStat("energy", 1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono active:scale-90 transition-transform">+</button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex gap-1.5 flex-shrink-0">
-                    <button onClick={() => adjustStat("energy", -1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono">-</button>
-                    <button onClick={() => adjustStat("energy", 1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono">+</button>
-                  </div>
                 </div>
+
+                {/* SVG Radar Chart (5 cols) */}
+                <div className="sm:col-span-5 flex flex-col items-center justify-center border-t sm:border-t-0 sm:border-l border-zinc-900 pt-4 sm:pt-0 sm:pl-4">
+                  <div className="relative w-32 h-32 flex items-center justify-center">
+                    <svg className="w-full h-full" viewBox="0 0 80 80">
+                      {/* Grid reference backgrounds */}
+                      {/* Max level 10 */}
+                      <polygon points="40,10 70,40 40,70 10,40" className="fill-none stroke-zinc-850 stroke-[0.5]" />
+                      {/* Mid level 5 */}
+                      <polygon points="40,25 55,40 40,55 25,40" className="fill-none stroke-zinc-900 stroke-[0.5]" />
+                      
+                      {/* Axes */}
+                      <line x1="40" y1="10" x2="40" y2="70" className="stroke-zinc-900 stroke-[0.5] stroke-dashed" />
+                      <line x1="10" y1="40" x2="70" y2="40" className="stroke-zinc-900 stroke-[0.5] stroke-dashed" />
+                      
+                      {/* Axis Label placements */}
+                      <text x="40" y="8" className="text-[5px] fill-zinc-550 font-mono text-center uppercase font-bold" textAnchor="middle">Will</text>
+                      <text x="73" y="42" className="text-[5px] fill-zinc-550 font-mono uppercase font-bold" textAnchor="start">Foc</text>
+                      <text x="40" y="78" className="text-[5px] fill-zinc-550 font-mono uppercase font-bold" textAnchor="middle">Clar</text>
+                      <text x="7" y="42" className="text-[5px] fill-zinc-550 font-mono uppercase font-bold" textAnchor="end">Eng</text>
+
+                      {/* Stat area polygon with smooth transition */}
+                      <polygon
+                        points={`40,${W_y} ${F_x},40 40,${C_y} ${E_x},40`}
+                        className="fill-zinc-100/[0.08] stroke-zinc-200 stroke-[1.5] transition-all duration-500"
+                      />
+
+                      {/* Individual nodes */}
+                      <circle cx="40" cy={W_y} r="1.5" className="fill-zinc-100 transition-all duration-500" />
+                      <circle cx={F_x} cy="40" r="1.5" className="fill-zinc-100 transition-all duration-500" />
+                      <circle cx="40" cy={C_y} r="1.5" className="fill-zinc-100 transition-all duration-500" />
+                      <circle cx={E_x} cy="40" r="1.5" className="fill-zinc-100 transition-all duration-500" />
+                    </svg>
+                  </div>
+                  <span className="text-[7.5px] font-mono text-zinc-500 uppercase tracking-widest font-bold mt-1">COGNITIVE RADAR</span>
+                </div>
+
               </div>
 
             </CardContent>
@@ -303,7 +363,7 @@ export default function HealthView({
                         <span className="font-semibold text-zinc-200">{skill.name}</span>
                         <span className="text-[8px] font-mono bg-zinc-900 text-zinc-500 border border-zinc-850 px-1 rounded uppercase tracking-wide">OKR</span>
                       </div>
-                      <p className="text-[9px] font-mono text-zinc-500 uppercase tracking-wide">{skill.keyResult}</p>
+                      <p className="text-[9px] font-mono text-zinc-555 uppercase tracking-wide">{skill.keyResult}</p>
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -338,7 +398,7 @@ export default function HealthView({
 
                       <button
                         onClick={() => handleDeleteSkill(skill.id)}
-                        className="text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="text-zinc-650 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         ×
                       </button>
@@ -388,7 +448,7 @@ export default function HealthView({
           </Card>
         </div>
 
-        {/* Right Column: Supplements & Water Calculator (6 cols) */}
+        {/* Right Column: Supplements & Water Calculator */}
         <div className="lg:col-span-6 space-y-4">
           
           {/* Supplement Dispatcher */}
@@ -412,7 +472,7 @@ export default function HealthView({
                         isTaken 
                           ? "bg-[#000000]/60 border-zinc-900 opacity-50" 
                           : isMissed 
-                            ? "bg-red-950/10 border-red-900/30 text-red-200" 
+                            ? "bg-red-955/15 border-red-900/30 text-red-200" 
                             : "bg-[#000000]/60 border-zinc-900 hover:bg-[#0a0a0a]"
                       }`}
                     >
@@ -434,7 +494,7 @@ export default function HealthView({
                           </p>
                           <div className="flex items-center gap-2 text-[8px] font-mono text-zinc-500 uppercase tracking-wide">
                             <span>Window: {item.window}</span>
-                            {isMissed && <span className="text-red-500 font-bold">● MISSED</span>}
+                            {isMissed && <span className="text-red-500 font-bold animate-pulse">● MISSED</span>}
                           </div>
                         </div>
                       </div>
@@ -446,7 +506,7 @@ export default function HealthView({
                           onClick={() => toggleSupplementLow(item.id)}
                           className={`text-[8.5px] font-mono px-2 py-0.5 rounded border transition-colors ${
                             item.low 
-                              ? "border-red-900/40 text-red-500 bg-red-950/15" 
+                              ? "border-red-900/40 text-red-500 bg-red-950/15 font-bold" 
                               : "border-zinc-900 text-zinc-550 hover:text-zinc-400"
                           }`}
                         >
@@ -455,7 +515,7 @@ export default function HealthView({
 
                         <button 
                           onClick={() => handleDeleteSupplement(item.id)}
-                          className="text-zinc-600 hover:text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="text-zinc-650 hover:text-zinc-350 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           ×
                         </button>
@@ -488,7 +548,7 @@ export default function HealthView({
                   <select
                     value={newSupWindow}
                     onChange={(e) => setNewSupWindow(e.target.value as any)}
-                    className="bg-[#000000] border border-zinc-800 rounded px-2 py-1.5 text-xs font-mono text-zinc-400 outline-none"
+                    className="bg-[#000000] border border-zinc-800 rounded px-2 py-1.5 text-xs font-mono text-zinc-450 outline-none"
                   >
                     <option value="morning">MORNING (7-10 AM)</option>
                     <option value="lunch">LUNCH (12-2 PM)</option>
@@ -517,13 +577,13 @@ export default function HealthView({
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => handleLogWater(250)}
-                  className="px-2 py-1 bg-zinc-100 hover:bg-white text-zinc-950 rounded text-[9.5px] font-mono font-bold uppercase tracking-wider flex items-center gap-1 transition-all"
+                  className="px-2 py-1 bg-zinc-100 hover:bg-white text-zinc-950 rounded text-[9.5px] font-mono font-bold uppercase tracking-wider flex items-center gap-1 transition-all active:scale-95"
                 >
                   <Plus className="h-3 w-3 stroke-[2.5]" /> 250ML
                 </button>
                 <button
                   onClick={() => handleLogWater(-250)}
-                  className="p-1 border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-zinc-400 rounded transition-colors"
+                  className="p-1 border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-zinc-450 rounded transition-colors active:scale-95"
                 >
                   <Minus className="h-3.5 w-3.5" />
                 </button>
@@ -534,7 +594,7 @@ export default function HealthView({
               {/* Water logging stats */}
               <div className="flex flex-col items-center justify-center p-4 border border-zinc-900 bg-[#000000]/60 rounded-md gap-2">
                 <div className="flex items-center gap-2">
-                  <Droplet className="h-5 w-5 text-zinc-400" />
+                  <Droplet className="h-5 w-5 text-zinc-450 animate-bounce" />
                   <span className="text-xl font-bold font-mono tracking-tight text-zinc-100">
                     {loggedWaterMl} ml / <span className="text-zinc-500">{targetWaterMl} ml</span>
                   </span>
@@ -545,7 +605,7 @@ export default function HealthView({
                     <span>{waterPercent}%</span>
                   </div>
                   <div className="w-full bg-[#000000] border border-zinc-850 h-1.5 rounded-sm overflow-hidden">
-                    <div className="bg-zinc-200 h-full transition-all duration-300" style={{ width: `${waterPercent}%` }} />
+                    <div className="bg-zinc-200 h-full transition-all duration-500" style={{ width: `${waterPercent}%` }} />
                   </div>
                 </div>
               </div>
@@ -564,57 +624,57 @@ export default function HealthView({
                       type="number"
                       value={water.weightKg}
                       onChange={(e) => updateWater({ ...water, weightKg: Number(e.target.value) })}
-                      className="w-full bg-[#000000] border border-zinc-850 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none"
+                      className="w-full bg-[#000000] border border-zinc-850 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none focus:border-zinc-700"
                     />
                   </div>
                   
                   {/* Age */}
                   <div className="space-y-0.5">
-                    <label className="text-[7.5px] font-mono text-zinc-550 uppercase font-bold">AGE (YRS)</label>
+                    <label className="text-[7.5px] font-mono text-zinc-555 uppercase font-bold">AGE (YRS)</label>
                     <input
                       type="number"
                       value={water.age}
                       onChange={(e) => updateWater({ ...water, age: Number(e.target.value) })}
-                      className="w-full bg-[#000000] border border-zinc-850 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none"
+                      className="w-full bg-[#000000] border border-zinc-850 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none focus:border-zinc-700"
                     />
                   </div>
 
                   {/* Training hours */}
                   <div className="space-y-0.5">
-                    <label className="text-[7.5px] font-mono text-zinc-550 uppercase font-bold">TRAIN (HRS/D)</label>
+                    <label className="text-[7.5px] font-mono text-zinc-555 uppercase font-bold">TRAIN (HRS/D)</label>
                     <input
                       type="number"
                       value={water.trainingHrs}
                       step="0.5"
                       onChange={(e) => updateWater({ ...water, trainingHrs: Number(e.target.value) })}
-                      className="w-full bg-[#000000] border border-zinc-850 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none"
+                      className="w-full bg-[#000000] border border-zinc-850 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none focus:border-zinc-700"
                     />
                   </div>
 
                   {/* Caffeine */}
                   <div className="space-y-0.5">
-                    <label className="text-[7.5px] font-mono text-zinc-550 uppercase font-bold">CAFFEINE (MG)</label>
+                    <label className="text-[7.5px] font-mono text-zinc-555 uppercase font-bold">CAFFEINE (MG)</label>
                     <input
                       type="number"
                       value={water.caffeineMg}
                       onChange={(e) => updateWater({ ...water, caffeineMg: Number(e.target.value) })}
-                      className="w-full bg-[#000000] border border-zinc-850 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none"
+                      className="w-full bg-[#000000] border border-zinc-850 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none focus:border-zinc-700"
                     />
                   </div>
 
                   {/* Active Meds */}
                   <div className="space-y-0.5 col-span-2 sm:col-span-1">
-                    <label className="text-[7.5px] font-mono text-zinc-550 uppercase font-bold">MEDS/DEHYD</label>
+                    <label className="text-[7.5px] font-mono text-zinc-555 uppercase font-bold">MEDS/DEHYD</label>
                     <input
                       type="number"
                       value={water.activeMedsCount}
                       onChange={(e) => updateWater({ ...water, activeMedsCount: Number(e.target.value) })}
-                      className="w-full bg-[#000000] border border-zinc-850 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none"
+                      className="w-full bg-[#000000] border border-zinc-850 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none focus:border-zinc-700"
                     />
                   </div>
                 </div>
 
-                <div className="text-[8.5px] font-mono text-zinc-550 uppercase tracking-wide leading-relaxed border-t border-zinc-900/50 pt-2.5">
+                <div className="text-[8.5px] font-mono text-zinc-555 uppercase tracking-wide leading-relaxed border-t border-zinc-900/50 pt-2.5">
                   <span className="font-bold text-zinc-400">MATH MECHANICS:</span> base 35ml/kg + 500ml/hr exercise + 1.5ml/mg caffeine + 250ml/active dehydrator.
                 </div>
               </div>

@@ -158,7 +158,7 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
     return (
       <div 
         key={task.id} 
-        className={`group flex items-center gap-3 py-2.5 px-3 border-b border-zinc-900 bg-[#000000]/40 hover:bg-[#0a0a0a] transition-all rounded duration-150 ${
+        className={`group flex items-center gap-3 py-2.5 px-3 border-b border-zinc-900 bg-[#000000]/40 hover:bg-[#0a0a0a] transition-all rounded duration-150 animate-slide-in ${
           task.completed ? "opacity-40" : ""
         }`}
       >
@@ -168,37 +168,44 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
           disabled={isReadOnly}
           className={`w-4 h-4 border flex items-center justify-center rounded-sm transition-all duration-150 cursor-pointer ${
             task.completed 
-              ? "bg-zinc-50 border-zinc-150 text-zinc-950" 
-              : "border-zinc-800 bg-transparent hover:border-zinc-650"
+              ? "bg-zinc-50 border-zinc-150 text-zinc-950 scale-105" 
+              : "border-zinc-800 bg-transparent hover:border-zinc-650 hover:scale-105 active:scale-95"
           }`}
         >
-          {task.completed && <Check className="h-3 w-3 stroke-[3.5] text-zinc-950" />}
+          {task.completed && <Check className="h-3 w-3 stroke-[3.5] text-zinc-950 animate-check-tick" />}
         </button>
 
-        {/* Task Text Input (Editable inline if not read-only) */}
-        <input
-          type="text"
-          value={task.text}
-          disabled={isReadOnly}
-          onChange={(e) => updateTaskText(task.id, e.target.value)}
-          className={`flex-grow bg-transparent outline-none text-xs font-mono transition-all duration-150 ${
-            task.completed ? "line-through text-zinc-500" : "text-zinc-200 focus:text-zinc-50"
-          }`}
-        />
+        {/* Task Text Input (Editable inline if not read-only) with animated line strike-through */}
+        <div className="flex-grow relative min-w-0">
+          <input
+            type="text"
+            value={task.text}
+            disabled={isReadOnly}
+            onChange={(e) => updateTaskText(task.id, e.target.value)}
+            className={`w-full bg-transparent outline-none text-xs font-mono transition-all duration-150 ${
+              task.completed ? "text-zinc-500" : "text-zinc-200 focus:text-zinc-50"
+            }`}
+          />
+          {task.completed && (
+            <div 
+              className="absolute left-0 top-1/2 -translate-y-1/2 h-[1px] bg-zinc-500 pointer-events-none origin-left animate-strike"
+            />
+          )}
+        </div>
 
         {/* Task Metadata Indicator Pills */}
-        <div className="flex items-center gap-1.5">
-          <span className={`text-[8px] font-mono px-1 rounded border uppercase ${
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <span className={`text-[8px] font-mono px-1 rounded border uppercase transition-colors duration-200 ${
             task.energy === "charging" 
               ? "border-emerald-900/30 text-emerald-500 bg-emerald-950/10" 
-              : "border-zinc-850 text-zinc-500"
+              : "border-zinc-850 text-zinc-550 bg-zinc-900/10"
           }`}>
             {task.energy}
           </span>
-          <span className={`text-[8px] font-mono px-1 rounded border uppercase ${
+          <span className={`text-[8px] font-mono px-1 rounded border uppercase transition-colors duration-200 ${
             task.revenue === "high" 
               ? "border-amber-900/30 text-amber-500 bg-amber-950/10" 
-              : "border-zinc-850 text-zinc-500"
+              : "border-zinc-850 text-zinc-550 bg-zinc-900/10"
           }`}>
             {task.revenue}
           </span>
@@ -208,9 +215,9 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
         <button
           onClick={() => !isReadOnly && togglePriority(task.id)}
           disabled={isReadOnly}
-          className={`p-0.5 rounded transition-all duration-150 ${
+          className={`p-0.5 rounded transition-all duration-150 hover:bg-zinc-900 ${
             task.priority 
-              ? "text-yellow-400 bg-yellow-950/20" 
+              ? "text-yellow-400 bg-yellow-950/20 scale-110" 
               : "text-zinc-700 hover:text-zinc-500"
           }`}
         >
@@ -221,7 +228,7 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
         {!isReadOnly && (
           <button
             onClick={() => deleteTask(task.id)}
-            className="text-zinc-600 hover:text-zinc-300 opacity-0 group-hover:opacity-100 transition-all duration-150"
+            className="text-zinc-700 hover:text-zinc-300 opacity-0 group-hover:opacity-100 transition-all duration-150 p-0.5"
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -232,7 +239,7 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
 
   const renderQuadrant = (title: string, subtitle: string, list: Task[], energyLabel: string, revenueLabel: string) => {
     return (
-      <div className="border border-zinc-800 rounded-md p-4 bg-[#0a0a0a] flex flex-col h-full min-h-[180px]">
+      <div className="border border-zinc-800 rounded-md p-4 bg-[#0a0a0a] flex flex-col h-full min-h-[180px] transition-all duration-300 hover:border-zinc-700">
         <div className="flex justify-between items-center mb-3 pb-1.5 border-b border-zinc-900 flex-shrink-0">
           <div className="space-y-0.5">
             <span className="text-[10px] font-mono font-bold tracking-widest text-zinc-200 uppercase">{title}</span>
@@ -246,7 +253,7 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
         <div className="flex-grow space-y-1.5 overflow-y-auto max-h-[220px]">
           {list.map(t => renderTaskRow(t))}
           {list.length === 0 && (
-            <div className="h-full flex items-center justify-center py-6 text-center text-[9px] font-mono uppercase tracking-widest text-zinc-650">
+            <div className="h-full flex items-center justify-center py-6 text-center text-[9px] font-mono uppercase tracking-widest text-zinc-650 animate-pulse">
               Empty quadrant.
             </div>
           )}
@@ -257,8 +264,34 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
 
   return (
     <div className="space-y-5 text-zinc-200 font-mono">
+      {/* CSS Keyframe Animations injection */}
+      <style jsx global>{`
+        @keyframes slideIn {
+          from { opacity: 0; transform: translateY(-6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes strike {
+          from { width: 0%; }
+          to { width: 100%; }
+        }
+        @keyframes checkTick {
+          0% { transform: scale(0.6); }
+          50% { transform: scale(1.2); }
+          100% { transform: scale(1); }
+        }
+        .animate-slide-in {
+          animation: slideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .animate-strike {
+          animation: strike 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        .animate-check-tick {
+          animation: checkTick 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+      `}</style>
+
       {/* View Toggle Bar */}
-      <div className="flex justify-between items-center bg-[#0a0a0a] border border-zinc-800 px-5 py-3 rounded-md">
+      <div className="flex justify-between items-center bg-[#0a0a0a] border border-zinc-800 px-5 py-3 rounded-md animate-slide-in">
         <div className="space-y-0.5">
           <span className="text-[9px] font-mono uppercase tracking-widest font-semibold text-zinc-500">TASK HUB</span>
           <h1 className="text-sm font-mono tracking-widest font-bold text-zinc-150 uppercase">THE DRIP MATRIX</h1>
@@ -269,7 +302,7 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
           <button
             onClick={() => setIsGridView(false)}
             className={`px-3 py-1 text-[9px] font-mono font-bold tracking-wider uppercase rounded flex items-center gap-1.5 transition-all duration-150 ${
-              !isGridView ? "bg-zinc-50 text-zinc-950" : "text-zinc-400 hover:text-zinc-250"
+              !isGridView ? "bg-zinc-50 text-zinc-950" : "text-zinc-400 hover:text-zinc-255"
             }`}
           >
             <List className="h-3 w-3" /> List View
@@ -277,7 +310,7 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
           <button
             onClick={() => setIsGridView(true)}
             className={`px-3 py-1 text-[9px] font-mono font-bold tracking-wider uppercase rounded flex items-center gap-1.5 transition-all duration-150 ${
-              isGridView ? "bg-zinc-50 text-zinc-950" : "text-zinc-400 hover:text-zinc-250"
+              isGridView ? "bg-zinc-50 text-zinc-950" : "text-zinc-400 hover:text-zinc-255"
             }`}
           >
             <LayoutGrid className="h-3 w-3" /> Grid Matrix
@@ -287,7 +320,7 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
 
       {/* Main Task List Area */}
       {!isGridView ? (
-        <div className="space-y-4">
+        <div className="space-y-4 animate-slide-in" style={{ animationDelay: "50ms" }}>
           <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
             <CardHeader className="p-4 border-b border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="space-y-0.5">
@@ -306,13 +339,13 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
                   {todayTasks.map((t) => (
                     <div 
                       key={t.id} 
-                      className={`h-1.5 flex-1 rounded-sm transition-all duration-300 ${
-                        t.completed ? "bg-zinc-100" : "bg-zinc-800"
+                      className={`h-1.5 flex-1 rounded-sm transition-all duration-500 ${
+                        t.completed ? "bg-zinc-100" : "bg-zinc-850"
                       }`} 
                     />
                   ))}
                   {todayTasks.length === 0 && (
-                    <div className="h-1.5 w-full rounded-sm bg-zinc-850" />
+                    <div className="h-1.5 w-full rounded-sm bg-zinc-850 animate-pulse" />
                   )}
                 </div>
               </div>
@@ -323,7 +356,7 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
               <div className="space-y-1">
                 {todayTasks.map((t) => renderTaskRow(t))}
                 {todayTasks.length === 0 && (
-                  <div className="text-center py-6 text-[10px] font-mono uppercase tracking-widest text-zinc-600 border border-dashed border-zinc-850 rounded">
+                  <div className="text-center py-6 text-[10px] font-mono uppercase tracking-widest text-zinc-600 border border-dashed border-zinc-850 rounded animate-pulse">
                     No active objectives registered for today.
                   </div>
                 )}
@@ -345,13 +378,13 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
                   <button
                     onClick={handlePolish}
                     disabled={isPolishing || !todayInput.trim()}
-                    className="px-3 rounded-md border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-zinc-400 hover:text-zinc-200 disabled:opacity-40 flex items-center justify-center transition-colors"
+                    className="px-3 rounded-md border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-zinc-400 hover:text-zinc-250 disabled:opacity-40 flex items-center justify-center transition-all duration-150 active:scale-95"
                     title="Polish Task with AI"
                   >
                     {isPolishing ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : (
-                      <Sparkles className="h-3.5 w-3.5" />
+                      <Sparkles className="h-3.5 w-3.5 text-zinc-450 hover:text-zinc-200" />
                     )}
                   </button>
                 </div>
@@ -363,7 +396,7 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
                       <button
                         onClick={() => setTodayEnergy("charging")}
                         className={`px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
-                          todayEnergy === "charging" ? "bg-zinc-800 text-zinc-100" : "text-zinc-650"
+                          todayEnergy === "charging" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-400"
                         }`}
                       >
                         Charging
@@ -371,7 +404,7 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
                       <button
                         onClick={() => setTodayEnergy("draining")}
                         className={`px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
-                          todayEnergy === "draining" ? "bg-zinc-800 text-zinc-100" : "text-zinc-650"
+                          todayEnergy === "draining" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-400"
                         }`}
                       >
                         Draining
@@ -383,7 +416,7 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
                       <button
                         onClick={() => setTodayRevenue("high")}
                         className={`px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
-                          todayRevenue === "high" ? "bg-zinc-800 text-zinc-100" : "text-zinc-650"
+                          todayRevenue === "high" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-400"
                         }`}
                       >
                         High Return
@@ -391,7 +424,7 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
                       <button
                         onClick={() => setTodayRevenue("low")}
                         className={`px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
-                          todayRevenue === "low" ? "bg-zinc-800 text-zinc-100" : "text-zinc-650"
+                          todayRevenue === "low" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-400"
                         }`}
                       >
                         Low Return
@@ -401,8 +434,8 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
                     {/* Priority Toggle */}
                     <button
                       onClick={() => setTodayPriority(!todayPriority)}
-                      className={`px-2 py-1 text-[8px] font-mono font-bold tracking-widest uppercase rounded border transition-colors ${
-                        todayPriority ? "border-yellow-900/40 text-yellow-500 bg-yellow-950/10" : "border-zinc-900 text-zinc-500"
+                      className={`px-2 py-1 text-[8px] font-mono font-bold tracking-widest uppercase rounded border transition-all duration-150 active:scale-95 ${
+                        todayPriority ? "border-yellow-900/40 text-yellow-500 bg-yellow-950/10 font-bold" : "border-zinc-900 text-zinc-500 hover:border-zinc-800"
                       }`}
                     >
                       Priority
@@ -413,13 +446,13 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
                     <button
                       onClick={pushRemainingToTomorrow}
                       disabled={todayTasks.filter(t => !t.completed).length === 0}
-                      className="px-3 py-1.5 rounded-md border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-zinc-400 hover:text-zinc-100 text-[9px] font-mono font-bold tracking-widest uppercase disabled:opacity-40 transition-all cursor-pointer"
+                      className="px-3 py-1.5 rounded-md border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-zinc-450 hover:text-zinc-100 text-[9px] font-mono font-bold tracking-widest uppercase disabled:opacity-40 transition-all duration-150 active:scale-95 cursor-pointer"
                     >
                       Push Remaining
                     </button>
                     <button
                       onClick={handleAddTodayTask}
-                      className="px-4 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-widest uppercase transition-all cursor-pointer"
+                      className="px-4 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-widest uppercase transition-all duration-150 active:scale-95 cursor-pointer"
                     >
                       Add Today
                     </button>
@@ -431,7 +464,7 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
         </div>
       ) : (
         /* Grid 4-Quadrant Drip Matrix */
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-slide-in" style={{ animationDelay: "50ms" }}>
           {renderQuadrant("ZONE OF GENIUS", "CHARGING ENERGY // HIGH REVENUE", geniusTasks, "charging", "high")}
           {renderQuadrant("PASSIONS & GROWTH", "CHARGING ENERGY // LOW REVENUE", passionTasks, "charging", "low")}
           {renderQuadrant("HIGH LEVERAGE", "DRAINING ENERGY // HIGH REVENUE", leverageTasks, "draining", "high")}
@@ -440,14 +473,14 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
       )}
 
       {/* Plan Tomorrow Card */}
-      <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
+      <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md animate-slide-in" style={{ animationDelay: "100ms" }}>
         <CardHeader className="p-4 border-b border-zinc-800">
           <div className="flex justify-between items-center">
             <div className="space-y-0.5">
               <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 font-bold">TOMORROW</span>
               <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-widest">NEXT DAY STRATEGY BUFFER</CardTitle>
             </div>
-            <div className="px-2.5 py-0.5 rounded border border-zinc-900 bg-[#000000] text-[8px] font-mono text-zinc-500 uppercase tracking-widest font-bold">
+            <div className="px-2.5 py-0.5 rounded border border-zinc-900 bg-[#000000] text-[8px] font-mono text-zinc-550 uppercase tracking-widest font-bold">
               ACTIVATES AT 6 AM TOMORROW
             </div>
           </div>
@@ -458,7 +491,7 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
           <div className="space-y-1">
             {tomorrowTasks.map((t) => renderTaskRow(t, true))}
             {tomorrowTasks.length === 0 && (
-              <div className="text-center py-6 text-[10px] font-mono uppercase tracking-widest text-zinc-600 border border-dashed border-zinc-850 rounded">
+              <div className="text-center py-6 text-[10px] font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-850 rounded animate-pulse">
                 No next-day strategy registered.
               </div>
             )}
@@ -484,7 +517,7 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
                   <button
                     onClick={() => setTomorrowEnergy("charging")}
                     className={`px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
-                      tomorrowEnergy === "charging" ? "bg-zinc-800 text-zinc-100" : "text-zinc-650"
+                      tomorrowEnergy === "charging" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-400"
                     }`}
                   >
                     Charging
@@ -492,7 +525,7 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
                   <button
                     onClick={() => setTomorrowEnergy("draining")}
                     className={`px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
-                      tomorrowEnergy === "draining" ? "bg-zinc-800 text-zinc-100" : "text-zinc-650"
+                      tomorrowEnergy === "draining" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-400"
                     }`}
                   >
                     Draining
@@ -504,7 +537,7 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
                   <button
                     onClick={() => setTomorrowRevenue("high")}
                     className={`px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
-                      tomorrowRevenue === "high" ? "bg-zinc-800 text-zinc-100" : "text-zinc-650"
+                      tomorrowRevenue === "high" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-400"
                     }`}
                   >
                     High
@@ -512,7 +545,7 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
                   <button
                     onClick={() => setTomorrowRevenue("low")}
                     className={`px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
-                      tomorrowRevenue === "low" ? "bg-zinc-800 text-zinc-100" : "text-zinc-650"
+                      tomorrowRevenue === "low" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-400"
                     }`}
                   >
                     Low
@@ -522,7 +555,7 @@ export default function DashboardView({ tasks, updateTasks, activeDate, tomorrow
 
               <button
                 onClick={handleAddTomorrowTask}
-                className="px-4 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-widest uppercase transition-all cursor-pointer"
+                className="px-4 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-widest uppercase transition-all duration-150 active:scale-95 cursor-pointer"
               >
                 Plan Tomorrow
               </button>

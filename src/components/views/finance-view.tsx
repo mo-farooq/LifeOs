@@ -59,6 +59,9 @@ export default function FinanceView({
   const [editingAssetId, setEditingAssetId] = useState<string | null>(null);
   const [editAssetVal, setEditAssetVal] = useState("");
 
+  // Interactive hover states for Donut
+  const [hoveredCategory, setHoveredCategory] = useState<"bank" | "stocks" | "crypto" | "other" | null>(null);
+
   // Subtotal Calculators
   const bankTotal = assets.filter(a => a.category === "bank").reduce((sum, a) => sum + a.amount, 0);
   const stocksTotal = assets.filter(a => a.category === "stocks").reduce((sum, a) => sum + a.amount, 0);
@@ -66,7 +69,7 @@ export default function FinanceView({
   const otherTotal = assets.filter(a => a.category === "other").reduce((sum, a) => sum + a.amount, 0);
   const netWorthTotal = bankTotal + stocksTotal + cryptoTotal + otherTotal;
 
-  // Pie chart variables
+  // Donut chart math
   const radius = 30;
   const circ = 2 * Math.PI * radius; // ~188.5
   
@@ -75,7 +78,7 @@ export default function FinanceView({
   const cryptoPct = netWorthTotal ? (cryptoTotal / netWorthTotal) * 100 : 0;
   const otherPct = netWorthTotal ? (otherTotal / netWorthTotal) * 100 : 0;
 
-  // Subscription warnings calculations (flash red if due in 3 days)
+  // Subscription warnings calculations (due in 3 days)
   const isSubscriptionWarning = (subDateStr: string) => {
     if (!subDateStr) return false;
     const subDate = new Date(subDateStr);
@@ -192,7 +195,6 @@ export default function FinanceView({
 
   // Log Expense Macro (deducts sub cost and advances renewal date by 1 month)
   const handleLogSubExpense = (sub: Subscription) => {
-    // Deduct cost from linked account
     const updatedAssets = assets.map((asset) => {
       if (asset.id === sub.linkedAssetId) {
         return {
@@ -203,7 +205,6 @@ export default function FinanceView({
       return asset;
     });
 
-    // Advance renewal date by 1 month
     const renewal = new Date(sub.nextRenewalDate);
     renewal.setMonth(renewal.getMonth() + 1);
     const nextRenewalStr = renewal.toISOString().split("T")[0];
@@ -218,7 +219,6 @@ export default function FinanceView({
       return s;
     });
 
-    // Write a purchase log matching subscription outflow
     const newOrder: PurchaseOrder = {
       id: "ord_sub_" + Date.now(),
       name: `Sub: ${sub.name}`,
@@ -232,18 +232,106 @@ export default function FinanceView({
     updateOrders([newOrder, ...orders]);
   };
 
-  // Format Helper
   const formatMoney = (amount: number) => {
     return `$${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
+  // Historical Net Worth Area Chart Renderer
+  const renderHistoricalChart = () => {
+    // Generate historical points, integrating current live Net Worth as the last point
+    const historyData = [
+      { date: "JAN", amount: 18400 },
+      { date: "FEB", amount: 19800 },
+      { date: "MAR", amount: 19200 },
+      { date: "APR", amount: 20600 },
+      { date: "MAY", amount: 21200 },
+      { date: "JUN (CURR)", amount: netWorthTotal }
+    ];
+
+    const width = 500;
+    const height = 90;
+    const paddingLeft = 45;
+    const paddingRight = 15;
+    const paddingTop = 10;
+    const paddingBottom = 15;
+
+    const drawWidth = width - paddingLeft - paddingRight;
+    const drawHeight = height - paddingTop - paddingBottom;
+
+    const amountsList = historyData.map(d => d.amount);
+    const minAmt = Math.min(...amountsList) * 0.95;
+    const maxAmt = Math.max(...amountsList) * 1.05;
+    const amtDiff = maxAmt - minAmt || 1;
+
+    // Map Coordinates
+    const points = historyData.map((dp, idx) => {
+      const x = paddingLeft + (idx / (historyData.length - 1)) * drawWidth;
+      const y = paddingTop + drawHeight - ((dp.amount - minAmt) / amtDiff) * drawHeight;
+      return { x, y, val: dp.amount, label: dp.date };
+    });
+
+    // Generate Line Path
+    let pathD = `M ${points[0].x} ${points[0].y}`;
+    for (let i = 1; i < points.length; i++) {
+      pathD += ` L ${points[i].x} ${points[i].y}`;
+    }
+
+    // Generate Area Fill Path
+    const areaD = `${pathD} L ${points[points.length - 1].x} ${paddingTop + drawHeight} L ${points[0].x} ${paddingTop + drawHeight} Z`;
+
+    return (
+      <div className="w-full overflow-x-auto select-none mt-2 pr-1">
+        <svg className="w-full min-w-[450px] h-24" viewBox={`0 0 ${width} ${height}`}>
+          {/* Grid lines */}
+          <line x1={paddingLeft} y1={paddingTop} x2={width - paddingRight} y2={paddingTop} className="stroke-zinc-950 stroke-[0.5]" />
+          <line x1={paddingLeft} y1={paddingTop + drawHeight / 2} x2={width - paddingRight} y2={paddingTop + drawHeight / 2} className="stroke-zinc-950 stroke-[0.5]" />
+          <line x1={paddingLeft} y1={paddingTop + drawHeight} x2={width - paddingRight} y2={paddingTop + drawHeight} className="stroke-zinc-900 stroke-[1]" />
+
+          {/* Y Axis labels */}
+          <text x={paddingLeft - 8} y={paddingTop + 3} className="text-[7px] fill-zinc-550 font-mono font-bold" textAnchor="end">{formatMoney(maxAmt).split(".")[0]}</text>
+          <text x={paddingLeft - 8} y={paddingTop + drawHeight / 2 + 3} className="text-[7px] fill-zinc-550 font-mono font-bold" textAnchor="end">{formatMoney((maxAmt + minAmt) / 2).split(".")[0]}</text>
+          <text x={paddingLeft - 8} y={paddingTop + drawHeight + 3} className="text-[7px] fill-zinc-550 font-mono font-bold" textAnchor="end">{formatMoney(minAmt).split(".")[0]}</text>
+
+          {/* Area under the line */}
+          <path d={areaD} className="fill-zinc-100/[0.03] transition-all duration-500" />
+          
+          {/* Outline Line */}
+          <path d={pathD} className="fill-none stroke-zinc-200 stroke-[1.5] transition-all duration-500" />
+
+          {/* Value nodes and dates */}
+          {points.map((pt, idx) => (
+            <g key={idx}>
+              <circle
+                cx={pt.x}
+                cy={pt.y}
+                r="2.5"
+                className="fill-zinc-950 stroke-zinc-200 stroke-[1.5] cursor-pointer hover:scale-125 transition-transform"
+              />
+              <text x={pt.x} y={pt.y - 7} className="text-[6.5px] fill-zinc-350 font-mono font-bold" textAnchor="middle">{formatMoney(pt.val).split(".")[0]}</text>
+              <text x={pt.x} y={height - 3} className="text-[6.5px] fill-zinc-550 font-mono font-semibold" textAnchor="middle">{pt.label}</text>
+            </g>
+          ))}
+        </svg>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-4 text-zinc-200">
+      <style jsx global>{`
+        @keyframes pageFade {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-page-fade {
+          animation: pageFade 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+      `}</style>
       
       {/* Net Worth Summary Panel */}
-      <div className="rounded-md border border-zinc-800 bg-[#0a0a0a] p-5">
+      <div className="rounded-md border border-zinc-800 bg-[#0a0a0a] p-5 animate-page-fade">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="space-y-0.5">
+          <div className="space-y-0.5 w-full md:w-auto">
             <span className="text-[9px] font-mono uppercase tracking-widest font-semibold text-zinc-500">LIQUID LEDGER</span>
             <h2 className="text-3xl font-mono font-bold tracking-tight text-zinc-50">
               {formatMoney(netWorthTotal)}
@@ -252,67 +340,115 @@ export default function FinanceView({
               <TrendingUp className="h-3.5 w-3.5 text-zinc-400" />
               <span>Global reserves tracking active</span>
             </div>
+            
+            {/* Embedded area chart */}
+            {renderHistoricalChart()}
           </div>
 
-          {/* SVG concentric donut diagram */}
+          {/* SVG concentric Donut chart with interactive hover */}
           {netWorthTotal > 0 && (
-            <div className="flex items-center gap-4 bg-[#000000] border border-zinc-900 px-4 py-2 rounded-md">
-              <div className="relative w-16 h-16 flex items-center justify-center">
+            <div className="flex items-center gap-5 bg-[#000000] border border-zinc-900 px-5 py-4 rounded-md">
+              <div className="relative w-20 h-20 flex items-center justify-center">
                 <svg className="-rotate-90 w-full h-full" viewBox="0 0 80 80">
                   {/* Bank slice */}
                   <circle
                     cx="40"
                     cy="40"
                     r={radius}
-                    className="stroke-zinc-100 fill-none stroke-[6]"
+                    className={`stroke-zinc-150 fill-none transition-all duration-300 cursor-pointer ${
+                      hoveredCategory === "bank" ? "stroke-[8] scale-105" : "stroke-[6]"
+                    }`}
                     strokeDasharray={`${(bankPct / 100) * circ} ${circ}`}
                     strokeDashoffset="0"
+                    onMouseEnter={() => setHoveredCategory("bank")}
+                    onMouseLeave={() => setHoveredCategory(null)}
                   />
                   {/* Stocks slice */}
                   <circle
                     cx="40"
                     cy="40"
                     r={radius}
-                    className="stroke-zinc-400 fill-none stroke-[6]"
+                    className={`stroke-zinc-400 fill-none transition-all duration-300 cursor-pointer ${
+                      hoveredCategory === "stocks" ? "stroke-[8] scale-105" : "stroke-[6]"
+                    }`}
                     strokeDasharray={`${(stocksPct / 100) * circ} ${circ}`}
                     strokeDashoffset={`-${(bankPct / 100) * circ}`}
+                    onMouseEnter={() => setHoveredCategory("stocks")}
+                    onMouseLeave={() => setHoveredCategory(null)}
                   />
                   {/* Crypto slice */}
                   <circle
                     cx="40"
                     cy="40"
                     r={radius}
-                    className="stroke-zinc-650 fill-none stroke-[6]"
+                    className={`stroke-zinc-650 fill-none transition-all duration-300 cursor-pointer ${
+                      hoveredCategory === "crypto" ? "stroke-[8] scale-105" : "stroke-[6]"
+                    }`}
                     strokeDasharray={`${(cryptoPct / 100) * circ} ${circ}`}
                     strokeDashoffset={`-${((bankPct + stocksPct) / 100) * circ}`}
+                    onMouseEnter={() => setHoveredCategory("crypto")}
+                    onMouseLeave={() => setHoveredCategory(null)}
                   />
                   {/* Other slice */}
                   <circle
                     cx="40"
                     cy="40"
                     r={radius}
-                    className="stroke-zinc-800 fill-none stroke-[6]"
+                    className={`stroke-zinc-800 fill-none transition-all duration-300 cursor-pointer ${
+                      hoveredCategory === "other" ? "stroke-[8] scale-105" : "stroke-[6]"
+                    }`}
                     strokeDasharray={`${(otherPct / 100) * circ} ${circ}`}
                     strokeDashoffset={`-${((bankPct + stocksPct + cryptoPct) / 100) * circ}`}
+                    onMouseEnter={() => setHoveredCategory("other")}
+                    onMouseLeave={() => setHoveredCategory(null)}
                   />
                 </svg>
+
+                {/* Concentric center text details */}
+                <div className="absolute text-center z-10 flex flex-col items-center justify-center">
+                  <span className="text-[9px] font-mono font-bold tracking-tight text-zinc-100">
+                    {hoveredCategory === "bank" ? `${Math.round(bankPct)}%` :
+                     hoveredCategory === "stocks" ? `${Math.round(stocksPct)}%` :
+                     hoveredCategory === "crypto" ? `${Math.round(cryptoPct)}%` :
+                     hoveredCategory === "other" ? `${Math.round(otherPct)}%` : "NW"}
+                  </span>
+                  <span className="text-[6.5px] font-mono text-zinc-500 uppercase tracking-widest font-bold">
+                    {hoveredCategory || "STACK"}
+                  </span>
+                </div>
               </div>
 
               {/* Legends list */}
-              <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[8.5px] font-mono">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-100" />
+              <div className="flex flex-col gap-1 text-[8.5px] font-mono">
+                <div 
+                  className={`flex items-center gap-2 p-1 rounded transition-colors duration-150 ${hoveredCategory === "bank" ? "bg-zinc-950 border border-zinc-900" : ""}`}
+                  onMouseEnter={() => setHoveredCategory("bank")}
+                  onMouseLeave={() => setHoveredCategory(null)}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-150" />
                   <span className="text-zinc-400 uppercase">BANK: {Math.round(bankPct)}%</span>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div 
+                  className={`flex items-center gap-2 p-1 rounded transition-colors duration-150 ${hoveredCategory === "stocks" ? "bg-zinc-950 border border-zinc-900" : ""}`}
+                  onMouseEnter={() => setHoveredCategory("stocks")}
+                  onMouseLeave={() => setHoveredCategory(null)}
+                >
                   <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
                   <span className="text-zinc-400 uppercase">STOCKS: {Math.round(stocksPct)}%</span>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div 
+                  className={`flex items-center gap-2 p-1 rounded transition-colors duration-150 ${hoveredCategory === "crypto" ? "bg-zinc-950 border border-zinc-900" : ""}`}
+                  onMouseEnter={() => setHoveredCategory("crypto")}
+                  onMouseLeave={() => setHoveredCategory(null)}
+                >
                   <span className="w-1.5 h-1.5 rounded-full bg-zinc-650" />
                   <span className="text-zinc-400 uppercase">CRYPTO: {Math.round(cryptoPct)}%</span>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div 
+                  className={`flex items-center gap-2 p-1 rounded transition-colors duration-150 ${hoveredCategory === "other" ? "bg-zinc-950 border border-zinc-900" : ""}`}
+                  onMouseEnter={() => setHoveredCategory("other")}
+                  onMouseLeave={() => setHoveredCategory(null)}
+                >
                   <span className="w-1.5 h-1.5 rounded-full bg-zinc-800" />
                   <span className="text-zinc-400 uppercase">OTHER: {Math.round(otherPct)}%</span>
                 </div>
@@ -323,9 +459,9 @@ export default function FinanceView({
       </div>
 
       {/* Main split view grids */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 animate-page-fade" style={{ animationDelay: "50ms" }}>
         
-        {/* Left Column: Asset Allocations & direct deduction form (7 cols) */}
+        {/* Left Column: Asset Allocations */}
         <div className="lg:col-span-7 space-y-4">
           
           {/* Asset reserves card */}
@@ -343,7 +479,7 @@ export default function FinanceView({
                   <div key={item.id} className="group flex justify-between items-center px-3 py-2 border border-zinc-900 bg-[#000000]/60 hover:bg-[#0a0a0a] rounded text-xs font-mono transition-colors duration-150">
                     <div className="space-y-0.5">
                       <span className="text-zinc-200 font-semibold">{item.name}</span>
-                      <p className="text-[8px] font-mono text-zinc-500 uppercase tracking-widest">{item.category}</p>
+                      <p className="text-[8px] font-mono text-zinc-550 uppercase tracking-widest">{item.category}</p>
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -474,12 +610,12 @@ export default function FinanceView({
               {/* Purchase history list */}
               {orders.length > 0 && (
                 <div className="space-y-1.5 border-t border-zinc-900 pt-3">
-                  <span className="text-[8px] font-mono text-zinc-600 uppercase font-semibold">TRANSACTION PURCHASE LOGS:</span>
+                  <span className="text-[8px] font-mono text-zinc-650 uppercase font-semibold">TRANSACTION PURCHASE LOGS:</span>
                   <div className="space-y-1 max-h-[140px] overflow-y-auto pr-1">
                     {orders.map((ord) => {
                       const linked = assets.find(a => a.id === ord.linkedAssetId);
                       return (
-                        <div key={ord.id} className="flex justify-between items-center px-2 py-1 rounded bg-[#000000] border border-zinc-950 text-[10px] font-mono">
+                        <div key={ord.id} className="flex justify-between items-center px-2 py-1 rounded bg-[#000000] border border-zinc-955 text-[10px] font-mono">
                           <div className="space-y-0.5">
                             <span className="text-zinc-300 font-bold">{ord.name}</span>
                             <p className="text-[7.5px] text-zinc-550 uppercase">Deducted from {linked?.name || "Asset"}</p>
@@ -504,7 +640,7 @@ export default function FinanceView({
           </Card>
         </div>
 
-        {/* Right Column: Subscriptions & warning registry (5 cols) */}
+        {/* Right Column: Subscriptions */}
         <div className="lg:col-span-5 space-y-4">
           <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
             <CardHeader className="p-4 border-b border-zinc-800">
@@ -526,7 +662,7 @@ export default function FinanceView({
                       key={sub.id} 
                       className={`group flex flex-col gap-2 p-3 border rounded text-xs font-mono transition-all duration-150 ${
                         isWarning 
-                          ? "bg-red-955/20 border-red-900/40 text-red-200 animate-pulse" 
+                          ? "bg-red-955/15 border-red-900/40 text-red-200 animate-pulse" 
                           : "bg-[#000000]/60 border-zinc-900 hover:bg-[#0a0a0a]"
                       }`}
                     >
@@ -540,7 +676,7 @@ export default function FinanceView({
 
                         <button
                           onClick={() => handleDeleteSubscription(sub.id)}
-                          className="text-zinc-650 hover:text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="text-zinc-650 hover:text-zinc-350 opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           ×
                         </button>
@@ -549,7 +685,7 @@ export default function FinanceView({
                       {/* Warning indicator + macro script */}
                       <div className="flex justify-between items-center border-t border-zinc-900/60 pt-2 mt-0.5">
                         <div className="flex flex-col text-[8.5px] font-mono">
-                          <span className="text-zinc-500">RENEW DATE:</span>
+                          <span className="text-zinc-550">RENEW DATE:</span>
                           <span className={`${isWarning ? "text-red-500 font-bold" : "text-zinc-400"}`}>
                             {sub.nextRenewalDate} {isWarning && "(DUE)"}
                           </span>
@@ -557,7 +693,7 @@ export default function FinanceView({
                         
                         <button
                           onClick={() => handleLogSubExpense(sub)}
-                          className="px-2.5 py-1 bg-zinc-50 hover:bg-white text-zinc-950 rounded text-[8.5px] font-mono font-bold uppercase tracking-wider transition-all"
+                          className="px-2.5 py-1 bg-zinc-50 hover:bg-white text-zinc-950 rounded text-[8.5px] font-mono font-bold uppercase tracking-wider transition-all duration-150 active:scale-95 cursor-pointer"
                         >
                           Log Expense
                         </button>

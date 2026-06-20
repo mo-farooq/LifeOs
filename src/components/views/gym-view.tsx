@@ -13,7 +13,10 @@ import {
   AlertCircle,
   Award,
   Settings,
-  MapPin
+  MapPin,
+  LineChart,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { GymExercise, GymPhoto } from "@/types";
 
@@ -51,6 +54,9 @@ export default function GymView({
   // Log active state
   const [loggingWeights, setLoggingWeights] = useState<Record<string, number>>({});
   const [loggingReps, setLoggingReps] = useState<Record<string, number>>({});
+
+  // Collapse states for charts
+  const [expandedCharts, setExpandedCharts] = useState<Record<string, boolean>>({});
 
   // Exercise Actions
   const handleAddExercise = () => {
@@ -128,10 +134,129 @@ export default function GymView({
     updateGymPhotos(gymPhotos.filter(p => p.id !== id));
   };
 
+  const toggleChart = (id: string) => {
+    setExpandedCharts(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
+  // Pure SVG Trend Line generator
+  const renderTrendChart = (ex: GymExercise) => {
+    // Collect all history plus the current set as data points
+    const dataPoints = [
+      ...ex.history.map(h => ({ date: h.date, volume: h.weight * h.reps })),
+      { date: activeDate, volume: ex.weight * ex.reps }
+    ].reverse(); // Sort chronologically (oldest to newest)
+
+    if (dataPoints.length < 2) {
+      return (
+        <div className="py-4 text-center text-[9px] font-mono text-zinc-600 uppercase tracking-widest border border-dashed border-zinc-900 rounded">
+          More historical data required to render overload trend.
+        </div>
+      );
+    }
+
+    const width = 360;
+    const height = 100;
+    const paddingLeft = 40;
+    const paddingRight = 15;
+    const paddingTop = 15;
+    const paddingBottom = 20;
+
+    const drawWidth = width - paddingLeft - paddingRight;
+    const drawHeight = height - paddingTop - paddingBottom;
+
+    const volumes = dataPoints.map(d => d.volume);
+    const minVol = Math.max(0, Math.min(...volumes) * 0.95);
+    const maxVol = Math.max(...volumes) * 1.05;
+    const volDiff = maxVol - minVol || 1;
+
+    // Calculate chart coordinates
+    const pointsCoords = dataPoints.map((dp, idx) => {
+      const x = paddingLeft + (idx / (dataPoints.length - 1)) * drawWidth;
+      const y = paddingTop + drawHeight - ((dp.volume - minVol) / volDiff) * drawHeight;
+      return { x, y, val: dp.volume, label: dp.date.slice(5) }; // MM-DD
+    });
+
+    let pathD = `M ${pointsCoords[0].x} ${pointsCoords[0].y}`;
+    for (let i = 1; i < pointsCoords.length; i++) {
+      pathD += ` L ${pointsCoords[i].x} ${pointsCoords[i].y}`;
+    }
+
+    return (
+      <div className="bg-[#000000] border border-zinc-900 rounded-md p-3.5 space-y-2 relative overflow-hidden animate-slide-in">
+        <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500 uppercase tracking-wider font-semibold">
+          <span>PROGRESSIVE VOLUME TREND (WEIGHT × REPS)</span>
+          <span>CURR: {ex.weight * ex.reps} kg·reps</span>
+        </div>
+        
+        <div className="w-full overflow-x-auto pr-1">
+          <svg className="w-full min-w-[340px] h-28" viewBox={`0 0 ${width} ${height}`}>
+            {/* Horizontal Grid lines */}
+            <line x1={paddingLeft} y1={paddingTop} x2={width - paddingRight} y2={paddingTop} className="stroke-zinc-950 stroke-[1]" />
+            <line x1={paddingLeft} y1={paddingTop + drawHeight / 2} x2={width - paddingRight} y2={paddingTop + drawHeight / 2} className="stroke-zinc-950 stroke-[1]" />
+            <line x1={paddingLeft} y1={paddingTop + drawHeight} x2={width - paddingRight} y2={paddingTop + drawHeight} className="stroke-zinc-900 stroke-[1]" />
+
+            {/* Y Axis Labels */}
+            <text x={paddingLeft - 8} y={paddingTop + 3} className="text-[7.5px] fill-zinc-550 font-mono font-bold" textAnchor="end">{Math.round(maxVol)}</text>
+            <text x={paddingLeft - 8} y={paddingTop + drawHeight / 2 + 3} className="text-[7.5px] fill-zinc-550 font-mono font-bold" textAnchor="end">{Math.round((maxVol + minVol) / 2)}</text>
+            <text x={paddingLeft - 8} y={paddingTop + drawHeight + 3} className="text-[7.5px] fill-zinc-550 font-mono font-bold" textAnchor="end">{Math.round(minVol)}</text>
+
+            {/* Trend Line Path */}
+            <path
+              d={pathD}
+              className="fill-none stroke-zinc-100 stroke-[2] transition-all duration-500"
+            />
+
+            {/* Data Point Nodes */}
+            {pointsCoords.map((pt, idx) => (
+              <g key={idx}>
+                <circle
+                  cx={pt.x}
+                  cy={pt.y}
+                  r="2.5"
+                  className="fill-zinc-950 stroke-zinc-200 stroke-[1.5] cursor-pointer hover:scale-125 transition-transform"
+                />
+                {/* Node tooltips value text */}
+                <text
+                  x={pt.x}
+                  y={pt.y - 7}
+                  className="text-[6.5px] fill-zinc-250 font-mono font-bold text-center"
+                  textAnchor="middle"
+                >
+                  {pt.val}
+                </text>
+                {/* X axis labels (date) */}
+                <text
+                  x={pt.x}
+                  y={height - 4}
+                  className="text-[6.5px] fill-zinc-550 font-mono font-semibold"
+                  textAnchor="middle"
+                >
+                  {pt.label}
+                </text>
+              </g>
+            ))}
+          </svg>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-4 text-zinc-200">
+      <style jsx global>{`
+        @keyframes slideIn {
+          from { opacity: 0; transform: translateY(-4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-slide-in {
+          animation: slideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+      `}</style>
       
-      {/* Gym Settings & splits Selection Header */}
+      {/* Gym Settings Selection Header */}
       <div className="rounded-md border border-zinc-800 bg-[#0a0a0a] p-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
@@ -143,8 +268,8 @@ export default function GymView({
             </h1>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 bg-[#000000] border border-zinc-900 p-1 rounded-md">
-            {/* Gym Location Selector */}
+          <div className="flex flex-wrap items-center gap-3 bg-[#000000] border border-zinc-905 p-1 rounded-md">
+            {/* Location */}
             <div className="flex items-center gap-1.5 border-r border-zinc-900 pr-2">
               <MapPin className="h-3 w-3 text-zinc-500" />
               <select
@@ -158,13 +283,13 @@ export default function GymView({
               </select>
             </div>
 
-            {/* Split selector */}
+            {/* Split */}
             <div className="flex items-center gap-1">
               {(["push", "pull", "legs", "rest"] as const).map((s) => (
                 <button
                   key={s}
                   onClick={() => updateGymSettings({ gymSplit: s })}
-                  className={`px-3 py-1 text-[9.5px] font-mono font-bold tracking-wider uppercase rounded transition-all duration-150 ${
+                  className={`px-3 py-1 text-[9.5px] font-mono font-bold tracking-wider uppercase rounded transition-all duration-150 active:scale-95 ${
                     gymSplit === s ? "bg-zinc-50 text-zinc-950" : "text-zinc-550 hover:text-zinc-350"
                   }`}
                 >
@@ -179,7 +304,7 @@ export default function GymView({
       {/* Main Grid: Exercises & Photos */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         
-        {/* Left Column: Workout Routine List (8 cols) */}
+        {/* Left Column: Exercises */}
         <div className="lg:col-span-8 space-y-4">
           <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
             <CardHeader className="p-4 border-b border-zinc-800">
@@ -198,40 +323,53 @@ export default function GymView({
             <CardContent className="p-4 space-y-4">
               
               {/* List Exercises */}
-              <div className="space-y-3.5">
+              <div className="space-y-4">
                 {gymExercises.map((ex) => {
                   const loggedW = loggingWeights[ex.id] ?? ex.weight;
                   const loggedR = loggingReps[ex.id] ?? ex.reps;
                   const isUpgraded = ex.reps >= ex.targetReps;
+                  const isChartOpen = expandedCharts[ex.id] || false;
 
                   return (
-                    <div key={ex.id} className="group border border-zinc-900 bg-[#000000]/60 p-4 rounded-md flex flex-col gap-3">
+                    <div key={ex.id} className="group border border-zinc-900 bg-[#000000]/60 p-4 rounded-md flex flex-col gap-3 transition-all hover:border-zinc-800">
                       <div className="flex justify-between items-start border-b border-zinc-900 pb-2">
                         <div className="space-y-0.5">
-                          <h3 className="text-xs font-bold font-mono text-zinc-150 uppercase tracking-wide">{ex.name}</h3>
+                          <div className="flex items-center gap-2.5">
+                            <h3 className="text-xs font-bold font-mono text-zinc-150 uppercase tracking-wide">{ex.name}</h3>
+                            <button
+                              onClick={() => toggleChart(ex.id)}
+                              className="text-zinc-500 hover:text-zinc-300 transition-colors p-0.5"
+                              title="Toggle volume progression chart"
+                            >
+                              <LineChart className={`h-3.5 w-3.5 ${isChartOpen ? "text-zinc-250" : ""}`} />
+                            </button>
+                          </div>
                           <div className="flex items-center gap-2 text-[8px] font-mono text-zinc-500 uppercase">
                             <span>CURRENT SET: <span className="font-bold text-zinc-300 font-mono">{ex.weight}kg × {ex.reps} reps</span></span>
-                            <span>Target: <span className="font-bold text-zinc-400 font-mono">{ex.targetReps} reps</span></span>
+                            <span>Target: <span className="font-bold text-zinc-450 font-mono">{ex.targetReps} reps</span></span>
                           </div>
                         </div>
 
                         <button 
                           onClick={() => handleDeleteExercise(ex.id)}
-                          className="text-zinc-650 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="text-zinc-650 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
                         >
                           ×
                         </button>
                       </div>
 
-                      {/* Progressive Overload prescriptions */}
+                      {/* Progressive Overload prescription alert */}
                       {isUpgraded && (
-                        <div className="flex items-center gap-2 bg-emerald-950/15 border border-emerald-900/40 rounded px-2.5 py-1.5 text-[9px] font-mono text-emerald-500 uppercase font-semibold">
+                        <div className="flex items-center gap-2 bg-emerald-950/15 border border-emerald-900/40 rounded px-2.5 py-1.5 text-[9px] font-mono text-emerald-500 uppercase font-semibold animate-slide-in">
                           <Award className="h-3.5 w-3.5 flex-shrink-0" />
                           <span>Overload Target Met! Upgrade weight by +2kg next session (Prescribed: {ex.weight}kg)</span>
                         </div>
                       )}
 
-                      {/* Logging input row */}
+                      {/* Expandable trend chart */}
+                      {isChartOpen && renderTrendChart(ex)}
+
+                      {/* Logging inputs */}
                       <div className="flex items-center gap-3">
                         <div className="flex-1 grid grid-cols-2 gap-2">
                           <div className="flex items-center gap-1.5 bg-[#000000] border border-zinc-900 rounded-md px-2 py-1">
@@ -258,13 +396,13 @@ export default function GymView({
 
                         <button
                           onClick={() => handleLogSet(ex.id)}
-                          className="px-3.5 py-1.5 bg-zinc-50 hover:bg-white text-zinc-950 rounded text-[9.5px] font-mono font-bold tracking-widest uppercase transition-all"
+                          className="px-3.5 py-1.5 bg-zinc-50 hover:bg-white text-zinc-950 rounded text-[9.5px] font-mono font-bold tracking-widest uppercase transition-all duration-150 active:scale-95 cursor-pointer"
                         >
                           Log Set
                         </button>
                       </div>
 
-                      {/* Render history logs */}
+                      {/* History badges */}
                       {ex.history.length > 0 && (
                         <div className="space-y-1 mt-1">
                           <span className="text-[8px] font-mono text-zinc-600 uppercase font-semibold tracking-wider">LOG HISTORY:</span>
@@ -282,7 +420,7 @@ export default function GymView({
                 })}
 
                 {gymExercises.length === 0 && (
-                  <div className="text-center py-6 text-[10px] font-mono uppercase tracking-widest text-zinc-600 border border-dashed border-zinc-850 rounded">
+                  <div className="text-center py-6 text-[10px] font-mono uppercase tracking-widest text-zinc-600 border border-dashed border-zinc-850 rounded animate-pulse">
                     No active gym split logs.
                   </div>
                 )}
@@ -322,7 +460,7 @@ export default function GymView({
                 </div>
                 <button
                   onClick={handleAddExercise}
-                  className="px-4 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-widest uppercase transition-all mt-1"
+                  className="px-4 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-widest uppercase transition-all duration-150 active:scale-95 mt-1 cursor-pointer"
                 >
                   Add Exercise
                 </button>
@@ -332,7 +470,7 @@ export default function GymView({
           </Card>
         </div>
 
-        {/* Right Column: Comparative Progress Photos Panel (4 cols) */}
+        {/* Right Column: Comparative Progress Photos Panel */}
         <div className="lg:col-span-4 space-y-4">
           <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
             <CardHeader className="p-4 border-b border-zinc-800">
@@ -346,11 +484,11 @@ export default function GymView({
               {/* Comparative side-by-side list */}
               <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto pr-1">
                 {gymPhotos.map((photo) => (
-                  <div key={photo.id} className="group border border-zinc-900 bg-[#000000]/60 p-2.5 rounded relative flex flex-col gap-2">
+                  <div key={photo.id} className="group border border-zinc-900 bg-[#000000]/60 p-2.5 rounded relative flex flex-col gap-2 transition-all hover:border-zinc-805 animate-slide-in">
                     <img 
                       src={photo.url} 
                       alt={photo.label}
-                      className="w-full h-28 object-cover rounded bg-zinc-950 border border-zinc-900 grayscale brightness-75 contrast-125"
+                      className="w-full h-28 object-cover rounded bg-zinc-950 border border-zinc-900 grayscale brightness-75 contrast-125 transition-all duration-300 group-hover:grayscale-0 group-hover:brightness-90"
                     />
                     <div className="flex justify-between items-center text-[9px] font-mono">
                       <span className="font-bold text-zinc-300 uppercase tracking-wider">{photo.label}</span>
@@ -369,7 +507,7 @@ export default function GymView({
                 ))}
 
                 {gymPhotos.length === 0 && (
-                  <div className="text-center py-6 text-[9px] font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-850 rounded">
+                  <div className="text-center py-6 text-[9px] font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-850 rounded animate-pulse">
                     No visual logs.
                   </div>
                 )}
@@ -395,7 +533,7 @@ export default function GymView({
                   />
                   <button
                     onClick={handleAddPhoto}
-                    className="px-4 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-widest uppercase transition-all"
+                    className="px-4 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-widest uppercase transition-all duration-150 active:scale-95"
                   >
                     Add
                   </button>
