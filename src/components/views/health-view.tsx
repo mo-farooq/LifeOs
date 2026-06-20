@@ -20,7 +20,7 @@ import {
   TrendingUp,
   BrainCircuit
 } from "lucide-react";
-import { CharacterStats, Skill, Supplement, WaterConfig } from "@/types";
+import { CharacterStats, Skill, Supplement, WaterConfig, NutritionConfig } from "@/types";
 
 interface HealthViewProps {
   stats: CharacterStats;
@@ -33,6 +33,8 @@ interface HealthViewProps {
   updateWater: (water: WaterConfig) => void;
   activeDate: string;
   currentTime: Date;
+  nutrition: NutritionConfig;
+  updateNutrition: (nutrition: NutritionConfig) => void;
 }
 
 export default function HealthView({
@@ -45,20 +47,71 @@ export default function HealthView({
   water,
   updateWater,
   activeDate,
-  currentTime
+  currentTime,
+  nutrition,
+  updateNutrition
 }: HealthViewProps) {
-  // Input states for adding
-  const [newSkillName, setNewSkillName] = useState("");
-  const [newSkillKeyResult, setNewSkillKeyResult] = useState("");
-  const [newSkillTarget, setNewSkillTarget] = useState<number | "">("");
-
   const [newSupName, setNewSupName] = useState("");
   const [newSupDose, setNewSupDose] = useState("");
   const [newSupWindow, setNewSupWindow] = useState<"morning" | "lunch" | "evening">("morning");
 
-  // Edit states
-  const [editingSkillId, setEditingSkillId] = useState<string | null>(null);
-  const [editSkillProgress, setEditSkillProgress] = useState<number | "">("");
+  // Nutrition states
+  const [logCalInput, setLogCalInput] = useState<number | "">("");
+  const [logProtInput, setLogProtInput] = useState<number | "">("");
+  const [logCarbInput, setLogCarbInput] = useState<number | "">("");
+  const [logFatInput, setLogFatInput] = useState<number | "">("");
+
+  const [editingNutritionTargets, setEditingNutritionTargets] = useState(false);
+  const [targetCalInput, setTargetCalInput] = useState<number | "">(nutrition?.targetCal || 2000);
+  const [targetProtInput, setTargetProtInput] = useState<number | "">(nutrition?.targetProt || 150);
+  const [targetCarbInput, setTargetCarbInput] = useState<number | "">(nutrition?.targetCarb || 200);
+  const [targetFatInput, setTargetFatInput] = useState<number | "">(nutrition?.targetFat || 65);
+
+  const handleLogNutrition = (cal: number, prot: number, carb: number, fat: number) => {
+    const updated = {
+      ...nutrition,
+      loggedCal: { ...nutrition.loggedCal, [activeDate]: Math.max((nutrition.loggedCal[activeDate] || 0) + cal, 0) },
+      loggedProt: { ...nutrition.loggedProt, [activeDate]: Math.max((nutrition.loggedProt[activeDate] || 0) + prot, 0) },
+      loggedCarb: { ...nutrition.loggedCarb, [activeDate]: Math.max((nutrition.loggedCarb[activeDate] || 0) + carb, 0) },
+      loggedFat: { ...nutrition.loggedFat, [activeDate]: Math.max((nutrition.loggedFat[activeDate] || 0) + fat, 0) }
+    };
+    updateNutrition(updated);
+  };
+
+  const handleCustomLog = () => {
+    const cal = Number(logCalInput) || 0;
+    const prot = Number(logProtInput) || 0;
+    const carb = Number(logCarbInput) || 0;
+    const fat = Number(logFatInput) || 0;
+    if (cal === 0 && prot === 0 && carb === 0 && fat === 0) return;
+    handleLogNutrition(cal, prot, carb, fat);
+    setLogCalInput("");
+    setLogProtInput("");
+    setLogCarbInput("");
+    setLogFatInput("");
+  };
+
+  const handleUpdateTargets = () => {
+    updateNutrition({
+      ...nutrition,
+      targetCal: Number(targetCalInput) || 2000,
+      targetProt: Number(targetProtInput) || 150,
+      targetCarb: Number(targetCarbInput) || 200,
+      targetFat: Number(targetFatInput) || 65
+    });
+    setEditingNutritionTargets(false);
+  };
+
+  const handleResetNutrition = () => {
+    const updated = {
+      ...nutrition,
+      loggedCal: { ...nutrition.loggedCal, [activeDate]: 0 },
+      loggedProt: { ...nutrition.loggedProt, [activeDate]: 0 },
+      loggedCarb: { ...nutrition.loggedCarb, [activeDate]: 0 },
+      loggedFat: { ...nutrition.loggedFat, [activeDate]: 0 }
+    };
+    updateNutrition(updated);
+  };
 
   // Supplement cutoff checks
   const isWindowMissed = (window: "morning" | "lunch" | "evening", isTaken: boolean) => {
@@ -117,45 +170,6 @@ export default function HealthView({
     updateSupplements(supplements.filter(s => s.id !== id));
   };
 
-  // Stats Actions (clamp between 0-10)
-  const adjustStat = (field: keyof CharacterStats, amount: number) => {
-    const val = stats[field];
-    const nextVal = Math.min(Math.max(val + amount, 0), 10);
-    updateStats({
-      ...stats,
-      [field]: nextVal
-    });
-  };
-
-  // Skill Actions
-  const handleAddSkill = () => {
-    if (!newSkillName.trim() || !newSkillKeyResult.trim() || newSkillTarget === "") return;
-    const newSkill: Skill = {
-      id: "sk_" + Date.now(),
-      name: newSkillName.trim(),
-      keyResult: newSkillKeyResult.trim(),
-      currentProgress: 0,
-      targetProgress: Number(newSkillTarget)
-    };
-    updateSkills([...skills, newSkill]);
-    setNewSkillName("");
-    setNewSkillKeyResult("");
-    setNewSkillTarget("");
-  };
-
-  const handleDeleteSkill = (id: string) => {
-    updateSkills(skills.filter(s => s.id !== id));
-  };
-
-  const handleCommitSkillProgress = (id: string) => {
-    if (editSkillProgress === "") return;
-    const progress = Math.min(Math.max(Number(editSkillProgress), 0), 99999);
-    updateSkills(
-      skills.map(s => s.id === id ? { ...s, currentProgress: progress } : s)
-    );
-    setEditingSkillId(null);
-    setEditSkillProgress("");
-  };
 
   // Water Coach Math
   const getWaterTargetMl = () => {
@@ -181,11 +195,23 @@ export default function HealthView({
     });
   };
 
-  // Radar chart coordinates (Center 40,40 Radius 30)
-  const W_y = 40 - 3 * stats.willpower;
-  const F_x = 40 + 3 * stats.focus;
-  const C_y = 40 + 3 * stats.clarity;
-  const E_x = 40 - 3 * stats.energy;
+  // Nutrition Math
+  const targetCal = nutrition?.targetCal || 2200;
+  const targetProt = nutrition?.targetProt || 150;
+  const targetCarb = nutrition?.targetCarb || 220;
+  const targetFat = nutrition?.targetFat || 70;
+
+  const loggedCal = nutrition?.loggedCal[activeDate] || 0;
+  const loggedProt = nutrition?.loggedProt[activeDate] || 0;
+  const loggedCarb = nutrition?.loggedCarb[activeDate] || 0;
+  const loggedFat = nutrition?.loggedFat[activeDate] || 0;
+
+  const calPercent = Math.min(Math.round((loggedCal / targetCal) * 100), 100);
+  const protPercent = Math.min(Math.round((loggedProt / targetProt) * 100), 100);
+  const carbPercent = Math.min(Math.round((loggedCarb / targetCarb) * 100), 100);
+  const fatPercent = Math.min(Math.round((loggedFat / targetFat) * 100), 100);
+
+
 
   return (
     <div className="space-y-4 text-zinc-200">
@@ -221,234 +247,6 @@ export default function HealthView({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 animate-page-fade">
         
         {/* Left Column: Character Stats & Skills */}
-        <div className="lg:col-span-6 space-y-4">
-          
-          {/* Character Stats & Radar Matrix */}
-          <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-            <CardHeader className="p-4 border-b border-zinc-800">
-              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">CHARACTER CORE</span>
-              <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-widest">COGNITIVE BIOMARKERS</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 space-y-4">
-              
-              {/* Double sub-panel split: left sliders, right SVG radar */}
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
-                
-                {/* Sliders (7 cols) */}
-                <div className="sm:col-span-7 space-y-3.5">
-                  {/* WILLPOWER */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center text-[9px] font-mono uppercase font-semibold text-zinc-400">
-                      <span>WILLPOWER</span>
-                      <span className="font-bold text-zinc-250">{stats.willpower}/10</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-grow bg-[#000000] border border-zinc-850 h-2 rounded-sm overflow-hidden">
-                        <div className="bg-zinc-200 h-full transition-all duration-500" style={{ width: `${stats.willpower * 10}%` }} />
-                      </div>
-                      <div className="flex gap-1.5 flex-shrink-0">
-                        <button onClick={() => adjustStat("willpower", -1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono active:scale-90 transition-transform">-</button>
-                        <button onClick={() => adjustStat("willpower", 1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono active:scale-90 transition-transform">+</button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* FOCUS */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center text-[9px] font-mono uppercase font-semibold text-zinc-400">
-                      <span>FOCUS METRIC</span>
-                      <span className="font-bold text-zinc-250">{stats.focus}/10</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-grow bg-[#000000] border border-zinc-850 h-2 rounded-sm overflow-hidden">
-                        <div className="bg-zinc-200 h-full transition-all duration-500" style={{ width: `${stats.focus * 10}%` }} />
-                      </div>
-                      <div className="flex gap-1.5 flex-shrink-0">
-                        <button onClick={() => adjustStat("focus", -1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono active:scale-90 transition-transform">-</button>
-                        <button onClick={() => adjustStat("focus", 1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono active:scale-90 transition-transform">+</button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* CLARITY */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center text-[9px] font-mono uppercase font-semibold text-zinc-400">
-                      <span>CLARITY LEVEL</span>
-                      <span className="font-bold text-zinc-250">{stats.clarity}/10</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-grow bg-[#000000] border border-zinc-850 h-2 rounded-sm overflow-hidden">
-                        <div className="bg-zinc-200 h-full transition-all duration-500" style={{ width: `${stats.clarity * 10}%` }} />
-                      </div>
-                      <div className="flex gap-1.5 flex-shrink-0">
-                        <button onClick={() => adjustStat("clarity", -1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono active:scale-90 transition-transform">-</button>
-                        <button onClick={() => adjustStat("clarity", 1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono active:scale-90 transition-transform">+</button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* ENERGY */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center text-[9px] font-mono uppercase font-semibold text-zinc-400">
-                      <span>ADAPTOGEN ENERGY</span>
-                      <span className="font-bold text-zinc-250">{stats.energy}/10</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-grow bg-[#000000] border border-zinc-850 h-2 rounded-sm overflow-hidden">
-                        <div className="bg-zinc-200 h-full transition-all duration-500" style={{ width: `${stats.energy * 10}%` }} />
-                      </div>
-                      <div className="flex gap-1.5 flex-shrink-0">
-                        <button onClick={() => adjustStat("energy", -1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono active:scale-90 transition-transform">-</button>
-                        <button onClick={() => adjustStat("energy", 1)} className="px-1.5 py-0.5 rounded border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-[10px] font-bold font-mono active:scale-90 transition-transform">+</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* SVG Radar Chart (5 cols) */}
-                <div className="sm:col-span-5 flex flex-col items-center justify-center border-t sm:border-t-0 sm:border-l border-zinc-900 pt-4 sm:pt-0 sm:pl-4">
-                  <div className="relative w-32 h-32 flex items-center justify-center">
-                    <svg className="w-full h-full" viewBox="0 0 80 80">
-                      {/* Grid reference backgrounds */}
-                      {/* Max level 10 */}
-                      <polygon points="40,10 70,40 40,70 10,40" className="fill-none stroke-zinc-850 stroke-[0.5]" />
-                      {/* Mid level 5 */}
-                      <polygon points="40,25 55,40 40,55 25,40" className="fill-none stroke-zinc-900 stroke-[0.5]" />
-                      
-                      {/* Axes */}
-                      <line x1="40" y1="10" x2="40" y2="70" className="stroke-zinc-900 stroke-[0.5] stroke-dashed" />
-                      <line x1="10" y1="40" x2="70" y2="40" className="stroke-zinc-900 stroke-[0.5] stroke-dashed" />
-                      
-                      {/* Axis Label placements */}
-                      <text x="40" y="8" className="text-[5px] fill-zinc-550 font-mono text-center uppercase font-bold" textAnchor="middle">Will</text>
-                      <text x="73" y="42" className="text-[5px] fill-zinc-550 font-mono uppercase font-bold" textAnchor="start">Foc</text>
-                      <text x="40" y="78" className="text-[5px] fill-zinc-550 font-mono uppercase font-bold" textAnchor="middle">Clar</text>
-                      <text x="7" y="42" className="text-[5px] fill-zinc-550 font-mono uppercase font-bold" textAnchor="end">Eng</text>
-
-                      {/* Stat area polygon with smooth transition */}
-                      <polygon
-                        points={`40,${W_y} ${F_x},40 40,${C_y} ${E_x},40`}
-                        className="fill-zinc-100/[0.08] stroke-zinc-200 stroke-[1.5] transition-all duration-500"
-                      />
-
-                      {/* Individual nodes */}
-                      <circle cx="40" cy={W_y} r="1.5" className="fill-zinc-100 transition-all duration-500" />
-                      <circle cx={F_x} cy="40" r="1.5" className="fill-zinc-100 transition-all duration-500" />
-                      <circle cx="40" cy={C_y} r="1.5" className="fill-zinc-100 transition-all duration-500" />
-                      <circle cx={E_x} cy="40" r="1.5" className="fill-zinc-100 transition-all duration-500" />
-                    </svg>
-                  </div>
-                  <span className="text-[7.5px] font-mono text-zinc-500 uppercase tracking-widest font-bold mt-1">COGNITIVE RADAR</span>
-                </div>
-
-              </div>
-
-            </CardContent>
-          </Card>
-
-          {/* Skill Tree Matrix */}
-          <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-            <CardHeader className="p-4 border-b border-zinc-800">
-              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">TALENT PATHS</span>
-              <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-widest">SKILL DEVELOPMENT TREE</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 space-y-4">
-              
-              {/* Skill rows list */}
-              <div className="space-y-2">
-                {skills.map((skill) => (
-                  <div key={skill.id} className="group border border-zinc-900 bg-[#000000]/60 hover:bg-[#0a0a0a] rounded px-3 py-2 flex items-center justify-between text-xs transition-colors">
-                    <div className="space-y-0.5 flex-1 pr-3">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-zinc-200">{skill.name}</span>
-                        <span className="text-[8px] font-mono bg-zinc-900 text-zinc-500 border border-zinc-850 px-1 rounded uppercase tracking-wide">OKR</span>
-                      </div>
-                      <p className="text-[9px] font-mono text-zinc-555 uppercase tracking-wide">{skill.keyResult}</p>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      {editingSkillId === skill.id ? (
-                        <div className="flex items-center gap-1.5">
-                          <input
-                            type="number"
-                            value={editSkillProgress}
-                            onChange={(e) => setEditSkillProgress(e.target.value === "" ? "" : Number(e.target.value))}
-                            className="w-16 bg-transparent border border-zinc-800 rounded text-right px-2 py-0.5 text-xs font-mono"
-                            placeholder="Val"
-                            autoFocus
-                          />
-                          <button
-                            onClick={() => handleCommitSkillProgress(skill.id)}
-                            className="px-2 py-0.5 bg-zinc-100 hover:bg-white text-zinc-950 rounded text-[9px] font-mono font-bold uppercase"
-                          >
-                            Save
-                          </button>
-                        </div>
-                      ) : (
-                        <span 
-                          onClick={() => {
-                            setEditingSkillId(skill.id);
-                            setEditSkillProgress(skill.currentProgress);
-                          }}
-                          className="font-mono text-zinc-300 font-bold hover:text-zinc-100 cursor-pointer"
-                        >
-                          {skill.currentProgress} / {skill.targetProgress}
-                        </span>
-                      )}
-
-                      <button
-                        onClick={() => handleDeleteSkill(skill.id)}
-                        className="text-zinc-650 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                
-                {skills.length === 0 && (
-                  <div className="text-center py-4 text-[9px] font-mono uppercase tracking-widest text-zinc-650">No development skills logged.</div>
-                )}
-              </div>
-
-              {/* Add Skill form */}
-              <div className="flex flex-col gap-2 pt-3 border-t border-zinc-900 mt-2">
-                <input
-                  type="text"
-                  value={newSkillName}
-                  onChange={(e) => setNewSkillName(e.target.value)}
-                  placeholder="NEW SKILL NAME..."
-                  className="bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
-                />
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newSkillKeyResult}
-                    onChange={(e) => setNewSkillKeyResult(e.target.value)}
-                    placeholder="KEY RESULT TARGET..."
-                    className="flex-1 bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
-                  />
-                  <input
-                    type="number"
-                    value={newSkillTarget}
-                    onChange={(e) => setNewSkillTarget(e.target.value === "" ? "" : Number(e.target.value))}
-                    placeholder="TARGET..."
-                    className="w-20 bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
-                  />
-                  <button
-                    onClick={handleAddSkill}
-                    className="px-4 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-widest uppercase transition-all"
-                  >
-                    Add
-                  </button>
-                </div>
-              </div>
-
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right Column: Supplements & Water Calculator */}
         <div className="lg:col-span-6 space-y-4">
           
           {/* Supplement Dispatcher */}
@@ -604,7 +402,7 @@ export default function HealthView({
                     <span>PROGRESS RATE</span>
                     <span>{waterPercent}%</span>
                   </div>
-                  <div className="w-full bg-[#000000] border border-zinc-850 h-1.5 rounded-sm overflow-hidden">
+                  <div className="w-full bg-[#000000] border border-zinc-855 h-1.5 rounded-sm overflow-hidden">
                     <div className="bg-zinc-200 h-full transition-all duration-500" style={{ width: `${waterPercent}%` }} />
                   </div>
                 </div>
@@ -658,7 +456,7 @@ export default function HealthView({
                       type="number"
                       value={water.caffeineMg}
                       onChange={(e) => updateWater({ ...water, caffeineMg: Number(e.target.value) })}
-                      className="w-full bg-[#000000] border border-zinc-850 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                      className="w-full bg-[#000000] border border-zinc-855 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none focus:border-zinc-700"
                     />
                   </div>
 
@@ -679,6 +477,224 @@ export default function HealthView({
                 </div>
               </div>
 
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column: Metabolic Ledger */}
+        <div className="lg:col-span-6 space-y-4">
+          
+          {/* Nutritional Macro Monitor Widget */}
+          <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
+            <CardHeader className="p-4 border-b border-zinc-800 flex justify-between flex-row items-center gap-3">
+              <div className="space-y-0.5">
+                <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">METABOLIC LEDGER</span>
+                <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-widest">NUTRITIONAL MACRO MONITOR</CardTitle>
+              </div>
+              <button
+                onClick={() => {
+                  if (editingNutritionTargets) {
+                    handleUpdateTargets();
+                  } else {
+                    setTargetCalInput(targetCal);
+                    setTargetProtInput(targetProt);
+                    setTargetCarbInput(targetCarb);
+                    setTargetFatInput(targetFat);
+                    setEditingNutritionTargets(true);
+                  }
+                }}
+                className="px-2 py-1 border border-zinc-850 bg-[#000000] hover:bg-[#0a0a0a] text-zinc-400 rounded text-[9.5px] font-mono font-bold uppercase transition-colors active:scale-95"
+              >
+                {editingNutritionTargets ? "Save Targets" : "Edit Targets"}
+              </button>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              {editingNutritionTargets ? (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 border border-zinc-900 bg-[#000000]/60 p-3 rounded-md">
+                  <div className="space-y-0.5">
+                    <label className="text-[7.5px] font-mono text-zinc-550 uppercase font-bold">TARGET CALORIES</label>
+                    <input
+                      type="number"
+                      value={targetCalInput}
+                      onChange={(e) => setTargetCalInput(e.target.value === "" ? "" : Number(e.target.value))}
+                      className="w-full bg-[#000000] border border-zinc-855 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                    />
+                  </div>
+                  <div className="space-y-0.5">
+                    <label className="text-[7.5px] font-mono text-zinc-550 uppercase font-bold">TARGET PRO (G)</label>
+                    <input
+                      type="number"
+                      value={targetProtInput}
+                      onChange={(e) => setTargetProtInput(e.target.value === "" ? "" : Number(e.target.value))}
+                      className="w-full bg-[#000000] border border-zinc-855 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                    />
+                  </div>
+                  <div className="space-y-0.5">
+                    <label className="text-[7.5px] font-mono text-zinc-555 uppercase font-bold">TARGET CARB (G)</label>
+                    <input
+                      type="number"
+                      value={targetCarbInput}
+                      onChange={(e) => setTargetCarbInput(e.target.value === "" ? "" : Number(e.target.value))}
+                      className="w-full bg-[#000000] border border-zinc-855 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                    />
+                  </div>
+                  <div className="space-y-0.5">
+                    <label className="text-[7.5px] font-mono text-zinc-555 uppercase font-bold">TARGET FAT (G)</label>
+                    <input
+                      type="number"
+                      value={targetFatInput}
+                      onChange={(e) => setTargetFatInput(e.target.value === "" ? "" : Number(e.target.value))}
+                      className="w-full bg-[#000000] border border-zinc-855 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Calorie Progress Ring or Bar */}
+                  <div className="flex flex-col items-center justify-center p-4 border border-zinc-900 bg-[#000000]/60 rounded-md gap-2">
+                    <div className="flex items-center gap-2">
+                      <Flame className="h-5 w-5 text-zinc-450 animate-pulse" />
+                      <span className="text-xl font-bold font-mono tracking-tight text-zinc-100">
+                        {loggedCal} kcal / <span className="text-zinc-500">{targetCal} kcal</span>
+                      </span>
+                    </div>
+                    <div className="w-full max-w-sm space-y-1">
+                      <div className="flex justify-between text-[8px] font-mono text-zinc-500 uppercase tracking-wider font-semibold">
+                        <span>ENERGY SATURATION</span>
+                        <span>{calPercent}%</span>
+                      </div>
+                      <div className="w-full bg-[#000000] border border-zinc-850 h-1.5 rounded-sm overflow-hidden">
+                        <div className="bg-zinc-200 h-full transition-all duration-500" style={{ width: `${calPercent}%` }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Macronutrient breakdown */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* Protein */}
+                    <div className="border border-zinc-900 bg-[#000000]/40 p-2 rounded space-y-1">
+                      <div className="flex justify-between text-[8px] font-mono text-zinc-550 uppercase tracking-wider font-bold">
+                        <span>PRO</span>
+                        <span className="text-zinc-350">{loggedProt}g / {targetProt}g</span>
+                      </div>
+                      <div className="w-full bg-[#000000] border border-zinc-850 h-1 rounded-sm overflow-hidden">
+                        <div className="bg-zinc-200 h-full transition-all duration-500" style={{ width: `${protPercent}%` }} />
+                      </div>
+                      <div className="text-right text-[8px] font-mono text-zinc-550 font-bold">{protPercent}%</div>
+                    </div>
+
+                    {/* Carbs */}
+                    <div className="border border-zinc-900 bg-[#000000]/40 p-2 rounded space-y-1">
+                      <div className="flex justify-between text-[8px] font-mono text-zinc-555 uppercase tracking-wider font-bold">
+                        <span>CARB</span>
+                        <span className="text-zinc-350">{loggedCarb}g / {targetCarb}g</span>
+                      </div>
+                      <div className="w-full bg-[#000000] border border-zinc-850 h-1 rounded-sm overflow-hidden">
+                        <div className="bg-zinc-200 h-full transition-all duration-500" style={{ width: `${carbPercent}%` }} />
+                      </div>
+                      <div className="text-right text-[8px] font-mono text-zinc-555 font-bold">{carbPercent}%</div>
+                    </div>
+
+                    {/* Fat */}
+                    <div className="border border-zinc-900 bg-[#000000]/40 p-2 rounded space-y-1">
+                      <div className="flex justify-between text-[8px] font-mono text-zinc-555 uppercase tracking-wider font-bold">
+                        <span>FAT</span>
+                        <span className="text-zinc-350">{loggedFat}g / {targetFat}g</span>
+                      </div>
+                      <div className="w-full bg-[#000000] border border-zinc-850 h-1 rounded-sm overflow-hidden">
+                        <div className="bg-zinc-200 h-full transition-all duration-500" style={{ width: `${fatPercent}%` }} />
+                      </div>
+                      <div className="text-right text-[8px] font-mono text-zinc-555 font-bold">{fatPercent}%</div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Log panel */}
+              <div className="space-y-3 border-t border-zinc-900 pt-3">
+                <span className="text-[9px] font-mono uppercase tracking-widest font-bold text-zinc-500 flex items-center gap-1">
+                  <PlusCircle className="h-3.5 w-3.5" /> LOG INTENDED NUTRITION
+                </span>
+
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  <div className="space-y-0.5">
+                    <label className="text-[7.5px] font-mono text-zinc-550 uppercase font-bold">CALORIES</label>
+                    <input
+                      type="number"
+                      placeholder="kcal"
+                      value={logCalInput}
+                      onChange={(e) => setLogCalInput(e.target.value === "" ? "" : Number(e.target.value))}
+                      className="w-full bg-[#000000] border border-zinc-855 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                    />
+                  </div>
+                  <div className="space-y-0.5">
+                    <label className="text-[7.5px] font-mono text-zinc-550 uppercase font-bold">PRO (G)</label>
+                    <input
+                      type="number"
+                      placeholder="grams"
+                      value={logProtInput}
+                      onChange={(e) => setLogProtInput(e.target.value === "" ? "" : Number(e.target.value))}
+                      className="w-full bg-[#000000] border border-zinc-855 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                    />
+                  </div>
+                  <div className="space-y-0.5">
+                    <label className="text-[7.5px] font-mono text-zinc-555 uppercase font-bold">CARB (G)</label>
+                    <input
+                      type="number"
+                      placeholder="grams"
+                      value={logCarbInput}
+                      onChange={(e) => setLogCarbInput(e.target.value === "" ? "" : Number(e.target.value))}
+                      className="w-full bg-[#000000] border border-zinc-855 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                    />
+                  </div>
+                  <div className="space-y-0.5">
+                    <label className="text-[7.5px] font-mono text-zinc-555 uppercase font-bold">FAT (G)</label>
+                    <input
+                      type="number"
+                      placeholder="grams"
+                      value={logFatInput}
+                      onChange={(e) => setLogFatInput(e.target.value === "" ? "" : Number(e.target.value))}
+                      className="w-full bg-[#000000] border border-zinc-855 rounded px-2 py-1 text-xs font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <button
+                      onClick={handleCustomLog}
+                      className="w-full h-8 bg-zinc-100 hover:bg-white text-zinc-950 rounded text-[9.5px] font-mono font-bold uppercase tracking-wider transition-colors"
+                    >
+                      LOG
+                    </button>
+                  </div>
+                </div>
+
+                {/* Pre-calculated entries */}
+                <div className="flex flex-wrap gap-1.5 pt-1.5 border-t border-zinc-900/50">
+                  <button
+                    onClick={() => handleLogNutrition(250, 30, 3, 2)}
+                    className="px-2 py-1 border border-zinc-905 bg-[#000000]/60 hover:bg-[#0a0a0a] text-[8.5px] font-mono text-zinc-400 rounded uppercase font-bold transition-all active:scale-95"
+                  >
+                    + SHAKE (30g P, 250 kcal)
+                  </button>
+                  <button
+                    onClick={() => handleLogNutrition(650, 45, 75, 18)}
+                    className="px-2 py-1 border border-zinc-905 bg-[#000000]/60 hover:bg-[#0a0a0a] text-[8.5px] font-mono text-zinc-400 rounded uppercase font-bold transition-all active:scale-95"
+                  >
+                    + MEAL (45g P, 650 kcal)
+                  </button>
+                  <button
+                    onClick={() => handleLogNutrition(150, 1, 35, 0)}
+                    className="px-2 py-1 border border-zinc-905 bg-[#000000]/60 hover:bg-[#0a0a0a] text-[8.5px] font-mono text-zinc-400 rounded uppercase font-bold transition-all active:scale-95"
+                  >
+                    + SNACK (35g C, 150 kcal)
+                  </button>
+                  <button
+                    onClick={handleResetNutrition}
+                    className="ml-auto px-2 py-1 border border-zinc-905 bg-red-950/10 hover:bg-red-950/20 text-[8.5px] font-mono text-red-400 rounded uppercase font-bold transition-all active:scale-95"
+                  >
+                    RESET
+                  </button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

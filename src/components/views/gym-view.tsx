@@ -81,9 +81,15 @@ export default function GymView({
   };
 
   const handleLogSet = (id: string) => {
-    const logW = loggingWeights[id] ?? 0;
-    const logR = loggingReps[id] ?? 0;
-    if (logW <= 0 || logR <= 0) return;
+    const exObj = gymExercises.find(e => e.id === id);
+    if (!exObj) return;
+
+    const inputW = loggingWeights[id];
+    const inputR = loggingReps[id];
+
+    // Fallback to exercise baseline values if blank or <= 0
+    const logW = (inputW !== undefined && inputW > 0) ? inputW : exObj.weight;
+    const logR = (inputR !== undefined && inputR > 0) ? inputR : exObj.targetReps;
 
     const updated = gymExercises.map((ex) => {
       if (ex.id === id) {

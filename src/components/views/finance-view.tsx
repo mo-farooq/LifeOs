@@ -29,6 +29,7 @@ interface FinanceViewProps {
   orders: PurchaseOrder[];
   updateOrders: (orders: PurchaseOrder[]) => void;
   activeDate: string;
+  monthlyNetWorthHistory: Record<string, number>;
 }
 
 export default function FinanceView({
@@ -38,7 +39,8 @@ export default function FinanceView({
   updateSubscriptions,
   orders,
   updateOrders,
-  activeDate
+  activeDate,
+  monthlyNetWorthHistory
 }: FinanceViewProps) {
   // Input states for adding
   const [newAssetName, setNewAssetName] = useState("");
@@ -193,7 +195,7 @@ export default function FinanceView({
     updateSubscriptions(subscriptions.filter(s => s.id !== id));
   };
 
-  // Log Expense Macro (deducts sub cost and advances renewal date by 1 month)
+  // Log Expense Macro (deducts sub cost and advances renewal date by 1 month, or 12 months if yearly)
   const handleLogSubExpense = (sub: Subscription) => {
     const updatedAssets = assets.map((asset) => {
       if (asset.id === sub.linkedAssetId) {
@@ -206,7 +208,11 @@ export default function FinanceView({
     });
 
     const renewal = new Date(sub.nextRenewalDate);
-    renewal.setMonth(renewal.getMonth() + 1);
+    if (sub.period === "yearly") {
+      renewal.setMonth(renewal.getMonth() + 12);
+    } else {
+      renewal.setMonth(renewal.getMonth() + 1);
+    }
     const nextRenewalStr = renewal.toISOString().split("T")[0];
 
     const updatedSubs = subscriptions.map((s) => {
@@ -238,15 +244,39 @@ export default function FinanceView({
 
   // Historical Net Worth Area Chart Renderer
   const renderHistoricalChart = () => {
-    // Generate historical points, integrating current live Net Worth as the last point
-    const historyData = [
-      { date: "JAN", amount: 18400 },
-      { date: "FEB", amount: 19800 },
-      { date: "MAR", amount: 19200 },
-      { date: "APR", amount: 20600 },
-      { date: "MAY", amount: 21200 },
-      { date: "JUN (CURR)", amount: netWorthTotal }
-    ];
+    const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+    const defaultHistory: Record<string, number> = {
+      "2026-01": 18400,
+      "2026-02": 19800,
+      "2026-03": 19200,
+      "2026-04": 20600,
+      "2026-05": 21200,
+    };
+
+    // Generate historical points dynamically
+    const historyData = [];
+    const currDate = new Date(activeDate);
+    
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(currDate.getFullYear(), currDate.getMonth() - i, 1);
+      const key = d.toISOString().split("T")[0].substring(0, 7); // YYYY-MM
+      
+      const monthLabel = monthNames[d.getMonth()];
+      const label = i === 0 ? `${monthLabel} (CURR)` : monthLabel;
+      
+      let amount = netWorthTotal;
+      if (i === 0) {
+        amount = netWorthTotal;
+      } else if (monthlyNetWorthHistory && monthlyNetWorthHistory[key] !== undefined) {
+        amount = monthlyNetWorthHistory[key];
+      } else if (defaultHistory[key] !== undefined) {
+        amount = defaultHistory[key];
+      } else {
+        amount = Math.max(0, netWorthTotal - i * 1000);
+      }
+      
+      historyData.push({ date: label, amount });
+    }
 
     const width = 500;
     const height = 90;

@@ -8,18 +8,26 @@ import {
   Wallet, 
   ChevronLeft, 
   ChevronRight,
-  Activity
+  Activity,
+  Zap,
+  Brain,
+  BookOpen,
+  Compass
 } from "lucide-react";
 
-export type NavTab = "dashboard" | "health" | "gym" | "finance";
+import { ModuleConfig, SleepConfig } from "@/types";
+
+export type NavTab = "dashboard" | "health" | "gym" | "finance" | "focus" | "brain" | "reviews" | "salah";
 
 interface SidebarProps {
   activeTab: NavTab;
   setActiveTab: (tab: NavTab) => void;
   currentTime: Date;
+  modules: ModuleConfig;
+  sleepConfig: SleepConfig;
 }
 
-export default function Sidebar({ activeTab, setActiveTab, currentTime }: SidebarProps) {
+export default function Sidebar({ activeTab, setActiveTab, currentTime, modules, sleepConfig }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const navItems = [
@@ -27,19 +35,47 @@ export default function Sidebar({ activeTab, setActiveTab, currentTime }: Sideba
     { id: "health" as NavTab, label: "HEALTH", icon: Heart },
     { id: "gym" as NavTab, label: "WORKOUT", icon: Dumbbell },
     { id: "finance" as NavTab, label: "FINANCE", icon: Wallet },
-  ];
+    { id: "focus" as NavTab, label: "FOCUS ROOM", icon: Zap },
+    { id: "brain" as NavTab, label: "SECOND BRAIN", icon: Brain },
+    { id: "reviews" as NavTab, label: "REFLECTIONS", icon: BookOpen },
+    { id: "salah" as NavTab, label: "SALAH TRACKER", icon: Compass },
+  ].filter(item => item.id === "dashboard" || modules[item.id as keyof ModuleConfig]);
 
-  // Awake Progress calculations (8:00 AM to 12:00 Midnight = 16 hours)
+  // Awake Progress calculations
   const getAwakeProgress = () => {
+    const start = sleepConfig?.awakeHourStart ?? 6;
+    const end = sleepConfig?.awakeHourEnd ?? 22;
+    
     const hour = currentTime.getHours();
     const min = currentTime.getMinutes();
     const decimalTime = hour + min / 60;
 
-    if (decimalTime < 8) return { percent: 0, sleeping: true };
-    if (decimalTime >= 24) return { percent: 100, sleeping: true };
+    let isAwake = false;
+    let elapsed = 0;
+    let total = 0;
 
-    const elapsed = decimalTime - 8;
-    const total = 16;
+    if (start < end) {
+      total = end - start;
+      if (decimalTime >= start && decimalTime < end) {
+        isAwake = true;
+        elapsed = decimalTime - start;
+      }
+    } else if (start > end) {
+      total = (24 - start) + end;
+      if (decimalTime >= start || decimalTime < end) {
+        isAwake = true;
+        elapsed = decimalTime >= start ? (decimalTime - start) : ((24 - start) + decimalTime);
+      }
+    } else {
+      total = 24;
+      isAwake = true;
+      elapsed = (decimalTime - start + 24) % 24;
+    }
+
+    if (!isAwake) {
+      return { percent: 0, sleeping: true };
+    }
+
     const percent = Math.min(Math.round((elapsed / total) * 100), 100);
     return { percent, sleeping: false };
   };
@@ -47,14 +83,13 @@ export default function Sidebar({ activeTab, setActiveTab, currentTime }: Sideba
   const awakeStatus = getAwakeProgress();
 
   const getActivePhase = () => {
+    if (awakeStatus.sleeping) return "SLEEPING";
     const hour = currentTime.getHours();
-    if (hour < 8) return "SLEEPING";
-    if (hour >= 8 && hour < 12) return "MORNING";
+    if (hour >= 5 && hour < 12) return "MORNING";
     if (hour >= 12 && hour < 15) return "MIDDAY";
     if (hour >= 15 && hour < 18) return "AFTERNOON";
-    if (hour >= 18 && hour < 21) return "EVENING";
-    if (hour >= 21 && hour < 24) return "BEDTIME";
-    return "SLEEPING";
+    if (hour >= 18 && hour < 22) return "EVENING";
+    return "BEDTIME";
   };
 
   const format12HourClock = () => {
@@ -113,7 +148,7 @@ export default function Sidebar({ activeTab, setActiveTab, currentTime }: Sideba
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md transition-all duration-150 group relative ${
                 isActive
                   ? "bg-[#0a0a0a] border border-zinc-800 text-zinc-50"
-                  : "border border-transparent text-zinc-500 hover:text-zinc-200 hover:bg-[#0a0a0a]/50"
+                  : "border border-transparent text-zinc-500 hover:text-zinc-205 hover:bg-[#0a0a0a]/50"
               }`}
             >
               <div className="flex items-center justify-center">
@@ -146,11 +181,10 @@ export default function Sidebar({ activeTab, setActiveTab, currentTime }: Sideba
         })}
       </nav>
 
-      {/* Mechanical SVG Awake Progress Ring Section (Persistent at bottom) */}
+      {/* Mechanical SVG Awake Progress Ring Section */}
       {!isCollapsed && (
         <div className="p-4 border-t border-zinc-900 bg-[#000000] flex flex-col items-center gap-3">
           <div className="relative w-28 h-28 flex items-center justify-center">
-            {/* SVG Progress Circle */}
             <svg className="absolute w-full h-full -rotate-90 origin-center" viewBox="0 0 80 80">
               <circle
                 cx="40"
@@ -169,7 +203,6 @@ export default function Sidebar({ activeTab, setActiveTab, currentTime }: Sideba
               />
             </svg>
             
-            {/* Text center stack */}
             <div className="text-center z-10 flex flex-col items-center justify-center space-y-0.5">
               <span className="text-[10px] font-mono font-bold tracking-tight text-zinc-100">
                 {awakeStatus.sleeping ? "0%" : `${awakeStatus.percent}%`}
