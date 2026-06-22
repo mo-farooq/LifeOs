@@ -11,7 +11,8 @@ import {
   BookOpen,
   Compass,
   Menu,
-  X
+  X,
+  Settings
 } from "lucide-react";
 import { ModuleConfig } from "@/types";
 import { NavTab } from "./sidebar";
@@ -39,14 +40,15 @@ export default function BottomNav({ activeTab, setActiveTab, modules }: BottomNa
     { id: "focus" as NavTab, label: "FOCUS ROOM", icon: Zap, desc: "Pomodoro & Lo-Fi" },
     { id: "brain" as NavTab, label: "SECOND BRAIN", icon: Brain, desc: "Notes & Ideas" },
     { id: "reviews" as NavTab, label: "REFLECTIONS", icon: BookOpen, desc: "Daily Audits & AI Report" },
-  ].filter(item => modules[item.id as keyof ModuleConfig]);
+    { id: "settings" as NavTab, label: "SETTINGS", icon: Settings, desc: "System Config & Backups" },
+  ].filter(item => item.id === "settings" || modules[item.id as keyof ModuleConfig]);
 
   const visibleTabIds = ["dashboard", "gym", "salah"];
   const isMoreActive = !visibleTabIds.includes(activeTab);
 
   return (
     <>
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#000000] border-t border-zinc-800 text-zinc-550 pb-[calc(env(safe-area-inset-bottom)+0.25rem)] pt-1.5 px-4">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#000000] border-t border-zinc-800 text-zinc-550 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-2.5 px-6">
         <div className="flex justify-between items-center max-w-lg mx-auto">
           {/* Main 3 tabs */}
           {mainNavItems.map((item) => {
@@ -60,26 +62,26 @@ export default function BottomNav({ activeTab, setActiveTab, modules }: BottomNa
                   setActiveTab(item.id);
                   setIsMoreOpen(false);
                 }}
-                className="flex flex-col items-center justify-center py-1 px-1.5 rounded transition-all duration-150 relative group flex-grow"
+                className="flex flex-col items-center justify-center py-1.5 px-2 rounded transition-all duration-150 relative group flex-grow"
               >
                 <div
-                  className={`p-1 rounded transition-all duration-150 ${
+                  className={`p-1.5 rounded transition-all duration-150 ${
                     isActive 
                       ? "bg-[#0a0a0a] border border-zinc-800 text-zinc-100" 
                       : "text-zinc-550 hover:text-zinc-350"
                   }`}
                 >
-                  <Icon className="h-4.5 w-4.5" />
+                  <Icon className="h-5.5 w-5.5" />
                 </div>
                 <span
-                  className={`text-[7px] font-mono tracking-wider mt-0.5 transition-colors duration-150 ${
+                  className={`text-[9px] font-mono tracking-wider mt-0.5 transition-colors duration-150 ${
                     isActive ? "text-zinc-200 font-bold" : "text-zinc-550"
                   }`}
                 >
                   {item.label}
                 </span>
                 {isActive && (
-                  <span className="absolute top-0 w-4 h-[1px] rounded bg-zinc-200" />
+                  <span className="absolute top-0 w-6 h-[1px] rounded bg-zinc-200" />
                 )}
               </button>
             );
@@ -89,26 +91,26 @@ export default function BottomNav({ activeTab, setActiveTab, modules }: BottomNa
           {moreNavItems.length > 0 && (
             <button
               onClick={() => setIsMoreOpen(!isMoreOpen)}
-              className="flex flex-col items-center justify-center py-1 px-1.5 rounded transition-all duration-150 relative group flex-grow"
+              className="flex flex-col items-center justify-center py-1.5 px-2 rounded transition-all duration-150 relative group flex-grow"
             >
               <div
-                className={`p-1 rounded transition-all duration-150 ${
+                className={`p-1.5 rounded transition-all duration-150 ${
                   isMoreActive || isMoreOpen
                     ? "bg-[#0a0a0a] border border-zinc-800 text-zinc-100" 
                     : "text-zinc-550 hover:text-zinc-350"
                 }`}
               >
-                {isMoreOpen ? <X className="h-4.5 w-4.5" /> : <Menu className="h-4.5 w-4.5" />}
+                {isMoreOpen ? <X className="h-5.5 w-5.5" /> : <Menu className="h-5.5 w-5.5" />}
               </div>
               <span
-                className={`text-[7px] font-mono tracking-wider mt-0.5 transition-colors duration-150 ${
+                className={`text-[9px] font-mono tracking-wider mt-0.5 transition-colors duration-150 ${
                   isMoreActive || isMoreOpen ? "text-zinc-200 font-bold" : "text-zinc-550"
                 }`}
               >
                 MORE
               </span>
-              {(isMoreActive && !isMoreOpen) && (
-                <span className="absolute top-0 w-4 h-[1px] rounded bg-zinc-200" />
+              {isMoreActive && !isMoreOpen && (
+                <span className="absolute top-0 w-6 h-[1px] rounded bg-zinc-200" />
               )}
             </button>
           )}

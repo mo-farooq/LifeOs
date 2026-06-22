@@ -19,7 +19,7 @@ import {
   TrendingDown,
   DollarSign
 } from "lucide-react";
-import { Asset, Subscription, PurchaseOrder } from "@/types";
+import { Asset, Subscription, PurchaseOrder, BlocksConfig } from "@/types";
 
 interface FinanceViewProps {
   assets: Asset[];
@@ -30,6 +30,7 @@ interface FinanceViewProps {
   updateOrders: (orders: PurchaseOrder[]) => void;
   activeDate: string;
   monthlyNetWorthHistory: Record<string, number>;
+  blocksConfig?: BlocksConfig;
 }
 
 export default function FinanceView({
@@ -40,8 +41,15 @@ export default function FinanceView({
   orders,
   updateOrders,
   activeDate,
-  monthlyNetWorthHistory
+  monthlyNetWorthHistory,
+  blocksConfig
 }: FinanceViewProps) {
+  const showNetWorthProgress = blocksConfig?.netWorthProgress ?? true;
+  const showRecurringSubs = blocksConfig?.recurringSubs ?? true;
+  const showPurchaseOrders = blocksConfig?.purchaseOrders ?? true;
+
+  const leftSpan = !showRecurringSubs ? "lg:col-span-12" : "lg:col-span-7";
+  const rightSpan = (!showNetWorthProgress && !showPurchaseOrders) ? "lg:col-span-12" : "lg:col-span-5";
   // Input states for adding
   const [newAssetName, setNewAssetName] = useState("");
   const [newAssetAmount, setNewAssetAmount] = useState<number | "">("");
@@ -359,15 +367,15 @@ export default function FinanceView({
       `}</style>
       
       {/* Net Worth Summary Panel */}
-      <div className="rounded-md border border-zinc-800 bg-[#0a0a0a] p-5 animate-page-fade">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="space-y-0.5 w-full md:w-auto">
-            <span className="text-[9px] font-mono uppercase tracking-widest font-semibold text-zinc-500">LIQUID LEDGER</span>
-            <h2 className="text-3xl font-mono font-bold tracking-tight text-zinc-50">
+      <div className="rounded-md border border-zinc-800 bg-[#0a0a0a] p-6 animate-page-fade">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="space-y-1 w-full md:w-auto">
+            <span className="text-xs font-mono uppercase tracking-widest font-semibold text-zinc-500">LIQUID LEDGER</span>
+            <h2 className="text-4xl font-mono font-bold tracking-tight text-zinc-50">
               {formatMoney(netWorthTotal)}
             </h2>
-            <div className="flex items-center gap-1.5 text-[9px] font-mono text-zinc-500 uppercase tracking-wide">
-              <TrendingUp className="h-3.5 w-3.5 text-zinc-400" />
+            <div className="flex items-center gap-2 text-xs font-mono text-zinc-550 uppercase tracking-wide">
+              <TrendingUp className="h-4 w-4 text-zinc-450" />
               <span>Global reserves tracking active</span>
             </div>
             
@@ -377,15 +385,15 @@ export default function FinanceView({
 
           {/* SVG concentric Donut chart with interactive hover */}
           {netWorthTotal > 0 && (
-            <div className="flex items-center gap-5 bg-[#000000] border border-zinc-900 px-5 py-4 rounded-md">
-              <div className="relative w-20 h-20 flex items-center justify-center">
+            <div className="flex items-center gap-6 bg-[#000000] border border-zinc-900 px-6 py-5 rounded-md">
+              <div className="relative w-24 h-24 flex items-center justify-center">
                 <svg className="-rotate-90 w-full h-full" viewBox="0 0 80 80">
                   {/* Bank slice */}
                   <circle
                     cx="40"
                     cy="40"
                     r={radius}
-                    className={`stroke-zinc-150 fill-none transition-all duration-300 cursor-pointer ${
+                    className={`stroke-zinc-155 fill-none transition-all duration-300 cursor-pointer ${
                       hoveredCategory === "bank" ? "stroke-[8] scale-105" : "stroke-[6]"
                     }`}
                     strokeDasharray={`${(bankPct / 100) * circ} ${circ}`}
@@ -436,50 +444,50 @@ export default function FinanceView({
 
                 {/* Concentric center text details */}
                 <div className="absolute text-center z-10 flex flex-col items-center justify-center">
-                  <span className="text-[9px] font-mono font-bold tracking-tight text-zinc-100">
+                  <span className="text-xs font-mono font-bold tracking-tight text-zinc-100">
                     {hoveredCategory === "bank" ? `${Math.round(bankPct)}%` :
                      hoveredCategory === "stocks" ? `${Math.round(stocksPct)}%` :
                      hoveredCategory === "crypto" ? `${Math.round(cryptoPct)}%` :
                      hoveredCategory === "other" ? `${Math.round(otherPct)}%` : "NW"}
                   </span>
-                  <span className="text-[6.5px] font-mono text-zinc-500 uppercase tracking-widest font-bold">
+                  <span className="text-[9.5px] font-mono text-zinc-500 uppercase tracking-widest font-bold">
                     {hoveredCategory || "STACK"}
                   </span>
                 </div>
               </div>
 
               {/* Legends list */}
-              <div className="flex flex-col gap-1 text-[8.5px] font-mono">
+              <div className="flex flex-col gap-1.5 text-xs font-mono">
                 <div 
-                  className={`flex items-center gap-2 p-1 rounded transition-colors duration-150 ${hoveredCategory === "bank" ? "bg-zinc-950 border border-zinc-900" : ""}`}
+                  className={`flex items-center gap-2.5 p-1 rounded transition-colors duration-150 ${hoveredCategory === "bank" ? "bg-zinc-950 border border-zinc-900" : ""}`}
                   onMouseEnter={() => setHoveredCategory("bank")}
                   onMouseLeave={() => setHoveredCategory(null)}
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-150" />
+                  <span className="w-2 h-2 rounded-full bg-zinc-150" />
                   <span className="text-zinc-400 uppercase">BANK: {Math.round(bankPct)}%</span>
                 </div>
                 <div 
-                  className={`flex items-center gap-2 p-1 rounded transition-colors duration-150 ${hoveredCategory === "stocks" ? "bg-zinc-950 border border-zinc-900" : ""}`}
+                  className={`flex items-center gap-2.5 p-1 rounded transition-colors duration-150 ${hoveredCategory === "stocks" ? "bg-zinc-950 border border-zinc-900" : ""}`}
                   onMouseEnter={() => setHoveredCategory("stocks")}
                   onMouseLeave={() => setHoveredCategory(null)}
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+                  <span className="w-2 h-2 rounded-full bg-zinc-400" />
                   <span className="text-zinc-400 uppercase">STOCKS: {Math.round(stocksPct)}%</span>
                 </div>
                 <div 
-                  className={`flex items-center gap-2 p-1 rounded transition-colors duration-150 ${hoveredCategory === "crypto" ? "bg-zinc-950 border border-zinc-900" : ""}`}
+                  className={`flex items-center gap-2.5 p-1 rounded transition-colors duration-150 ${hoveredCategory === "crypto" ? "bg-zinc-950 border border-zinc-900" : ""}`}
                   onMouseEnter={() => setHoveredCategory("crypto")}
                   onMouseLeave={() => setHoveredCategory(null)}
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-650" />
+                  <span className="w-2 h-2 rounded-full bg-zinc-650" />
                   <span className="text-zinc-400 uppercase">CRYPTO: {Math.round(cryptoPct)}%</span>
                 </div>
                 <div 
-                  className={`flex items-center gap-2 p-1 rounded transition-colors duration-150 ${hoveredCategory === "other" ? "bg-zinc-950 border border-zinc-900" : ""}`}
+                  className={`flex items-center gap-2.5 p-1 rounded transition-colors duration-150 ${hoveredCategory === "other" ? "bg-zinc-950 border border-zinc-900" : ""}`}
                   onMouseEnter={() => setHoveredCategory("other")}
                   onMouseLeave={() => setHoveredCategory(null)}
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-zinc-800" />
+                  <span className="w-2 h-2 rounded-full bg-zinc-800" />
                   <span className="text-zinc-400 uppercase">OTHER: {Math.round(otherPct)}%</span>
                 </div>
               </div>
@@ -489,30 +497,32 @@ export default function FinanceView({
       </div>
 
       {/* Main split view grids */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 animate-page-fade" style={{ animationDelay: "50ms" }}>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-page-fade" style={{ animationDelay: "50ms" }}>
         
         {/* Left Column: Asset Allocations */}
-        <div className="lg:col-span-7 space-y-4">
-          
-          {/* Asset reserves card */}
-          <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-            <CardHeader className="p-4 border-b border-zinc-800">
-              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">CAPITAL RESERVES</span>
-              <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-widest">
+        {(showNetWorthProgress || showPurchaseOrders) && (
+          <div className={`${leftSpan} space-y-6`}>
+            
+            {/* Asset reserves card */}
+            {showNetWorthProgress && (
+              <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
+            <CardHeader className="p-6 border-b border-zinc-800">
+              <span className="text-xs font-mono uppercase tracking-widest text-zinc-500">CAPITAL RESERVES</span>
+              <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">
                 NET WORTH ASSET ALLOCATIONS
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 space-y-4">
+            <CardContent className="p-6 space-y-6">
               
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 {assets.map((item) => (
-                  <div key={item.id} className="group flex justify-between items-center px-3 py-2 border border-zinc-900 bg-[#000000]/60 hover:bg-[#0a0a0a] rounded text-xs font-mono transition-colors duration-150">
+                  <div key={item.id} className="group flex justify-between items-center px-4 py-3 border border-zinc-900 bg-[#000000]/60 hover:bg-[#0a0a0a] rounded text-sm font-mono transition-colors duration-150">
                     <div className="space-y-0.5">
                       <span className="text-zinc-200 font-semibold">{item.name}</span>
-                      <p className="text-[8px] font-mono text-zinc-550 uppercase tracking-widest">{item.category}</p>
+                      <p className="text-[10px] font-mono text-zinc-550 uppercase tracking-widest">{item.category}</p>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3.5">
                       {editingAssetId === item.id ? (
                         <input
                           type="text"
@@ -520,7 +530,7 @@ export default function FinanceView({
                           onChange={(e) => setEditAssetVal(e.target.value)}
                           onBlur={() => handleEditAssetCommit(item.id)}
                           onKeyDown={(e) => e.key === "Enter" && handleEditAssetCommit(item.id)}
-                          className="bg-[#000000] border border-zinc-800 rounded text-right outline-none text-zinc-200 w-24 py-0.5 px-2 font-bold"
+                          className="bg-[#000000] border border-zinc-800 rounded text-right outline-none text-zinc-200 w-28 py-1.5 px-3 font-bold"
                           placeholder="+500 or -200"
                           autoFocus
                         />
@@ -530,7 +540,7 @@ export default function FinanceView({
                             setEditingAssetId(item.id);
                             setEditAssetVal(item.amount.toString());
                           }}
-                          className="font-bold text-zinc-150 hover:text-zinc-50 cursor-pointer font-mono"
+                          className="font-bold text-zinc-150 hover:text-zinc-550 cursor-pointer font-mono text-sm"
                           title="Edit balance (supports math expressions like +500)"
                         >
                           {formatMoney(item.amount)}
@@ -547,16 +557,16 @@ export default function FinanceView({
                   </div>
                 ))}
                 {assets.length === 0 && (
-                  <div className="text-center py-4 text-[9px] font-mono uppercase tracking-widest text-zinc-650">Empty asset registry.</div>
+                  <div className="text-center py-4 text-xs font-mono uppercase tracking-widest text-zinc-650">Empty asset registry.</div>
                 )}
               </div>
 
               {/* Add asset form */}
-              <div className="flex flex-col sm:flex-row gap-2 pt-3 border-t border-zinc-900 mt-2">
+              <div className="flex flex-col sm:flex-row gap-2.5 pt-4 border-t border-zinc-900 mt-3">
                 <select
                   value={newAssetCategory}
                   onChange={(e) => setNewAssetCategory(e.target.value as any)}
-                  className="bg-[#000000] border border-zinc-800 rounded px-2 py-1.5 text-xs font-mono text-zinc-400 outline-none"
+                  className="bg-[#000000] border border-zinc-800 rounded px-3.5 py-2.5 text-sm font-mono text-zinc-400 outline-none"
                 >
                   <option value="bank">BANK</option>
                   <option value="stocks">STOCKS</option>
@@ -568,18 +578,18 @@ export default function FinanceView({
                   value={newAssetName}
                   onChange={(e) => setNewAssetName(e.target.value)}
                   placeholder="ASSET NAME..."
-                  className="flex-1 bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                  className="flex-grow bg-transparent border border-zinc-800 rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
                 />
                 <input
                   type="number"
                   value={newAssetAmount}
                   onChange={(e) => setNewAssetAmount(e.target.value === "" ? "" : Number(e.target.value))}
                   placeholder="AMOUNT..."
-                  className="w-24 bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                  className="w-28 bg-transparent border border-zinc-800 rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
                 />
                 <button
                   onClick={handleAddAsset}
-                  className="px-4 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-widest uppercase transition-all"
+                  className="px-5 py-2.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all"
                 >
                   Add
                 </button>
@@ -587,36 +597,38 @@ export default function FinanceView({
 
             </CardContent>
           </Card>
+          )}
 
           {/* Balance Deduction Purchase Form */}
-          <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-            <CardHeader className="p-4 border-b border-zinc-800">
-              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">DEBIT LEDGER ENGINE</span>
-              <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-widest">
+          {showPurchaseOrders && (
+            <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
+            <CardHeader className="p-6 border-b border-zinc-800">
+              <span className="text-xs font-mono uppercase tracking-widest text-zinc-500">DEBIT LEDGER ENGINE</span>
+              <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">
                 LOG ORDER PURCHASE (DIRECT BALANCE DEDUCTION)
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 space-y-4">
+            <CardContent className="p-6 space-y-6">
               
-              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
                 <input
                   type="text"
                   placeholder="PURCHASE ITEM NAME (e.g. Mechanical Keyboard)..."
                   value={newOrderName}
                   onChange={(e) => setNewOrderName(e.target.value)}
-                  className="sm:col-span-6 bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                  className="sm:col-span-6 bg-transparent border border-zinc-800 rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
                 />
                 <input
                   type="number"
                   placeholder="COST..."
                   value={newOrderCost}
                   onChange={(e) => setNewOrderCost(e.target.value === "" ? "" : Number(e.target.value))}
-                  className="sm:col-span-3 bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                  className="sm:col-span-3 bg-transparent border border-zinc-800 rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
                 />
                 <select
                   value={newOrderLinkedAsset}
                   onChange={(e) => setNewOrderLinkedAsset(e.target.value)}
-                  className="sm:col-span-3 bg-[#000000] border border-zinc-800 rounded px-2.5 py-1.5 text-xs font-mono text-zinc-400 outline-none focus:border-zinc-700"
+                  className="sm:col-span-3 bg-[#000000] border border-zinc-800 rounded px-3.5 py-2.5 text-sm font-mono text-zinc-400 outline-none focus:border-zinc-700"
                 >
                   <option value="">DEDUCT FROM...</option>
                   {assets.filter(a => a.category === "bank" || a.category === "crypto").map((asset) => (
@@ -627,11 +639,11 @@ export default function FinanceView({
                 </select>
               </div>
 
-              <div className="flex justify-end">
+              <div className="flex justify-end pt-2">
                 <button
                   onClick={handleLogPurchase}
                   disabled={!newOrderName.trim() || newOrderCost === "" || !newOrderLinkedAsset}
-                  className="px-4 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-widest uppercase transition-all disabled:opacity-40"
+                  className="px-5 py-2.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all disabled:opacity-40"
                 >
                   Deduct and Log Order
                 </button>
@@ -639,22 +651,22 @@ export default function FinanceView({
 
               {/* Purchase history list */}
               {orders.length > 0 && (
-                <div className="space-y-1.5 border-t border-zinc-900 pt-3">
-                  <span className="text-[8px] font-mono text-zinc-650 uppercase font-semibold">TRANSACTION PURCHASE LOGS:</span>
-                  <div className="space-y-1 max-h-[140px] overflow-y-auto pr-1">
+                <div className="space-y-2 border-t border-zinc-900 pt-4">
+                  <span className="text-xs font-mono text-zinc-650 uppercase font-semibold">TRANSACTION PURCHASE LOGS:</span>
+                  <div className="space-y-1.5 max-h-[180px] overflow-y-auto pr-1">
                     {orders.map((ord) => {
                       const linked = assets.find(a => a.id === ord.linkedAssetId);
                       return (
-                        <div key={ord.id} className="flex justify-between items-center px-2 py-1 rounded bg-[#000000] border border-zinc-955 text-[10px] font-mono">
+                        <div key={ord.id} className="flex justify-between items-center px-3.5 py-2.5 rounded bg-[#000000] border border-zinc-955 text-xs font-mono">
                           <div className="space-y-0.5">
                             <span className="text-zinc-300 font-bold">{ord.name}</span>
-                            <p className="text-[7.5px] text-zinc-550 uppercase">Deducted from {linked?.name || "Asset"}</p>
+                            <p className="text-[10px] text-zinc-550 uppercase">Deducted from {linked?.name || "Asset"}</p>
                           </div>
                           <div className="flex items-center gap-3">
                             <span className="text-red-500 font-bold">-{formatMoney(ord.cost)}</span>
                             <button 
                               onClick={() => handleDeleteOrder(ord.id)}
-                              className="text-zinc-700 hover:text-zinc-500"
+                              className="text-zinc-700 hover:text-zinc-500 text-sm"
                             >
                               ×
                             </button>
@@ -668,21 +680,24 @@ export default function FinanceView({
 
             </CardContent>
           </Card>
-        </div>
+          )}
+          </div>
+        )}
 
         {/* Right Column: Subscriptions */}
-        <div className="lg:col-span-5 space-y-4">
-          <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-            <CardHeader className="p-4 border-b border-zinc-800">
-              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">AUTO-DEBITS</span>
-              <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-widest">
+        {showRecurringSubs && (
+          <div className={`${rightSpan} space-y-6`}>
+            <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
+            <CardHeader className="p-6 border-b border-zinc-800">
+              <span className="text-xs font-mono uppercase tracking-widest text-zinc-500">AUTO-DEBITS</span>
+              <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">
                 RECURRING SUBSCRIPTIONS WARNING
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 space-y-4">
+            <CardContent className="p-6 space-y-6">
               
               {/* List subscriptions with warnings */}
-              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+              <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
                 {subscriptions.map((sub) => {
                   const isWarning = isSubscriptionWarning(sub.nextRenewalDate);
                   const linked = assets.find(a => a.id === sub.linkedAssetId);
@@ -690,32 +705,32 @@ export default function FinanceView({
                   return (
                     <div 
                       key={sub.id} 
-                      className={`group flex flex-col gap-2 p-3 border rounded text-xs font-mono transition-all duration-150 ${
+                      className={`group flex flex-col gap-3 p-4 border rounded text-xs font-mono transition-all duration-150 ${
                         isWarning 
                           ? "bg-red-955/15 border-red-900/40 text-red-200 animate-pulse" 
                           : "bg-[#000000]/60 border-zinc-900 hover:bg-[#0a0a0a]"
                       }`}
                     >
                       <div className="flex justify-between items-start">
-                        <div className="space-y-0.5">
-                          <span className="font-bold text-zinc-200 uppercase tracking-wide">{sub.name}</span>
-                          <div className="flex items-center gap-1.5 text-[8.5px] font-mono text-zinc-500 uppercase tracking-wide">
+                        <div className="space-y-1">
+                          <span className="font-bold text-zinc-200 uppercase tracking-wide text-sm">{sub.name}</span>
+                          <div className="flex items-center gap-1.5 text-xs font-mono text-zinc-500 uppercase tracking-wide">
                             <span>Cost: {formatMoney(sub.cost)}/{sub.period === "monthly" ? "mo" : "yr"}</span>
                           </div>
                         </div>
 
                         <button
                           onClick={() => handleDeleteSubscription(sub.id)}
-                          className="text-zinc-650 hover:text-zinc-350 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="text-zinc-650 hover:text-zinc-350 opacity-0 group-hover:opacity-100 transition-opacity text-sm"
                         >
                           ×
                         </button>
                       </div>
 
                       {/* Warning indicator + macro script */}
-                      <div className="flex justify-between items-center border-t border-zinc-900/60 pt-2 mt-0.5">
-                        <div className="flex flex-col text-[8.5px] font-mono">
-                          <span className="text-zinc-550">RENEW DATE:</span>
+                      <div className="flex justify-between items-center border-t border-zinc-900/60 pt-3 mt-1">
+                        <div className="flex flex-col text-xs font-mono">
+                          <span className="text-[10px] text-zinc-550">RENEW DATE:</span>
                           <span className={`${isWarning ? "text-red-500 font-bold" : "text-zinc-400"}`}>
                             {sub.nextRenewalDate} {isWarning && "(DUE)"}
                           </span>
@@ -723,7 +738,7 @@ export default function FinanceView({
                         
                         <button
                           onClick={() => handleLogSubExpense(sub)}
-                          className="px-2.5 py-1 bg-zinc-50 hover:bg-white text-zinc-950 rounded text-[8.5px] font-mono font-bold uppercase tracking-wider transition-all duration-150 active:scale-95 cursor-pointer"
+                          className="px-3.5 py-1.5 bg-zinc-50 hover:bg-white text-zinc-950 rounded text-xs font-mono font-bold uppercase tracking-wider transition-all duration-150 active:scale-95 cursor-pointer"
                         >
                           Log Expense
                         </button>
@@ -733,52 +748,52 @@ export default function FinanceView({
                 })}
 
                 {subscriptions.length === 0 && (
-                  <div className="text-center py-4 text-[9px] font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-850 rounded">
+                  <div className="text-center py-6 text-xs font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-850 rounded">
                     No active auto-debits cataloged.
                   </div>
                 )}
               </div>
 
               {/* Add Subscription Form */}
-              <div className="flex flex-col gap-2 pt-3 border-t border-zinc-900 mt-2">
-                <span className="text-[9px] font-mono uppercase tracking-widest font-semibold text-zinc-500">REGISTER NEW AUTO-DEBIT</span>
+              <div className="flex flex-col gap-3 pt-4 border-t border-zinc-900 mt-3">
+                <span className="text-xs font-mono uppercase tracking-widest font-semibold text-zinc-500">REGISTER NEW AUTO-DEBIT</span>
                 <input
                   type="text"
                   placeholder="SUBSCRIPTION SERVICE (e.g. Netflix)..."
                   value={newSubName}
                   onChange={(e) => setNewSubName(e.target.value)}
-                  className="bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                  className="bg-transparent border border-zinc-800 rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
                 />
                 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-3.5">
                   <input
                     type="number"
                     placeholder="COST..."
                     value={newSubCost}
                     onChange={(e) => setNewSubCost(e.target.value === "" ? "" : Number(e.target.value))}
-                    className="bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                    className="bg-transparent border border-zinc-800 rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
                   />
                   <select
                     value={newSubPeriod}
                     onChange={(e) => setNewSubPeriod(e.target.value as any)}
-                    className="bg-[#000000] border border-zinc-800 rounded px-2.5 py-1.5 text-xs font-mono text-zinc-400 outline-none focus:border-zinc-700"
+                    className="bg-[#000000] border border-zinc-800 rounded px-3.5 py-2.5 text-sm font-mono text-zinc-400 outline-none focus:border-zinc-700"
                   >
                     <option value="monthly">MONTHLY</option>
                     <option value="yearly">YEARLY</option>
                   </select>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-3.5">
                   <input
                     type="date"
                     value={newSubRenewal}
                     onChange={(e) => setNewSubRenewal(e.target.value)}
-                    className="bg-[#000000] border border-zinc-800 rounded px-2.5 py-1.5 text-xs font-mono text-zinc-400 outline-none focus:border-zinc-700"
+                    className="bg-[#000000] border border-zinc-800 rounded px-3.5 py-2.5 text-sm font-mono text-zinc-400 outline-none focus:border-zinc-700"
                   />
                   <select
                     value={newSubLinkedAsset}
                     onChange={(e) => setNewSubLinkedAsset(e.target.value)}
-                    className="bg-[#000000] border border-zinc-800 rounded px-2.5 py-1.5 text-xs font-mono text-zinc-400 outline-none focus:border-zinc-700"
+                    className="bg-[#000000] border border-zinc-800 rounded px-3.5 py-2.5 text-sm font-mono text-zinc-400 outline-none focus:border-zinc-700"
                   >
                     <option value="">DEBIT FROM...</option>
                     {assets.filter(a => a.category === "bank").map((asset) => (
@@ -792,7 +807,7 @@ export default function FinanceView({
                 <button
                   onClick={handleAddSubscription}
                   disabled={!newSubName.trim() || newSubCost === "" || !newSubRenewal || !newSubLinkedAsset}
-                  className="px-4 py-1.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-[9px] tracking-widest uppercase transition-all disabled:opacity-40 mt-1 cursor-pointer"
+                  className="px-5 py-2.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all disabled:opacity-40 mt-1 cursor-pointer"
                 >
                   Register Auto-Debit
                 </button>
@@ -800,7 +815,8 @@ export default function FinanceView({
 
             </CardContent>
           </Card>
-        </div>
+          </div>
+        )}
 
       </div>
     </div>

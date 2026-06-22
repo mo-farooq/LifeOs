@@ -48,7 +48,12 @@ export interface GymExercise {
   weight: number;
   reps: number;
   targetReps: number;
-  history: Array<{ date: string; weight: number; reps: number }>;
+  history: Array<{
+    date: string;
+    weight: number;
+    reps: number;
+    sets?: Array<{ weight: number; reps: number }>;
+  }>;
 }
 
 export interface GymPhoto {
@@ -227,4 +232,22 @@ export interface LifeOSState {
 
   // Daily Habits
   habits?: Habit[];
+
+  // Focus sessions history log
+  focusSessionsLog?: Record<string, number>; // key: YYYY-MM-DD -> sessionCount
+
+  // Granular settings configuration for hiding/showing cards
+  blocksConfig?: BlocksConfig;
 }
+
+export interface BlocksConfig {
+  macroMonitor: boolean;
+  waterCoach: boolean;
+  supplementStack: boolean;
+  workoutSplit: boolean;
+  photoMatrix: boolean;
+  netWorthProgress: boolean;
+  recurringSubs: boolean;
+  purchaseOrders: boolean;
+}
+

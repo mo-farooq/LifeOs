@@ -24,6 +24,8 @@ interface FocusViewProps {
   activeDate: string;
   focusConfig?: FocusConfig;
   updateFocusConfig: (config: FocusConfig) => void;
+  focusSessionsLog: Record<string, number>;
+  updateFocusSessionsLog: (log: Record<string, number>) => void;
 }
 
 type TimerMode = "focus" | "short" | "long";
@@ -48,7 +50,9 @@ export default function FocusView({
   updateTasks,
   activeDate,
   focusConfig,
-  updateFocusConfig
+  updateFocusConfig,
+  focusSessionsLog = {},
+  updateFocusSessionsLog
 }: FocusViewProps) {
   // Timer States
   const [mode, setMode] = useState<TimerMode>("focus");
@@ -57,7 +61,8 @@ export default function FocusView({
   const [longDuration, setLongDuration] = useState(focusConfig?.longDuration ?? 15);
   const [timeLeft, setTimeLeft] = useState((focusConfig?.focusDuration ?? 25) * 60);
   const [isRunning, setIsRunning] = useState(false);
-  const [completedSessions, setCompletedSessions] = useState(0);
+
+  const completedSessions = focusSessionsLog[activeDate] || 0;
 
   // Task linking
   const [selectedTaskId, setSelectedTaskId] = useState<string>("");
@@ -173,7 +178,11 @@ export default function FocusView({
     if (timerRef.current) clearInterval(timerRef.current);
 
     if (mode === "focus") {
-      setCompletedSessions((prev) => prev + 1);
+      const nextLog = {
+        ...focusSessionsLog,
+        [activeDate]: (focusSessionsLog[activeDate] || 0) + 1
+      };
+      updateFocusSessionsLog(nextLog);
       
       // Auto-complete linked task if present
       if (selectedTaskId) {
