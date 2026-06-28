@@ -20,7 +20,8 @@ import {
   EyeOff,
   User,
   Activity,
-  Target
+  Target,
+  GripVertical
 } from "lucide-react";
 import { Task, VisionOS, Habit, WaterConfig, NutritionConfig, SalahLog, Asset } from "@/types";
 
@@ -567,50 +568,73 @@ export default function DashboardView({
     return (
       <div 
         key={task.id} 
-        draggable={isDraggable}
-        onDragStart={(e) => {
-          if (!isDraggable) return;
-          setDraggedTaskId(task.id);
-        }}
-        onDragOver={(e) => {
-          if (!isDraggable) return;
-          e.preventDefault();
-        }}
-        onDrop={(e) => {
-          if (!isDraggable) return;
-          handleTaskDrop(task.id);
-        }}
-        className={`group flex items-center gap-3 py-3 px-4 border-b border-zinc-900 bg-[#000000]/40 hover:bg-[#0a0a0a] transition-all rounded duration-150 animate-slide-in ${
+        draggable={false}
+        className={`group flex items-center gap-3 py-1.5 px-4 border-b border-zinc-900 bg-[#000000]/40 hover:bg-[#0a0a0a] transition-all rounded duration-150 animate-slide-in ${
           task.completed ? "opacity-40" : ""
-        } ${isDraggable ? "cursor-grab active:cursor-grabbing" : ""}`}
+        }`}
       >
+        {isDraggable && (
+          <div
+            draggable={isDraggable}
+            onDragStart={(e) => {
+              if (!isDraggable) return;
+              setDraggedTaskId(task.id);
+            }}
+            onDragOver={(e) => {
+              if (!isDraggable) return;
+              e.preventDefault();
+            }}
+            onDrop={(e) => {
+              if (!isDraggable) return;
+              handleTaskDrop(task.id);
+            }}
+            className="cursor-grab active:cursor-grabbing text-zinc-650 hover:text-zinc-400 p-1.5 -ml-2.5 mr-0.5 flex items-center justify-center min-w-[32px] min-h-[44px] transition-colors"
+            title="Drag to reorder"
+          >
+            <GripVertical className="h-4.5 w-4.5" />
+          </div>
+        )}
+
         <button
           onClick={() => !isReadOnly && toggleComplete(task.id)}
           disabled={isReadOnly}
-          className={`w-5 h-5 border flex items-center justify-center rounded-sm transition-all duration-150 cursor-pointer ${
-            task.completed 
-              ? "bg-zinc-50 border-zinc-150 text-zinc-950 scale-105" 
-              : "border-zinc-800 bg-transparent hover:border-zinc-650 hover:scale-105 active:scale-95"
+          className={`p-3 mr-2 cursor-pointer flex items-center justify-center min-w-[44px] min-h-[44px] bg-transparent outline-none focus:outline-none transition-transform duration-100 active:scale-95 ${
+            isDraggable ? "-ml-1.5" : "-ml-3"
           }`}
         >
-          {task.completed && <Check className="h-3.5 w-3.5 stroke-[3.5] text-zinc-950 animate-check-tick" />}
+          <div
+            className={`w-5 h-5 border flex items-center justify-center rounded-sm transition-all duration-150 ${
+              task.completed 
+                ? "bg-zinc-50 border-zinc-150 text-zinc-950 scale-105" 
+                : "border-zinc-800 bg-transparent hover:border-zinc-650 hover:scale-105"
+            }`}
+          >
+            {task.completed && <Check className="h-3.5 w-3.5 stroke-[3.5] text-zinc-950 animate-check-tick" />}
+          </div>
         </button>
 
-        <div className="flex-grow relative min-w-0">
-          <input
-            type="text"
-            value={task.text}
-            disabled={isReadOnly}
-            onChange={(e) => updateTaskText(task.id, e.target.value)}
-            className={`w-full bg-transparent outline-none text-sm font-mono transition-all duration-150 ${
-              task.completed ? "text-zinc-500" : "text-zinc-200 focus:text-zinc-50"
+        <div className="flex-1 min-w-0 flex flex-col justify-center py-1">
+          <div
+            contentEditable={!isReadOnly}
+            suppressContentEditableWarning
+            onBlur={(e) => {
+              const newText = e.currentTarget.innerText || "";
+              updateTaskText(task.id, newText);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                e.currentTarget.blur();
+              }
+            }}
+            className={`whitespace-normal break-words text-[15px] font-medium leading-relaxed outline-none transition-all duration-150 ${
+              task.completed 
+                ? "text-zinc-500 line-through decoration-zinc-500" 
+                : "text-zinc-200 focus:text-zinc-50"
             }`}
-          />
-          {task.completed && (
-            <div 
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-[1px] bg-zinc-500 pointer-events-none origin-left animate-strike"
-            />
-          )}
+          >
+            {task.text}
+          </div>
         </div>
 
         <div className="flex items-center gap-1.5 flex-shrink-0">
