@@ -880,16 +880,7 @@ export default function DashboardView({
                 </CardHeader>
 
                 <CardContent className="p-4 space-y-4">
-                  <div className="space-y-1">
-                    {todayTasks.map((t) => renderTaskRow(t))}
-                    {todayTasks.length === 0 && (
-                      <div className="text-center py-6 text-[10px] font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-850 rounded animate-pulse">
-                        No active objectives registered for today.
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col gap-3.5 pt-4 border-t border-zinc-900 mt-3">
+                  <div className="flex flex-col gap-3.5 pb-4 border-b border-zinc-900 mb-3">
                     <div className="flex gap-2.5">
                       <input
                         type="text"
@@ -909,7 +900,7 @@ export default function DashboardView({
                         {isPolishing ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          <Sparkles className="h-4 w-4 text-zinc-450 hover:text-zinc-200" />
+                          <Sparkles className="h-4 w-4 text-zinc-455 hover:text-zinc-200" />
                         )}
                       </button>
                     </div>
@@ -981,6 +972,15 @@ export default function DashboardView({
                       </div>
                     </div>
                   </div>
+
+                  <div className="space-y-1">
+                    {todayTasks.map((t) => renderTaskRow(t))}
+                    {todayTasks.length === 0 && (
+                      <div className="text-center py-6 text-[10px] font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-850 rounded animate-pulse">
+                        No active objectives registered for today.
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -1008,16 +1008,7 @@ export default function DashboardView({
             </CardHeader>
             
             <CardContent className="p-6 space-y-4">
-              <div className="space-y-1.5">
-                {tomorrowTasks.map((t) => renderTaskRow(t, true))}
-                {tomorrowTasks.length === 0 && (
-                  <div className="text-center py-6 text-xs font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-850 rounded animate-pulse">
-                    No next-day strategy registered.
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-3.5 pt-4 border-t border-zinc-900 mt-3">
+              <div className="flex flex-col gap-3.5 pb-4 border-b border-zinc-900 mb-3">
                 <div className="flex gap-2.5">
                   <input
                     type="text"
@@ -1086,6 +1077,15 @@ export default function DashboardView({
                     Plan Tomorrow
                   </button>
                 </div>
+              </div>
+
+              <div className="space-y-1.5">
+                {tomorrowTasks.map((t) => renderTaskRow(t, true))}
+                {tomorrowTasks.length === 0 && (
+                  <div className="text-center py-6 text-xs font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-850 rounded animate-pulse">
+                    No next-day strategy registered.
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
