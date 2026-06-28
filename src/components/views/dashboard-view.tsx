@@ -74,6 +74,7 @@ export default function DashboardView({
   const [isVisionOpen, setIsVisionOpen] = useState(false); // Toggle Vision OS panel
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isCaptureOpen, setIsCaptureOpen] = useState(false);
 
   // Habit Tracker States & Handlers
   const [newHabitName, setNewHabitName] = useState("");
@@ -502,6 +503,7 @@ export default function DashboardView({
     updateTasks([...tasks, newTask]);
     setTodayInput("");
     setTodayPriority(false);
+    setIsCaptureOpen(false);
   };
 
   const handleAddTomorrowTask = () => {
@@ -740,6 +742,15 @@ export default function DashboardView({
         </div>
 
         <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-start lg:justify-end">
+          {/* Push Remaining to Tomorrow */}
+          <button
+            onClick={pushRemainingToTomorrow}
+            disabled={todayTasks.filter(t => !t.completed).length === 0}
+            className="px-4 py-2 text-xs font-mono font-bold tracking-wider uppercase border border-zinc-800 rounded bg-[#000000] text-zinc-455 hover:text-zinc-150 hover:border-zinc-750 disabled:opacity-40 transition-all duration-100 active:scale-[0.98] cursor-pointer flex items-center gap-2"
+          >
+            Push Remaining
+          </button>
+
           {/* Vision OS toggle */}
           <button
             onClick={() => setIsVisionOpen(!isVisionOpen)}
@@ -774,7 +785,14 @@ export default function DashboardView({
                 activeSubView === "history" ? "bg-zinc-50 text-zinc-950" : "text-zinc-455 hover:text-zinc-250"
               }`}
             >
-              <TrendingUp className="h-3.5 w-3.5" /> History & Trends
+              <TrendingUp className="h-3.5 w-3.5" /> History
+            </button>
+            
+            <button 
+              onClick={() => setIsCaptureOpen(true)} 
+              className="px-3 h-8 border border-zinc-800 text-xs font-mono text-zinc-400 hover:text-white hover:border-zinc-700 rounded transition-colors"
+            >
+              [ + NEW TASK ]
             </button>
           </div>
         </div>
@@ -880,99 +898,6 @@ export default function DashboardView({
                 </CardHeader>
 
                 <CardContent className="p-4 space-y-4">
-                  <div className="flex flex-col gap-3.5 pb-4 border-b border-zinc-900 mb-3">
-                    <div className="flex gap-2.5">
-                      <input
-                        type="text"
-                        value={todayInput}
-                        onChange={(e) => setTodayInput(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleAddTodayTask()}
-                        placeholder="ENTER TODAY'S TASK OBJECTIVE..."
-                        className="h-12 flex-1 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
-                      />
-                      
-                      <button
-                        onClick={handlePolish}
-                        disabled={isPolishing || !todayInput.trim()}
-                        className="h-12 w-12 rounded-md border border-zinc-800 bg-[#000000] hover:bg-zinc-900/60 hover:border-zinc-700 text-zinc-400 hover:text-zinc-250 disabled:opacity-40 flex items-center justify-center transition-all duration-100 active:scale-[0.98] cursor-pointer flex-shrink-0"
-                        title="Polish Task with AI"
-                      >
-                        {isPolishing ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Sparkles className="h-4 w-4 text-zinc-455 hover:text-zinc-200" />
-                        )}
-                      </button>
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex flex-wrap items-center gap-2.5">
-                        <div className="flex items-center gap-1 bg-[#000000] border border-zinc-900 p-0.5 rounded">
-                          <button
-                            onClick={() => setTodayEnergy("charging")}
-                            className={`px-2.5 py-1 text-[9px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all duration-100 active:scale-[0.98] cursor-pointer ${
-                              todayEnergy === "charging" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-400"
-                            }`}
-                          >
-                            Charging
-                          </button>
-                          <button
-                            onClick={() => setTodayEnergy("draining")}
-                            className={`px-2.5 py-1 text-[9px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all duration-100 active:scale-[0.98] cursor-pointer ${
-                              todayEnergy === "draining" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-400"
-                            }`}
-                          >
-                            Draining
-                          </button>
-                        </div>
-
-                        <div className="flex items-center gap-1 bg-[#000000] border border-zinc-900 p-0.5 rounded">
-                          <button
-                            onClick={() => setTodayRevenue("high")}
-                            className={`px-2.5 py-1 text-[9px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all duration-100 active:scale-[0.98] cursor-pointer ${
-                              todayRevenue === "high" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-400"
-                            }`}
-                          >
-                            High Return
-                          </button>
-                          <button
-                            onClick={() => setTodayRevenue("low")}
-                            className={`px-2.5 py-1 text-[9px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all duration-100 active:scale-[0.98] cursor-pointer ${
-                              todayRevenue === "low" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-400"
-                            }`}
-                          >
-                            Low Return
-                          </button>
-                        </div>
-
-                        <button
-                          onClick={() => setTodayPriority(!todayPriority)}
-                          className={`px-2.5 py-1 text-[9px] font-mono font-bold tracking-widest uppercase rounded border transition-all duration-100 active:scale-[0.98] cursor-pointer ${
-                            todayPriority ? "border-yellow-900/40 text-yellow-500 bg-yellow-950/10 font-bold" : "border-zinc-900 text-zinc-500 hover:border-zinc-800 hover:bg-zinc-900/60"
-                          }`}
-                        >
-                          Priority
-                        </button>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={pushRemainingToTomorrow}
-                          disabled={todayTasks.filter(t => !t.completed).length === 0}
-                          className="h-12 px-5 rounded-md border border-zinc-800 bg-[#000000] hover:bg-zinc-900/60 hover:border-zinc-700 text-zinc-455 hover:text-zinc-100 text-xs font-mono font-bold tracking-widest uppercase disabled:opacity-40 transition-all duration-100 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
-                        >
-                          Push Remaining
-                        </button>
-                        <button
-                          onClick={handleAddTodayTask}
-                          className="h-12 px-6 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
-                        >
-                          Add Today
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
                   <div className="space-y-1">
                     {todayTasks.map((t) => renderTaskRow(t))}
                     {todayTasks.length === 0 && (
@@ -1378,6 +1303,143 @@ export default function DashboardView({
           </div>
         </div>
       )}
+
+      {/* Terminal-Style Overlay Drawer (Strategy B) */}
+      <div 
+        className={`fixed top-0 right-0 h-full w-full max-w-md bg-zinc-955/98 backdrop-blur-md border-l border-zinc-800 p-6 z-[100] transform transition-transform duration-300 ease-in-out flex flex-col justify-between ${
+          isCaptureOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex justify-between items-center pb-3 border-b border-zinc-900">
+            <span className="text-xs font-mono font-bold tracking-widest text-zinc-350 uppercase">
+              CAPTURE OBJECTIVE
+            </span>
+            <button 
+              onClick={() => setIsCaptureOpen(false)} 
+              className="text-xs font-mono text-zinc-500 hover:text-zinc-200"
+            >
+              [ ESC // CLOSE ]
+            </button>
+          </div>
+
+          {/* Form Content */}
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <label className="text-[10px] font-mono text-zinc-550 uppercase tracking-widest font-bold">
+                Task Objective
+              </label>
+              <div className="flex gap-2.5">
+                <input
+                  type="text"
+                  value={todayInput}
+                  onChange={(e) => setTodayInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddTodayTask()}
+                  placeholder="ENTER TODAY'S TASK OBJECTIVE..."
+                  className="h-12 flex-1 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
+                />
+                
+                <button
+                  onClick={handlePolish}
+                  disabled={isPolishing || !todayInput.trim()}
+                  className="h-12 w-12 rounded-md border border-zinc-800 bg-[#000000] hover:bg-zinc-900/60 hover:border-zinc-700 text-zinc-450 hover:text-zinc-250 disabled:opacity-40 flex items-center justify-center transition-all duration-100 active:scale-[0.98] cursor-pointer flex-shrink-0"
+                  title="Polish Task with AI"
+                >
+                  {isPolishing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 text-zinc-455 hover:text-zinc-250" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-4 pt-2">
+              {/* Energy selectors */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-mono text-zinc-550 uppercase tracking-widest font-bold block">
+                  Energy Matrix
+                </label>
+                <div className="flex items-center gap-1 bg-[#000000] border border-zinc-900 p-0.5 rounded w-fit">
+                  <button
+                    type="button"
+                    onClick={() => setTodayEnergy("charging")}
+                    className={`px-3 py-1.5 text-xs font-mono font-bold tracking-widest uppercase rounded-sm transition-all duration-100 active:scale-[0.98] cursor-pointer ${
+                      todayEnergy === "charging" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-450"
+                    }`}
+                  >
+                    Charging
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTodayEnergy("draining")}
+                    className={`px-3 py-1.5 text-xs font-mono font-bold tracking-widest uppercase rounded-sm transition-all duration-100 active:scale-[0.98] cursor-pointer ${
+                      todayEnergy === "draining" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-455"
+                    }`}
+                  >
+                    Draining
+                  </button>
+                </div>
+              </div>
+
+              {/* Return selectors */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-mono text-zinc-550 uppercase tracking-widest font-bold block">
+                  Revenue Potential
+                </label>
+                <div className="flex items-center gap-1 bg-[#000000] border border-zinc-900 p-0.5 rounded w-fit">
+                  <button
+                    type="button"
+                    onClick={() => setTodayRevenue("high")}
+                    className={`px-3 py-1.5 text-xs font-mono font-bold tracking-widest uppercase rounded-sm transition-all duration-100 active:scale-[0.98] cursor-pointer ${
+                      todayRevenue === "high" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-450"
+                    }`}
+                  >
+                    High Return
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTodayRevenue("low")}
+                    className={`px-3 py-1.5 text-xs font-mono font-bold tracking-widest uppercase rounded-sm transition-all duration-100 active:scale-[0.98] cursor-pointer ${
+                      todayRevenue === "low" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-455"
+                    }`}
+                  >
+                    Low Return
+                  </button>
+                </div>
+              </div>
+
+              {/* Priority stars */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-mono text-zinc-550 uppercase tracking-widest font-bold block">
+                  Priority Flag
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setTodayPriority(!todayPriority)}
+                  className={`px-3.5 py-2 text-xs font-mono font-bold tracking-widest uppercase rounded border transition-all duration-100 active:scale-[0.98] cursor-pointer ${
+                    todayPriority ? "border-yellow-900/40 text-yellow-500 bg-yellow-950/10 font-bold" : "border-zinc-900 text-zinc-500 hover:border-zinc-800 hover:bg-zinc-900/60"
+                  }`}
+                >
+                  Priority (Star)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <div className="pt-6 border-t border-zinc-900">
+          <button
+            onClick={handleAddTodayTask}
+            disabled={!todayInput.trim()}
+            className="w-full h-12 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 disabled:opacity-40"
+          >
+            Add Today
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
