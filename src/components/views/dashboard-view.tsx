@@ -73,6 +73,7 @@ export default function DashboardView({
   const [activeSubView, setActiveSubView] = useState<"list" | "grid" | "history">("list");
   const [isVisionOpen, setIsVisionOpen] = useState(false); // Toggle Vision OS panel
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   // Habit Tracker States & Handlers
   const [newHabitName, setNewHabitName] = useState("");
@@ -391,22 +392,29 @@ export default function DashboardView({
   const totalCount = todayTasks.length;
 
   // Task Actions
-  const toggleComplete = (id: string) => {
+  const updateTaskDetails = (id: string, updates: Partial<Task>) => {
     updateTasks(
-      tasks.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
+      tasks.map((t) => (t.id === id ? { ...t, ...updates } : t))
     );
+    if (selectedTask && selectedTask.id === id) {
+      setSelectedTask((prev) => prev ? { ...prev, ...updates } : null);
+    }
+  };
+
+  const toggleComplete = (id: string) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    updateTaskDetails(id, { completed: !task.completed });
   };
 
   const togglePriority = (id: string) => {
-    updateTasks(
-      tasks.map((t) => (t.id === id ? { ...t, priority: !t.priority } : t))
-    );
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    updateTaskDetails(id, { priority: !task.priority });
   };
 
   const updateTaskText = (id: string, text: string) => {
-    updateTasks(
-      tasks.map((t) => (t.id === id ? { ...t, text } : t))
-    );
+    updateTaskDetails(id, { text });
   };
 
   const deleteTask = (id: string) => {
@@ -613,31 +621,22 @@ export default function DashboardView({
           </div>
         </button>
 
-        <div className="flex-1 min-w-0 flex flex-col justify-center py-1">
-          <div
-            contentEditable={!isReadOnly}
-            suppressContentEditableWarning
-            onBlur={(e) => {
-              const newText = e.currentTarget.innerText || "";
-              updateTaskText(task.id, newText);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                e.currentTarget.blur();
-              }
-            }}
-            className={`whitespace-normal break-words text-[15px] font-medium leading-relaxed outline-none transition-all duration-150 ${
+        <div 
+          onClick={() => setSelectedTask(task)}
+          className="flex-1 min-w-0 flex flex-col justify-center py-1 cursor-pointer group/text"
+        >
+          <span
+            className={`whitespace-normal break-words text-[15px] font-medium leading-relaxed transition-all duration-150 ${
               task.completed 
-                ? "text-zinc-500 line-through decoration-zinc-500" 
-                : "text-zinc-200 focus:text-zinc-50"
+                ? "text-zinc-555 line-through decoration-zinc-500" 
+                : "text-zinc-200 group-hover/text:text-zinc-100"
             }`}
           >
             {task.text}
-          </div>
+          </span>
         </div>
 
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="hidden sm:flex items-center gap-1.5 flex-shrink-0">
           <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border uppercase transition-colors duration-200 ${
             task.energy === "charging" 
               ? "border-emerald-900/30 text-emerald-500 bg-emerald-950/10" 
@@ -657,7 +656,7 @@ export default function DashboardView({
         <button
           onClick={() => !isReadOnly && togglePriority(task.id)}
           disabled={isReadOnly}
-          className={`p-1 rounded transition-all duration-150 hover:bg-zinc-900 ${
+          className={`hidden sm:block p-1 rounded transition-all duration-150 hover:bg-zinc-900 ${
             task.priority 
               ? "text-yellow-400 bg-yellow-950/20 scale-110" 
               : "text-zinc-700 hover:text-zinc-500"
@@ -669,7 +668,7 @@ export default function DashboardView({
         {!isReadOnly && (
           <button
             onClick={() => deleteTask(task.id)}
-            className="text-zinc-700 hover:text-zinc-300 opacity-0 group-hover:opacity-100 transition-all duration-150 p-0.5"
+            className="hidden sm:block text-zinc-700 hover:text-zinc-300 opacity-0 group-hover:opacity-100 transition-all duration-150 p-0.5"
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -1226,6 +1225,158 @@ export default function DashboardView({
         </div>
 
       </div>
+      )}
+
+      {/* Floating Task Details Modal */}
+      {selectedTask && (
+        <div className="fixed inset-0 bg-[#000000]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#0a0a0a] border border-zinc-800 rounded-md w-full max-w-lg overflow-hidden animate-slide-in flex flex-col">
+            {/* Header */}
+            <div className="flex justify-between items-center px-6 py-4 border-b border-zinc-855">
+              <span className="text-[10px] font-mono font-bold tracking-widest text-zinc-500 uppercase">
+                OBJECTIVE DETAILS
+              </span>
+              <button
+                onClick={() => setSelectedTask(null)}
+                className="text-zinc-555 hover:text-zinc-300 transition-colors p-1"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Content Area */}
+            <div className="p-6 space-y-6 flex-1 overflow-y-auto max-h-[80vh]">
+              {/* Objective Description */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-mono font-bold tracking-widest text-zinc-500 uppercase block">
+                  Objective Description
+                </label>
+                <textarea
+                  value={selectedTask.text}
+                  onChange={(e) => updateTaskText(selectedTask.id, e.target.value)}
+                  placeholder="Enter objective details..."
+                  rows={3}
+                  className="w-full bg-black border border-zinc-800 rounded p-3 text-sm font-sans font-medium text-zinc-200 outline-none focus:border-zinc-700 transition-colors resize-none"
+                />
+              </div>
+
+              {/* Status & Options Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Energy Requirement */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-mono font-bold tracking-widest text-zinc-500 uppercase block">
+                    Energy Requirement
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => updateTaskDetails(selectedTask.id, { energy: "charging" })}
+                      className={`flex-1 py-2 text-xs font-mono font-bold rounded border tracking-wider transition-all duration-150 uppercase active:scale-[0.98] ${
+                        selectedTask.energy === "charging"
+                          ? "border-emerald-900/50 text-emerald-500 bg-emerald-950/10 font-bold"
+                          : "border-zinc-850 text-zinc-500 bg-[#000000]"
+                      }`}
+                    >
+                      🔋 Charging
+                    </button>
+                    <button
+                      onClick={() => updateTaskDetails(selectedTask.id, { energy: "draining" })}
+                      className={`flex-1 py-2 text-xs font-mono font-bold rounded border tracking-wider transition-all duration-150 uppercase active:scale-[0.98] ${
+                        selectedTask.energy === "draining"
+                          ? "border-zinc-700 text-zinc-350 bg-zinc-900/10 font-bold"
+                          : "border-zinc-850 text-zinc-555 bg-[#000000]"
+                      }`}
+                    >
+                      ⚡ Draining
+                    </button>
+                  </div>
+                </div>
+
+                {/* Revenue Potential */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-mono font-bold tracking-widest text-zinc-500 uppercase block">
+                    Revenue Potential
+                  </label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => updateTaskDetails(selectedTask.id, { revenue: "high" })}
+                      className={`flex-1 py-2 text-xs font-mono font-bold rounded border tracking-wider transition-all duration-150 uppercase active:scale-[0.98] ${
+                        selectedTask.revenue === "high"
+                          ? "border-amber-900/50 text-amber-500 bg-amber-950/10 font-bold"
+                          : "border-zinc-850 text-zinc-500 bg-[#000000]"
+                      }`}
+                    >
+                      💰 High
+                    </button>
+                    <button
+                      onClick={() => updateTaskDetails(selectedTask.id, { revenue: "low" })}
+                      className={`flex-1 py-2 text-xs font-mono font-bold rounded border tracking-wider transition-all duration-150 uppercase active:scale-[0.98] ${
+                        selectedTask.revenue === "low"
+                          ? "border-zinc-700 text-zinc-350 bg-zinc-900/10 font-bold"
+                          : "border-zinc-850 text-zinc-555 bg-[#000000]"
+                      }`}
+                    >
+                      📉 Low
+                    </button>
+                  </div>
+                </div>
+
+                {/* Priority Status */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-mono font-bold tracking-widest text-zinc-500 uppercase block">
+                    Priority Status
+                  </label>
+                  <button
+                    onClick={() => togglePriority(selectedTask.id)}
+                    className={`w-full py-2 text-xs font-mono font-bold rounded border tracking-wider transition-all duration-150 uppercase flex items-center justify-center gap-2 active:scale-[0.98] ${
+                      selectedTask.priority
+                        ? "border-yellow-900/50 text-yellow-500 bg-yellow-950/10 font-bold"
+                        : "border-zinc-850 text-zinc-550 bg-[#000000]"
+                    }`}
+                  >
+                    <Zap className={`h-3.5 w-3.5 ${selectedTask.priority ? "fill-yellow-500 text-yellow-500" : "text-zinc-500"}`} />
+                    {selectedTask.priority ? "Starred" : "Normal"}
+                  </button>
+                </div>
+
+                {/* Completion Status */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-mono font-bold tracking-widest text-zinc-500 uppercase block">
+                    Completion State
+                  </label>
+                  <button
+                    onClick={() => toggleComplete(selectedTask.id)}
+                    className={`w-full py-2 text-xs font-mono font-bold rounded border tracking-wider transition-all duration-150 uppercase flex items-center justify-center gap-2 active:scale-[0.98] ${
+                      selectedTask.completed
+                        ? "border-zinc-150 text-zinc-950 bg-zinc-50 font-bold"
+                        : "border-zinc-800 text-zinc-200 bg-transparent hover:border-zinc-650"
+                    }`}
+                  >
+                    {selectedTask.completed ? "✓ Completed" : "Mark Complete"}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Action Buttons */}
+            <div className="flex justify-between items-center px-6 py-4 border-t border-zinc-855 bg-[#070707] gap-3">
+              <button
+                onClick={() => {
+                  deleteTask(selectedTask.id);
+                  setSelectedTask(null);
+                }}
+                className="px-4 py-2.5 text-xs font-mono font-bold tracking-wider rounded border border-red-950/40 text-red-500 bg-red-950/5 hover:bg-red-950/10 hover:border-red-800/40 transition-colors uppercase active:scale-[0.98]"
+              >
+                Delete Objective
+              </button>
+              <button
+                onClick={() => setSelectedTask(null)}
+                className="px-5 py-2.5 text-xs font-mono font-bold tracking-wider rounded bg-zinc-100 text-zinc-950 hover:bg-zinc-200 transition-colors uppercase active:scale-[0.98]"
+              >
+                Close Details
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
