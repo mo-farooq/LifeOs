@@ -345,7 +345,7 @@ export default function HealthView({
                   placeholder="SUPPLEMENT NAME..."
                   className="bg-transparent border border-zinc-800 rounded-md px-4 py-2 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
                 />
-                <div className="flex gap-2.5">
+                <div className="flex flex-col sm:flex-row gap-2.5">
                   <input
                     type="text"
                     value={newSupDose}

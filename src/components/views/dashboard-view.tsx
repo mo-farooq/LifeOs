@@ -708,7 +708,7 @@ export default function DashboardView({
       `}</style>
 
       {/* View Toggle Bar */}
-      <div className="flex justify-between items-center bg-[#0a0a0a] border border-zinc-800 px-6 py-4 rounded-md animate-slide-in">
+      <div className="flex flex-col lg:flex-row gap-4 justify-between lg:items-center bg-[#0a0a0a] border border-zinc-800 px-6 py-4 rounded-md animate-slide-in">
         <div className="space-y-1">
           <span className="text-xs font-mono uppercase tracking-widest font-semibold text-zinc-550 font-bold">TASK HUB</span>
           <h1 className="text-base font-mono tracking-widest font-bold text-zinc-150 uppercase flex items-center gap-2.5">
@@ -716,7 +716,7 @@ export default function DashboardView({
           </h1>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-start lg:justify-end">
           {/* Vision OS toggle */}
           <button
             onClick={() => setIsVisionOpen(!isVisionOpen)}
@@ -728,11 +728,11 @@ export default function DashboardView({
           </button>
 
           {/* Layout Subview toggle */}
-          <div className="flex items-center border border-zinc-800 bg-[#000000] p-1.5 rounded-md">
+          <div className="flex flex-wrap items-center border border-zinc-800 bg-[#000000] p-1 rounded-md gap-1">
             <button
               onClick={() => setActiveSubView("list")}
               className={`px-4 py-2 text-xs font-mono font-bold tracking-wider uppercase rounded flex items-center gap-2 transition-all duration-150 ${
-                activeSubView === "list" ? "bg-zinc-50 text-zinc-950" : "text-zinc-450 hover:text-zinc-250"
+                activeSubView === "list" ? "bg-zinc-50 text-zinc-950" : "text-zinc-455 hover:text-zinc-250"
               }`}
             >
               <List className="h-3.5 w-3.5" /> List View
@@ -740,7 +740,7 @@ export default function DashboardView({
             <button
               onClick={() => setActiveSubView("grid")}
               className={`px-4 py-2 text-xs font-mono font-bold tracking-wider uppercase rounded flex items-center gap-2 transition-all duration-150 ${
-                activeSubView === "grid" ? "bg-zinc-50 text-zinc-950" : "text-zinc-450 hover:text-zinc-250"
+                activeSubView === "grid" ? "bg-zinc-50 text-zinc-950" : "text-zinc-455 hover:text-zinc-250"
               }`}
             >
               <LayoutGrid className="h-3.5 w-3.5" /> Grid Matrix
@@ -892,7 +892,7 @@ export default function DashboardView({
                     </div>
 
                     <div className="flex flex-wrap items-center justify-between gap-2.5">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <div className="flex items-center gap-1 bg-[#000000] border border-zinc-900 p-0.5 rounded">
                           <button
                             onClick={() => setTodayEnergy("charging")}
@@ -1007,7 +1007,7 @@ export default function DashboardView({
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex flex-wrap items-center gap-2.5">
                     <div className="flex items-center gap-1.5 bg-[#000000] border border-zinc-900 p-0.5 rounded">
                       <button
                         onClick={() => setTomorrowEnergy("charging")}
