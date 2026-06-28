@@ -670,12 +670,13 @@ export default function Home() {
 
   const formatHeaderDate = () => {
     const d = new Date(activeDate);
-    return d.toLocaleDateString("en-US", {
-      weekday: "long",
+    const weekday = d.toLocaleDateString("en-US", { weekday: "long" }).toUpperCase();
+    const rest = d.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric"
     }).toUpperCase();
+    return { weekday, rest };
   };
 
   const renderActiveView = () => {
@@ -864,28 +865,28 @@ export default function Home() {
         </div>
 
         {/* Global Desktop Header */}
-        <header className="h-16 border-b border-zinc-800 bg-[#000000] px-8 flex items-center justify-between z-10 flex-shrink-0">
-          <div className="flex items-center gap-3">
+        <header className="h-16 border-b border-zinc-800 bg-[#000000] px-4 md:px-8 flex items-center justify-between z-10 flex-shrink-0">
+          <div className="hidden md:flex items-center gap-3">
             <span className="text-xs font-mono font-bold px-3 py-1 rounded bg-[#0a0a0a] border border-zinc-800 text-zinc-300 uppercase tracking-widest">
               {activeTab} VIEW
             </span>
           </div>
 
           {/* Header Controls */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2.5">
             <button
               onClick={() => {
                 const d = new Date(activeDate);
                 d.setDate(d.getDate() - 1);
                 setActiveDateOverride(d.toISOString().split("T")[0]);
               }}
-              className="h-11 w-11 flex items-center justify-center transition-all duration-100 active:scale-[0.98] cursor-pointer rounded bg-[#0a0a0a] border border-zinc-800 hover:bg-zinc-900/60 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200"
+              className="h-11 w-9 sm:w-11 flex items-center justify-center transition-all duration-100 active:scale-[0.98] cursor-pointer rounded bg-[#0a0a0a] border border-zinc-800 hover:bg-zinc-900/60 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200"
               title="Previous Day"
             >
               <ChevronLeft className="h-4.5 w-4.5" />
             </button>
             
-            <div className="relative flex items-center gap-2 px-4 h-11 rounded bg-[#0a0a0a] border border-zinc-800 text-xs font-mono text-zinc-300 uppercase tracking-wider font-bold hover:border-zinc-700 hover:bg-zinc-900/60 transition-colors">
+            <div className="relative flex items-center gap-2 px-2.5 sm:px-4 h-11 rounded bg-[#0a0a0a] border border-zinc-800 text-[10px] sm:text-xs font-mono text-zinc-300 uppercase tracking-wider font-bold hover:border-zinc-700 hover:bg-zinc-900/60 transition-colors">
               <input
                 type="date"
                 value={activeDate}
@@ -896,7 +897,10 @@ export default function Home() {
                 }}
                 className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
               />
-              <span>{formatHeaderDate()}</span>
+              <span>
+                <span className="hidden sm:inline">{formatHeaderDate().weekday}, </span>
+                <span>{formatHeaderDate().rest}</span>
+              </span>
             </div>
 
             <button
@@ -905,7 +909,7 @@ export default function Home() {
                 d.setDate(d.getDate() + 1);
                 setActiveDateOverride(d.toISOString().split("T")[0]);
               }}
-              className="h-11 w-11 flex items-center justify-center transition-all duration-100 active:scale-[0.98] cursor-pointer rounded bg-[#0a0a0a] border border-zinc-800 hover:bg-zinc-900/60 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200"
+              className="h-11 w-9 sm:w-11 flex items-center justify-center transition-all duration-100 active:scale-[0.98] cursor-pointer rounded bg-[#0a0a0a] border border-zinc-800 hover:bg-zinc-900/60 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200"
               title="Next Day"
             >
               <ChevronRight className="h-4.5 w-4.5" />
@@ -914,7 +918,7 @@ export default function Home() {
             {activeDateOverride && (
               <button
                 onClick={() => setActiveDateOverride(null)}
-                className="h-11 px-4 flex items-center justify-center rounded bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-mono font-bold uppercase tracking-widest transition-all duration-100 active:scale-[0.98] cursor-pointer"
+                className="h-11 px-3 sm:px-4 flex items-center justify-center rounded bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-mono font-bold uppercase tracking-widest transition-all duration-100 active:scale-[0.98] cursor-pointer"
                 title="Reset to Live Date"
               >
                 LIVE
@@ -923,15 +927,15 @@ export default function Home() {
           </div>
             
           {/* Quick User Profile & Settings */}
-          <div className="flex items-center gap-3 pl-3 border-l border-zinc-900">
+          <div className="flex items-center gap-1.5 sm:gap-3 pl-1.5 sm:pl-3 border-l border-zinc-900">
             <button
               onClick={() => setActiveTab("settings")}
-              className="h-11 w-11 flex items-center justify-center rounded bg-[#0a0a0a] border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 transition-all duration-100 active:scale-[0.98] cursor-pointer"
+              className="h-11 w-9 sm:w-11 flex items-center justify-center rounded bg-[#0a0a0a] border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 transition-all duration-100 active:scale-[0.98] cursor-pointer"
               title="System Settings"
             >
               <Settings className="h-4.5 w-4.5" />
             </button>
-            <div className="w-11 h-11 rounded bg-[#0a0a0a] border border-zinc-800 flex items-center justify-center text-zinc-300 font-bold text-xs select-none">
+            <div className="w-9 sm:w-11 h-11 rounded bg-[#0a0a0a] border border-zinc-800 flex items-center justify-center text-zinc-300 font-bold text-xs select-none">
               MF
             </div>
           </div>
