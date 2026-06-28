@@ -1,22 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Dumbbell, 
-  Plus, 
-  Minus,
   X,
-  TrendingUp,
-  Camera,
   Calendar,
   AlertCircle,
-  Award,
-  Settings,
-  MapPin,
-  LineChart,
-  ChevronDown,
-  ChevronUp
+  MapPin
 } from "lucide-react";
 import { GymExercise, GymPhoto, BlocksConfig } from "@/types";
 
@@ -32,6 +23,13 @@ interface GymViewProps {
   blocksConfig?: BlocksConfig;
 }
 
+const routineSplits = {
+  PUSH: ["Barbell Bench Press", "Incline DB Press", "Overhead Shoulder Press", "Pushups"],
+  PULL: ["Barbell Deadlifts", "Lat Pulldowns", "Seated Cable Rows", "Bicep Dumbbell Curls"],
+  LEGS: ["Barbell Back Squats", "Romanian Deadlifts", "Leg Extensions", "Calf Raises"],
+  REST: [] as string[]
+};
+
 export default function GymView({
   gymType,
   gymSplit,
@@ -43,6 +41,37 @@ export default function GymView({
   activeDate,
   blocksConfig
 }: GymViewProps) {
+  const activeSplitTab = gymSplit.toUpperCase() as keyof typeof routineSplits;
+  const activeRoutineExercises = routineSplits[activeSplitTab] || [];
+  const filteredExercises = gymExercises.filter((ex) => activeRoutineExercises.includes(ex.name));
+
+  React.useEffect(() => {
+    if (gymSplit === "rest") return;
+    const activeSplitTab = gymSplit.toUpperCase() as keyof typeof routineSplits;
+    const exercisesForSplit = routineSplits[activeSplitTab] || [];
+    
+    const missing = exercisesForSplit.filter(
+      name => !gymExercises.some(ex => ex.name.toLowerCase() === name.toLowerCase())
+    );
+    
+    if (missing.length > 0) {
+      const nextExs = [...gymExercises];
+      missing.forEach(name => {
+        nextExs.push({
+          id: `auto-${name.toLowerCase().replace(/\s+/g, "-")}`,
+          name,
+          weight: 0,
+          reps: 8,
+          targetReps: 8,
+          history: []
+        });
+      });
+      updateGymExercises(nextExs);
+    }
+  }, [gymSplit, gymExercises, updateGymExercises]);
+
+  const skipRestTimer = () => { setRestTimer(null); };
+
   const showWorkoutSplit = blocksConfig?.workoutSplit ?? true;
   const showPhotoMatrix = blocksConfig?.photoMatrix ?? true;
 
@@ -88,13 +117,11 @@ export default function GymView({
 
   // Live Workout timer effect
   React.useEffect(() => {
-    let intervalId: any;
+    let intervalId: ReturnType<typeof setInterval> | undefined;
     if (isSessionActive && sessionStartTime !== null) {
       intervalId = setInterval(() => {
         setSessionElapsedTime(Math.round((Date.now() - sessionStartTime) / 1000));
       }, 1000);
-    } else {
-      setSessionElapsedTime(0);
     }
     return () => {
       if (intervalId) clearInterval(intervalId);
@@ -103,7 +130,7 @@ export default function GymView({
 
   // Countdown rest timer effect
   React.useEffect(() => {
-    let intervalId: any;
+    let intervalId: ReturnType<typeof setInterval> | undefined;
     if (restTimer !== null && restTimer > 0) {
       intervalId = setInterval(() => {
         setRestTimer((prev) => (prev !== null && prev > 0 ? prev - 1 : null));
@@ -287,24 +314,6 @@ export default function GymView({
     return "—";
   };
 
-  const getPreviewSets = (ex: GymExercise) => {
-    const prevSession = ex.history[0];
-    return Array.from({ length: 4 }).map((_, i) => {
-      let weight = ex.weight;
-      let reps = ex.targetReps || ex.reps || 8;
-      if (prevSession) {
-        if (prevSession.sets && prevSession.sets[i]) {
-          weight = prevSession.sets[i].weight;
-          reps = prevSession.sets[i].reps;
-        } else {
-          weight = prevSession.weight;
-          reps = prevSession.reps;
-        }
-      }
-      return { weight, reps, done: false };
-    });
-  };
-
   // Exercise Actions
   const handleAddExercise = () => {
     if (!newExName.trim() || newExWeight === "" || newExReps === "" || newExTarget === "") return;
@@ -359,21 +368,21 @@ export default function GymView({
     updateGymPhotos(gymPhotos.filter(p => p.id !== id));
   };
 
-  const getHistory1RM = (h: any) => {
+  const getHistory1RM = (h: GymExercise["history"][number]) => {
     if (h.sets && h.sets.length > 0) {
-      return Math.max(...h.sets.map((s: any) => Math.round(s.weight * (1 + s.reps / 30))));
+      return Math.max(...h.sets.map((s) => Math.round(s.weight * (1 + s.reps / 30))));
     }
     return Math.round(h.weight * (1 + h.reps / 30));
   };
 
-  const getHistoryPeakWeight = (h: any) => {
+  const getHistoryPeakWeight = (h: GymExercise["history"][number]) => {
     if (h.sets && h.sets.length > 0) {
-      return Math.max(...h.sets.map((s: any) => s.weight));
+      return Math.max(...h.sets.map((s) => s.weight));
     }
     return h.weight;
   };
 
-  const getHistorySetsCompleted = (h: any) => {
+  const getHistorySetsCompleted = (h: GymExercise["history"][number]) => {
     return h.sets ? h.sets.length : 1;
   };
 
@@ -544,7 +553,7 @@ export default function GymView({
               <MapPin className="h-4 w-4 text-zinc-500" />
               <select
                 value={gymType}
-                onChange={(e) => updateGymSettings({ gymType: e.target.value as any })}
+                onChange={(e) => updateGymSettings({ gymType: e.target.value as "home" | "commercial" | "both" })}
                 className="bg-[#000000] text-xs font-mono text-zinc-300 outline-none border-none cursor-pointer font-bold uppercase"
               >
                 <option value="both">BOTH GYMS</option>
@@ -577,155 +586,163 @@ export default function GymView({
         {/* Left Column: Exercises */}
         {showWorkoutSplit && (
           <div className={`${leftSpan} space-y-2 sm:space-y-4 md:space-y-6`}>
-            <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-            <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800">
-              <div className="flex justify-between items-center">
-                <div className="space-y-1">
-                  <span className="text-xs font-mono uppercase tracking-widest text-zinc-550 font-bold">ROUTINE TRACKER</span>
-                  <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">
-                    ACTIVE {gymSplit} EXERCISES
-                  </CardTitle>
+            {gymSplit === "rest" ? (
+              <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
+                <CardContent className="p-8 text-center text-zinc-400 font-mono text-sm uppercase leading-relaxed">
+                  REST PROFILE ACTIVE // Focus on sleep metrics, mobility workflows, and active hydration pacing today.
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
+              <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800">
+                <div className="flex justify-between items-center">
+                  <div className="space-y-1">
+                    <span className="text-xs font-mono uppercase tracking-widest text-zinc-550 font-bold">ROUTINE TRACKER</span>
+                    <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">
+                      ACTIVE {gymSplit} EXERCISES
+                    </CardTitle>
+                  </div>
+                  <div className="text-xs font-mono text-zinc-500 uppercase tracking-wider font-bold">
+                    {filteredExercises.length} Total Exercises
+                  </div>
                 </div>
-                <div className="text-xs font-mono text-zinc-500 uppercase tracking-wider font-bold">
-                  {gymExercises.length} Total Exercises
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="p-3.5 sm:p-5 md:p-6 space-y-6">
+              </CardHeader>
+              <CardContent className="p-3.5 sm:p-5 md:p-6 space-y-6">
 
-              {/* Live Workout Session Banner */}
-              <div className="border border-zinc-900 bg-[#000000] p-4.5 rounded-md flex items-center justify-between">
-                <div className="space-y-1">
-                  <span className="text-xs font-mono uppercase tracking-widest text-zinc-500 font-bold">WORKOUT SESSION</span>
+                {/* Live Workout Session Banner */}
+                <div className="border border-zinc-900 bg-[#000000] p-4.5 rounded-md flex items-center justify-between">
+                  <div className="space-y-1">
+                    <span className="text-xs font-mono uppercase tracking-widest text-zinc-550 font-bold">WORKOUT SESSION</span>
+                    {isSessionActive ? (
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 rounded-full bg-[#10b981] animate-ping" />
+                        <span className="text-3xl md:text-4xl font-mono tracking-tight text-white font-bold">
+                          {formatElapsedTime(sessionElapsedTime)}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="text-sm font-mono font-bold text-zinc-400">INACTIVE</div>
+                    )}
+                  </div>
                   {isSessionActive ? (
-                    <div className="flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#10b981] animate-ping" />
-                      <span className="text-sm font-mono font-bold text-[#10b981]">
-                        ACTIVE: {formatElapsedTime(sessionElapsedTime)}
-                      </span>
-                    </div>
+                    <button
+                      onClick={finishWorkout}
+                      className="px-5 py-2.5 bg-red-950/20 hover:bg-red-950/40 border border-red-900/60 hover:border-red-900 text-red-500 rounded text-xs font-mono font-bold tracking-widest uppercase active:scale-95 transition-all cursor-pointer font-bold"
+                    >
+                      Finish Workout
+                    </button>
                   ) : (
-                    <div className="text-sm font-mono font-bold text-zinc-400">INACTIVE</div>
+                    <button
+                      disabled={(gymSplit as string) === "rest"}
+                      onClick={startWorkout}
+                      className="px-5 py-2.5 bg-zinc-50 hover:bg-white text-zinc-950 rounded text-xs font-mono font-bold tracking-widest uppercase active:scale-95 transition-all cursor-pointer font-bold disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      Start Workout
+                    </button>
                   )}
                 </div>
-                {isSessionActive ? (
-                  <button
-                    onClick={finishWorkout}
-                    className="px-5 py-2.5 bg-red-950/20 hover:bg-red-950/40 border border-red-900/60 hover:border-red-900 text-red-500 rounded text-xs font-mono font-bold tracking-widest uppercase active:scale-95 transition-all cursor-pointer font-bold"
-                  >
-                    Finish Workout
-                  </button>
-                ) : (
-                  <button
-                    disabled={gymSplit === "rest"}
-                    onClick={startWorkout}
-                    className="px-5 py-2.5 bg-zinc-50 hover:bg-white text-zinc-950 rounded text-xs font-mono font-bold tracking-widest uppercase active:scale-95 transition-all cursor-pointer font-bold disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    Start Workout
-                  </button>
-                )}
-              </div>
-              
-              {/* List Exercises (Basic Clickable Cards Profile) */}
-              <div className="space-y-4">
-                {gymExercises.map((ex) => {
-                  const isUpgraded = isSessionActive 
-                    ? sessionSets[ex.id]?.some(s => s.done && s.reps >= ex.targetReps)
-                    : ex.reps >= ex.targetReps;
+                
+                {/* List Exercises (Basic Clickable Cards Profile) */}
+                <div className="space-y-4">
+                  {filteredExercises.map((ex) => {
+                    const isUpgraded = isSessionActive 
+                      ? sessionSets[ex.id]?.some(s => s.done && s.reps >= ex.targetReps)
+                      : ex.reps >= ex.targetReps;
 
-                  return (
-                    <div 
-                      key={ex.id} 
-                      onClick={() => setActiveExercise(ex)}
-                      className="group border border-zinc-900 bg-[#000000]/60 p-4 rounded-md flex flex-col gap-2 transition-all hover:border-zinc-700 hover:bg-zinc-900/10 cursor-pointer animate-slide-in animate-fade-in"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="space-y-1">
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                            <h3 className="text-sm font-bold font-mono text-zinc-150 uppercase tracking-wide group-hover:text-white transition-colors">
-                              {ex.name}
-                            </h3>
-                            <span className="text-[10px] text-zinc-500 font-mono tracking-wider">
-                              [PR: {calculatePR(ex)}KG // 1RM: {calculate1RM(ex)}KG]
-                            </span>
+                    return (
+                      <div 
+                        key={ex.id} 
+                        onClick={() => setActiveExercise(ex)}
+                        className="group border border-zinc-900 bg-[#000000]/60 p-4 rounded-md flex flex-col gap-2 transition-all hover:border-zinc-700 hover:bg-zinc-900/10 cursor-pointer animate-slide-in animate-fade-in"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-1">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                              <h3 className="text-sm font-bold font-mono text-zinc-150 uppercase tracking-wide group-hover:text-white transition-colors">
+                                {ex.name}
+                              </h3>
+                              <span className="text-[10px] text-zinc-500 font-mono tracking-wider">
+                                [PR: {calculatePR(ex)}KG // 1RM: {calculate1RM(ex)}KG]
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs font-mono text-zinc-400 uppercase">
+                              <span>CURRENT: <span className="font-bold text-zinc-200">{ex.weight}kg × {ex.reps} reps</span></span>
+                              <span>TARGET: <span className="font-bold text-zinc-400">{ex.targetReps} reps</span></span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-3 text-xs font-mono text-zinc-400 uppercase">
-                            <span>CURRENT: <span className="font-bold text-zinc-200">{ex.weight}kg × {ex.reps} reps</span></span>
-                            <span>TARGET: <span className="font-bold text-zinc-400">{ex.targetReps} reps</span></span>
-                          </div>
-                        </div>
 
-                        <div className="flex items-center gap-2">
-                          {isUpgraded && (
-                            <span className="px-2 py-0.5 bg-emerald-950/20 border border-emerald-900/60 rounded text-[9px] font-mono text-emerald-400 uppercase font-semibold">
-                              TARGET MET
-                            </span>
-                          )}
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteExercise(ex.id);
-                            }}
-                            className="text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-sm font-bold font-mono"
-                            title="Delete exercise"
-                          >
-                            ×
-                          </button>
+                          <div className="flex items-center gap-2">
+                            {isUpgraded && (
+                              <span className="px-2 py-0.5 bg-emerald-950/20 border border-emerald-900/60 rounded text-[9px] font-mono text-emerald-400 uppercase font-semibold">
+                                TARGET MET
+                              </span>
+                            )}
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteExercise(ex.id);
+                              }}
+                              className="text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-sm font-bold font-mono"
+                              title="Delete exercise"
+                            >
+                              ×
+                            </button>
+                          </div>
                         </div>
                       </div>
+                    );
+                  })}
+
+                  {filteredExercises.length === 0 && (
+                    <div className="text-center py-6 text-xs font-mono uppercase tracking-widest text-zinc-500 border border-dashed border-zinc-800 rounded animate-pulse">
+                      No active gym split logs.
                     </div>
-                  );
-                })}
-
-                {gymExercises.length === 0 && (
-                  <div className="text-center py-6 text-xs font-mono uppercase tracking-widest text-zinc-500 border border-dashed border-zinc-800 rounded animate-pulse">
-                    No active gym split logs.
-                  </div>
-                )}
-              </div>
-
-              {/* Add Exercise form */}
-              <div className="flex flex-col gap-2.5 pt-4 border-t border-zinc-900 mt-3">
-                <input
-                  type="text"
-                  value={newExName}
-                  onChange={(e) => setNewExName(e.target.value)}
-                  placeholder="EXERCISE NAME (e.g. Overhead Press)..."
-                  className="h-12 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
-                />
-                <div className="grid grid-cols-3 gap-2.5">
-                  <input
-                    type="number"
-                    value={newExWeight}
-                    onChange={(e) => setNewExWeight(e.target.value === "" ? "" : Number(e.target.value))}
-                    placeholder="WEIGHT (KG)..."
-                    className="h-12 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
-                  />
-                  <input
-                    type="number"
-                    value={newExReps}
-                    onChange={(e) => setNewExReps(e.target.value === "" ? "" : Number(e.target.value))}
-                    placeholder="REPS..."
-                    className="h-12 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
-                  />
-                  <input
-                    type="number"
-                    value={newExTarget}
-                    onChange={(e) => setNewExTarget(e.target.value === "" ? "" : Number(e.target.value))}
-                    placeholder="TARGET REPS..."
-                    className="h-12 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
-                  />
+                  )}
                 </div>
-                <button
-                  onClick={handleAddExercise}
-                  className="h-12 w-full rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
-                >
-                  Add Exercise
-                </button>
-              </div>
 
-            </CardContent>
-          </Card>
+                {/* Add Exercise form */}
+                <div className="flex flex-col gap-2.5 pt-4 border-t border-zinc-900 mt-3">
+                  <input
+                    type="text"
+                    value={newExName}
+                    onChange={(e) => setNewExName(e.target.value)}
+                    placeholder="EXERCISE NAME (e.g. Overhead Press)..."
+                    className="h-12 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
+                  />
+                  <div className="grid grid-cols-3 gap-2.5">
+                    <input
+                      type="number"
+                      value={newExWeight}
+                      onChange={(e) => setNewExWeight(e.target.value === "" ? "" : Number(e.target.value))}
+                      placeholder="WEIGHT (KG)..."
+                      className="h-12 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
+                    />
+                    <input
+                      type="number"
+                      value={newExReps}
+                      onChange={(e) => setNewExReps(e.target.value === "" ? "" : Number(e.target.value))}
+                      placeholder="REPS..."
+                      className="h-12 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
+                    />
+                    <input
+                      type="number"
+                      value={newExTarget}
+                      onChange={(e) => setNewExTarget(e.target.value === "" ? "" : Number(e.target.value))}
+                      placeholder="TARGET REPS..."
+                      className="h-12 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
+                    />
+                  </div>
+                  <button
+                    onClick={handleAddExercise}
+                    className="h-12 w-full rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    Add Exercise
+                  </button>
+                </div>
+
+              </CardContent>
+            </Card>
+            )}
           </div>
         )}
 
@@ -743,7 +760,7 @@ export default function GymView({
               
               {/* Comparative side-by-side list */}
               <div className="grid grid-cols-1 gap-3.5 max-h-[300px] overflow-y-auto pr-1">
-                {gymPhotos.map((photo) => (
+                {gymPhotos.filter(p => p.date === activeDate).map((photo) => (
                   <div key={photo.id} className="group border border-zinc-900 bg-[#000000]/60 p-3.5 rounded relative flex flex-col gap-2 transition-all hover:border-zinc-805 animate-slide-in">
                     <img 
                       src={photo.url} 
@@ -759,14 +776,14 @@ export default function GymView({
 
                     <button
                       onClick={() => handleDeletePhoto(photo.id)}
-                      className="absolute top-4 right-4 bg-zinc-950/80 hover:bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 p-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-4 right-4 bg-zinc-950/80 hover:bg-zinc-900 border border-zinc-800 text-zinc-450 hover:text-zinc-200 p-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       <X className="h-4 w-4" />
                     </button>
                   </div>
                 ))}
 
-                {gymPhotos.length === 0 && (
+                {gymPhotos.filter(p => p.date === activeDate).length === 0 && (
                   <div className="text-center py-6 text-xs font-mono uppercase tracking-widest text-zinc-550 border border-dashed border-zinc-850 rounded animate-pulse">
                     No visual logs.
                   </div>
@@ -807,7 +824,7 @@ export default function GymView({
 
       {/* Fullscreen Exercise Detail Overlay View */}
       {currentExercise && (
-        <div className="fixed inset-0 bg-black z-50 p-6 md:p-8 overflow-y-auto flex flex-col gap-6 animate-slide-in">
+        <div className="fixed inset-0 md:left-64 bg-black z-50 p-6 md:p-12 max-w-7xl mx-auto w-full overflow-y-auto flex flex-col gap-6 animate-slide-in">
           {/* Overlay Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-zinc-800 pb-6 gap-4">
             <div className="space-y-1">
@@ -823,9 +840,9 @@ export default function GymView({
               </h2>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-mono text-zinc-400 uppercase tracking-wider">
                 <span>PR: <span className="text-zinc-200 font-bold">{calculatePR(currentExercise)}KG</span></span>
-                <span className="text-zinc-700">//</span>
+                <span className="text-zinc-700">{"//"}</span>
                 <span>EST. 1RM: <span className="text-zinc-200 font-bold">{calculate1RM(currentExercise)}KG</span></span>
-                <span className="text-zinc-700">//</span>
+                <span className="text-zinc-700">{"//"}</span>
                 <span>CURRENT SET: <span className="text-zinc-200 font-bold">{currentExercise.weight}kg × {currentExercise.reps} reps</span></span>
               </div>
             </div>
@@ -874,22 +891,102 @@ export default function GymView({
               </div>
 
               {!isSessionActive ? (
-                <div className="bg-zinc-955/50 border border-zinc-900 rounded-lg p-8 text-center space-y-4">
-                  <AlertCircle className="h-8 w-8 text-zinc-500 mx-auto" />
-                  <div className="space-y-1.5">
-                    <h4 className="text-sm font-mono font-bold text-zinc-300 uppercase">Workout Session Inactive</h4>
-                    <p className="text-xs font-mono text-zinc-500">You must start a workout session to log active sets, adjust parameters, and track progressive overload.</p>
-                  </div>
-                  <button
-                    disabled={gymSplit === "rest"}
-                    onClick={startWorkout}
-                    className="px-6 py-3 bg-zinc-150 hover:bg-white text-zinc-950 rounded font-mono font-bold text-xs tracking-widest uppercase active:scale-95 transition-all cursor-pointer disabled:opacity-35"
-                  >
-                    Start Workout Session
-                  </button>
-                </div>
+                (() => {
+                  const completedToday = currentExercise.history.find(h => h.date === activeDate);
+                  if (completedToday) {
+                    return (
+                      <div className="space-y-4">
+                        {completedToday.sets && completedToday.sets.length > 0 ? (
+                          completedToday.sets.map((set, setIdx: number) => (
+                            <div
+                              key={setIdx}
+                              className="border border-emerald-900 bg-emerald-950/5 rounded-lg p-4 transition-all animate-slide-in"
+                            >
+                              <div className="flex justify-between items-center mb-3">
+                                <div className="flex items-center gap-3">
+                                  <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-400">
+                                    SET {setIdx + 1}
+                                  </span>
+                                  <span className="text-[10px] font-mono text-zinc-500 uppercase">
+                                    COMPLETED
+                                  </span>
+                                </div>
+                                <span className="text-xs font-mono text-emerald-400 font-bold">
+                                  ✓ READ-ONLY
+                                </span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4 text-sm font-mono">
+                                <div className="bg-black/40 border border-zinc-900 rounded p-2.5 text-center">
+                                  <span className="text-[9px] text-zinc-500 uppercase block mb-1">WEIGHT</span>
+                                  <span className="text-zinc-200 font-bold">{set.weight} kg</span>
+                                </div>
+                                <div className="bg-black/40 border border-zinc-900 rounded p-2.5 text-center">
+                                  <span className="text-[9px] text-zinc-500 uppercase block mb-1">REPS</span>
+                                  <span className="text-zinc-200 font-bold">{set.reps}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="border border-emerald-900 bg-emerald-950/5 rounded-lg p-4 animate-slide-in">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-400">
+                                SINGLE LOG
+                              </span>
+                              <span className="text-xs font-mono text-emerald-400 font-bold">
+                                ✓ READ-ONLY
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 text-sm font-mono">
+                              <div className="bg-black/40 border border-zinc-900 rounded p-2.5 text-center">
+                                <span className="text-[9px] text-zinc-500 uppercase block mb-1">WEIGHT</span>
+                                <span className="text-zinc-200 font-bold">{completedToday.weight} kg</span>
+                              </div>
+                              <div className="bg-black/40 border border-zinc-900 rounded p-2.5 text-center">
+                                <span className="text-[9px] text-zinc-500 uppercase block mb-1">REPS</span>
+                                <span className="text-zinc-200 font-bold">{completedToday.reps}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="bg-zinc-955/50 border border-zinc-900 rounded-lg p-8 text-center space-y-4">
+                      <AlertCircle className="h-8 w-8 text-zinc-500 mx-auto" />
+                      <div className="space-y-1.5">
+                        <h4 className="text-sm font-mono font-bold text-zinc-300 uppercase">Workout Session Inactive</h4>
+                        <p className="text-xs font-mono text-zinc-500">You must start a workout session to log active sets, adjust parameters, and track progressive overload.</p>
+                      </div>
+                      <div className="flex justify-center w-full">
+                        <button
+                          disabled={gymSplit === "rest"}
+                          onClick={startWorkout}
+                          className="w-full max-w-xs h-12 bg-zinc-100 hover:bg-white text-zinc-950 font-mono text-xs font-bold uppercase tracking-wider transition-colors rounded shadow-lg disabled:opacity-35"
+                        >
+                          START WORKOUT SESSION
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-4 relative min-h-[200px]">
+                  {restTimer !== null && (
+                    <div className="absolute inset-0 bg-[#0a0a0a]/95 border border-zinc-800 rounded-lg z-10 flex flex-col items-center justify-center p-6 text-center animate-slide-in">
+                      <div className="space-y-2">
+                        <span className="text-[10px] font-mono tracking-widest text-zinc-550 uppercase font-semibold block">REST BREAK ACTIVE</span>
+                        <div className="text-4xl md:text-5xl font-mono tracking-tight text-emerald-400 font-bold animate-pulse-slow">
+                          {formatTime(restTimer)}
+                        </div>
+                        <p className="text-xs font-mono text-zinc-500 max-w-xs mx-auto">Take a moment to recover. Hydrate and prepare for the next set.</p>
+                        <button onClick={() => skipRestTimer()} className="mt-2 text-xs font-mono text-zinc-400 hover:text-white underline block mx-auto">
+                          [ SKIP REST BREAK ]
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   {(() => {
                     const activeSets = sessionSets[currentExercise.id] || [];
                     return activeSets.map((set, setIdx) => {
