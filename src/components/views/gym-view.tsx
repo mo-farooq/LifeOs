@@ -65,8 +65,26 @@ export default function GymView({
   const [sessionSets, setSessionSets] = useState<Record<string, Array<{ weight: number; reps: number; done: boolean }>>>({});
   const [restTimer, setRestTimer] = useState<number | null>(null);
 
-  // Collapse states for charts
-  const [expandedCharts, setExpandedCharts] = useState<Record<string, boolean>>({});
+  // Focus selection state for active exercise detail overlay
+  const [activeExercise, setActiveExercise] = useState<GymExercise | null>(null);
+
+  // Handle ESC key press to exit exercise detail view
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setActiveExercise(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  // Resolve the current active exercise from the latest gymExercises list state
+  const currentExercise = activeExercise 
+    ? gymExercises.find(ex => ex.id === activeExercise.id) || activeExercise
+    : null;
 
   // Live Workout timer effect
   React.useEffect(() => {
@@ -318,6 +336,9 @@ export default function GymView({
 
   const handleDeleteExercise = (id: string) => {
     updateGymExercises(gymExercises.filter(ex => ex.id !== id));
+    if (activeExercise?.id === id) {
+      setActiveExercise(null);
+    }
   };
 
   // Photo actions
@@ -338,49 +359,61 @@ export default function GymView({
     updateGymPhotos(gymPhotos.filter(p => p.id !== id));
   };
 
-  const toggleChart = (id: string) => {
-    setExpandedCharts(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
+  const getHistory1RM = (h: any) => {
+    if (h.sets && h.sets.length > 0) {
+      return Math.max(...h.sets.map((s: any) => Math.round(s.weight * (1 + s.reps / 30))));
+    }
+    return Math.round(h.weight * (1 + h.reps / 30));
   };
 
-  // Pure SVG Trend Line generator
-  const renderTrendChart = (ex: GymExercise) => {
-    // Collect all history plus the current set as data points
+  const getHistoryPeakWeight = (h: any) => {
+    if (h.sets && h.sets.length > 0) {
+      return Math.max(...h.sets.map((s: any) => s.weight));
+    }
+    return h.weight;
+  };
+
+  const getHistorySetsCompleted = (h: any) => {
+    return h.sets ? h.sets.length : 1;
+  };
+
+  // Pure SVG Trend Line generator for 1RM over time
+  const render1RMChart = (ex: GymExercise) => {
     const dataPoints = [
-      ...ex.history.map(h => ({ date: h.date, volume: h.weight * h.reps })),
-      { date: activeDate, volume: ex.weight * ex.reps }
-    ].reverse(); // Sort chronologically (oldest to newest)
+      ...ex.history.map(h => ({
+        date: h.date,
+        oneRM: getHistory1RM(h)
+      }))
+    ].reverse(); // Sort oldest to newest
 
     if (dataPoints.length < 2) {
       return (
-        <div className="py-4 text-center text-[9px] font-mono text-zinc-600 uppercase tracking-widest border border-dashed border-zinc-900 rounded">
-          More historical data required to render overload trend.
+        <div className="py-8 text-center text-xs font-mono text-zinc-500 uppercase tracking-widest border border-dashed border-zinc-800 rounded">
+          More historical data required to render 1RM performance trend.
         </div>
       );
     }
 
-    const width = 360;
-    const height = 100;
-    const paddingLeft = 40;
-    const paddingRight = 15;
-    const paddingTop = 15;
-    const paddingBottom = 20;
+    const width = 500;
+    const height = 180;
+    const paddingLeft = 45;
+    const paddingRight = 20;
+    const paddingTop = 20;
+    const paddingBottom = 30;
 
     const drawWidth = width - paddingLeft - paddingRight;
     const drawHeight = height - paddingTop - paddingBottom;
 
-    const volumes = dataPoints.map(d => d.volume);
-    const minVol = Math.max(0, Math.min(...volumes) * 0.95);
-    const maxVol = Math.max(...volumes) * 1.05;
-    const volDiff = maxVol - minVol || 1;
+    const oneRMs = dataPoints.map(d => d.oneRM);
+    const min1RM = Math.max(0, Math.min(...oneRMs) * 0.95);
+    const max1RM = Math.max(...oneRMs) * 1.05;
+    const diff = max1RM - min1RM || 1;
 
-    // Calculate chart coordinates
+    // Calculate coordinates
     const pointsCoords = dataPoints.map((dp, idx) => {
       const x = paddingLeft + (idx / (dataPoints.length - 1)) * drawWidth;
-      const y = paddingTop + drawHeight - ((dp.volume - minVol) / volDiff) * drawHeight;
-      return { x, y, val: dp.volume, label: dp.date.slice(5) }; // MM-DD
+      const y = paddingTop + drawHeight - ((dp.oneRM - min1RM) / diff) * drawHeight;
+      return { x, y, val: dp.oneRM, label: dp.date.slice(5) }; // MM-DD
     });
 
     let pathD = `M ${pointsCoords[0].x} ${pointsCoords[0].y}`;
@@ -389,28 +422,28 @@ export default function GymView({
     }
 
     return (
-      <div className="bg-[#000000] border border-zinc-900 rounded-md p-3.5 space-y-2 relative overflow-hidden animate-slide-in">
-        <div className="flex justify-between items-center text-[9px] font-mono text-zinc-500 uppercase tracking-wider font-semibold">
-          <span>PROGRESSIVE VOLUME TREND (WEIGHT × REPS)</span>
-          <span>CURR: {ex.weight * ex.reps} kg·reps</span>
+      <div className="bg-[#080808] border border-zinc-800 rounded-md p-4 space-y-3 relative overflow-hidden">
+        <div className="flex justify-between items-center text-[10px] font-mono text-zinc-450 uppercase tracking-wider font-semibold">
+          <span>1RM PERFORMANCE TREND (EST. 1RM OVER TIME)</span>
+          <span>PEAK 1RM: {Math.max(...oneRMs)} kg</span>
         </div>
         
-        <div className="w-full overflow-x-auto pr-1">
-          <svg className="w-full min-w-[340px] h-28" viewBox={`0 0 ${width} ${height}`}>
+        <div className="w-full overflow-x-auto">
+          <svg className="w-full min-w-[400px] h-44" viewBox={`0 0 ${width} ${height}`}>
             {/* Horizontal Grid lines */}
-            <line x1={paddingLeft} y1={paddingTop} x2={width - paddingRight} y2={paddingTop} className="stroke-zinc-950 stroke-[1]" />
-            <line x1={paddingLeft} y1={paddingTop + drawHeight / 2} x2={width - paddingRight} y2={paddingTop + drawHeight / 2} className="stroke-zinc-950 stroke-[1]" />
-            <line x1={paddingLeft} y1={paddingTop + drawHeight} x2={width - paddingRight} y2={paddingTop + drawHeight} className="stroke-zinc-900 stroke-[1]" />
+            <line x1={paddingLeft} y1={paddingTop} x2={width - paddingRight} y2={paddingTop} className="stroke-zinc-900 stroke-[1]" />
+            <line x1={paddingLeft} y1={paddingTop + drawHeight / 2} x2={width - paddingRight} y2={paddingTop + drawHeight / 2} className="stroke-zinc-900 stroke-[1]" />
+            <line x1={paddingLeft} y1={paddingTop + drawHeight} x2={width - paddingRight} y2={paddingTop + drawHeight} className="stroke-zinc-800/80 stroke-[1]" />
 
             {/* Y Axis Labels */}
-            <text x={paddingLeft - 8} y={paddingTop + 3} className="text-[7.5px] fill-zinc-550 font-mono font-bold" textAnchor="end">{Math.round(maxVol)}</text>
-            <text x={paddingLeft - 8} y={paddingTop + drawHeight / 2 + 3} className="text-[7.5px] fill-zinc-550 font-mono font-bold" textAnchor="end">{Math.round((maxVol + minVol) / 2)}</text>
-            <text x={paddingLeft - 8} y={paddingTop + drawHeight + 3} className="text-[7.5px] fill-zinc-550 font-mono font-bold" textAnchor="end">{Math.round(minVol)}</text>
+            <text x={paddingLeft - 8} y={paddingTop + 4} className="text-[9px] fill-zinc-550 font-mono font-bold" textAnchor="end">{Math.round(max1RM)}</text>
+            <text x={paddingLeft - 8} y={paddingTop + drawHeight / 2 + 4} className="text-[9px] fill-zinc-555 font-mono font-bold" textAnchor="end">{Math.round((max1RM + min1RM) / 2)}</text>
+            <text x={paddingLeft - 8} y={paddingTop + drawHeight + 4} className="text-[9px] fill-zinc-555 font-mono font-bold" textAnchor="end">{Math.round(min1RM)}</text>
 
             {/* Trend Line Path */}
             <path
               d={pathD}
-              className="fill-none stroke-zinc-100 stroke-[2] transition-all duration-500"
+              className="fill-none stroke-zinc-200 stroke-[2] transition-all duration-500"
             />
 
             {/* Data Point Nodes */}
@@ -419,14 +452,14 @@ export default function GymView({
                 <circle
                   cx={pt.x}
                   cy={pt.y}
-                  r="2.5"
-                  className="fill-zinc-950 stroke-zinc-200 stroke-[1.5] cursor-pointer hover:scale-125 transition-transform"
+                  r="3.5"
+                  className="fill-black stroke-zinc-200 stroke-[1.5]"
                 />
-                {/* Node tooltips value text */}
+                {/* Node values */}
                 <text
                   x={pt.x}
-                  y={pt.y - 7}
-                  className="text-[6.5px] fill-zinc-250 font-mono font-bold text-center"
+                  y={pt.y - 8}
+                  className="text-[8.5px] fill-zinc-300 font-mono font-bold"
                   textAnchor="middle"
                 >
                   {pt.val}
@@ -434,8 +467,8 @@ export default function GymView({
                 {/* X axis labels (date) */}
                 <text
                   x={pt.x}
-                  y={height - 4}
-                  className="text-[6.5px] fill-zinc-550 font-mono font-semibold"
+                  y={height - 8}
+                  className="text-[8px] fill-zinc-550 font-mono font-semibold"
                   textAnchor="middle"
                 >
                   {pt.label}
@@ -537,6 +570,7 @@ export default function GymView({
           </div>
         </div>
       </div>
+
       {/* Main Grid: Exercises & Photos */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-4 md:gap-6">
         
@@ -547,12 +581,12 @@ export default function GymView({
             <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800">
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
-                  <span className="text-xs font-mono uppercase tracking-widest text-zinc-500 font-bold">ROUTINE TRACKER</span>
+                  <span className="text-xs font-mono uppercase tracking-widest text-zinc-550 font-bold">ROUTINE TRACKER</span>
                   <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">
                     ACTIVE {gymSplit} EXERCISES
                   </CardTitle>
                 </div>
-                <div className="text-xs font-mono text-zinc-550 uppercase tracking-wider font-bold">
+                <div className="text-xs font-mono text-zinc-500 uppercase tracking-wider font-bold">
                   {gymExercises.length} Total Exercises
                 </div>
               </div>
@@ -562,7 +596,7 @@ export default function GymView({
               {/* Live Workout Session Banner */}
               <div className="border border-zinc-900 bg-[#000000] p-4.5 rounded-md flex items-center justify-between">
                 <div className="space-y-1">
-                  <span className="text-xs font-mono uppercase tracking-widest text-zinc-550 font-bold">WORKOUT SESSION</span>
+                  <span className="text-xs font-mono uppercase tracking-widest text-zinc-500 font-bold">WORKOUT SESSION</span>
                   {isSessionActive ? (
                     <div className="flex items-center gap-2">
                       <span className="h-1.5 w-1.5 rounded-full bg-[#10b981] animate-ping" />
@@ -592,151 +626,59 @@ export default function GymView({
                 )}
               </div>
               
-              {/* List Exercises */}
-              <div className="space-y-6">
+              {/* List Exercises (Basic Clickable Cards Profile) */}
+              <div className="space-y-4">
                 {gymExercises.map((ex) => {
                   const isUpgraded = isSessionActive 
                     ? sessionSets[ex.id]?.some(s => s.done && s.reps >= ex.targetReps)
                     : ex.reps >= ex.targetReps;
-                  const isChartOpen = expandedCharts[ex.id] || false;
-                  const activeSets = sessionSets[ex.id] || getPreviewSets(ex);
 
                   return (
-                    <div key={ex.id} className="group border border-zinc-900 bg-[#000000]/60 p-3.5 sm:p-5 md:p-6 rounded-md flex flex-col gap-3 transition-all hover:border-zinc-800 animate-slide-in">
-                      <div className="flex justify-between items-start border-b border-zinc-900 pb-2.5">
+                    <div 
+                      key={ex.id} 
+                      onClick={() => setActiveExercise(ex)}
+                      className="group border border-zinc-900 bg-[#000000]/60 p-4 rounded-md flex flex-col gap-2 transition-all hover:border-zinc-700 hover:bg-zinc-900/10 cursor-pointer animate-slide-in animate-fade-in"
+                    >
+                      <div className="flex justify-between items-start">
                         <div className="space-y-1">
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                            <h3 className="text-sm font-bold font-mono text-zinc-150 uppercase tracking-wide">{ex.name}</h3>
-                            <span className="text-xs text-zinc-500 font-mono tracking-wider">
+                            <h3 className="text-sm font-bold font-mono text-zinc-150 uppercase tracking-wide group-hover:text-white transition-colors">
+                              {ex.name}
+                            </h3>
+                            <span className="text-[10px] text-zinc-500 font-mono tracking-wider">
                               [PR: {calculatePR(ex)}KG // 1RM: {calculate1RM(ex)}KG]
                             </span>
-                            <button
-                              onClick={() => toggleChart(ex.id)}
-                              className="text-zinc-500 hover:text-zinc-350 transition-colors p-0.5 animate-fade-in"
-                              title="Toggle volume progression chart"
-                            >
-                              <LineChart className={`h-4 w-4 ${isChartOpen ? "text-zinc-250" : ""}`} />
-                            </button>
                           </div>
-                          <div className="flex items-center gap-2.5 text-xs font-mono text-zinc-550 uppercase">
-                            <span>CURRENT SET: <span className="font-bold text-zinc-300 font-mono">{ex.weight}kg × {ex.reps} reps</span></span>
-                            <span>Target: <span className="font-bold text-zinc-455 font-mono">{ex.targetReps} reps</span></span>
+                          <div className="flex items-center gap-3 text-xs font-mono text-zinc-400 uppercase">
+                            <span>CURRENT: <span className="font-bold text-zinc-200">{ex.weight}kg × {ex.reps} reps</span></span>
+                            <span>TARGET: <span className="font-bold text-zinc-400">{ex.targetReps} reps</span></span>
                           </div>
                         </div>
 
-                        <button 
-                          onClick={() => handleDeleteExercise(ex.id)}
-                          className="text-zinc-655 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 text-sm font-bold"
-                        >
-                          ×
-                        </button>
-                      </div>
-
-                      {/* Progressive Overload prescription alert */}
-                      {isUpgraded && (
-                        <div className="flex items-center gap-2.5 bg-emerald-950/15 border border-emerald-900/40 rounded px-3 py-2 text-xs font-mono text-emerald-500 uppercase font-semibold animate-slide-in">
-                          <Award className="h-4 w-4 flex-shrink-0" />
-                          <span>Overload Target Met! Upgrade weight by +2kg next session (Prescribed: {ex.weight}kg)</span>
-                        </div>
-                      )}
-
-                      {/* Expandable trend chart */}
-                      {isChartOpen && renderTrendChart(ex)}
-
-                      {/* Multi-Set grid columns */}
-                      <div className="border border-zinc-900 rounded-md bg-[#000000]/30 p-2 sm:p-3.5 space-y-2">
-                        {/* Grid Header */}
-                        <div className="grid grid-cols-4 gap-1 sm:gap-3 border-b border-zinc-900 pb-1.5 text-zinc-500 text-[10px] font-bold uppercase tracking-wider">
-                          <div>SET / PREV</div>
-                          <div>KG</div>
-                          <div>REPS</div>
-                          <div className="text-center">STATUS</div>
-                        </div>
-                        {/* Grid Body */}
-                        <div className="space-y-1.5">
-                          {activeSets.map((set, setIdx) => {
-                            const isDone = set.done;
-                            const previousDetail = getPreviousSetDetails(ex, setIdx);
-                            return (
-                              <div 
-                                key={setIdx} 
-                                className={`grid grid-cols-4 gap-1 sm:gap-3 items-center py-1 border-b border-zinc-950 last:border-0 ${
-                                  isDone ? "opacity-30" : ""
-                                }`}
-                              >
-                                <div className="flex flex-col">
-                                  <span className="text-xs font-bold text-zinc-400">Set {setIdx + 1}</span>
-                                  <span className="text-[10px] text-zinc-650 truncate">{previousDetail || "—"}</span>
-                                </div>
-                                <div>
-                                  <input
-                                    type="number"
-                                    disabled={isDone || !isSessionActive}
-                                    value={set.weight || ""}
-                                    placeholder={ex.weight.toString()}
-                                    onChange={(e) => handleUpdateSetWeight(ex.id, setIdx, Number(e.target.value))}
-                                    className="w-full bg-[#000000] border border-zinc-900 disabled:border-transparent disabled:bg-transparent rounded px-2 py-1.5 text-center text-sm text-zinc-200 focus:border-zinc-700 outline-none transition-all"
-                                  />
-                                </div>
-                                <div>
-                                  <input
-                                    type="number"
-                                    disabled={isDone || !isSessionActive}
-                                    value={set.reps || ""}
-                                    placeholder={ex.targetReps.toString()}
-                                    onChange={(e) => handleUpdateSetReps(ex.id, setIdx, Number(e.target.value))}
-                                    className="w-full bg-[#000000] border border-zinc-900 disabled:border-transparent disabled:bg-transparent rounded px-2 py-1.5 text-center text-sm text-zinc-200 focus:border-zinc-700 outline-none transition-all"
-                                  />
-                                </div>
-                                <div className="flex justify-center">
-                                  <button
-                                    type="button"
-                                    disabled={!isSessionActive}
-                                    onClick={() => handleToggleSetDone(ex.id, setIdx)}
-                                    className={`w-5.5 h-5.5 rounded-sm border flex items-center justify-center transition-all ${
-                                      isDone
-                                        ? "bg-zinc-50 border-zinc-150 text-black"
-                                        : "bg-transparent border-zinc-800 hover:border-zinc-600 text-transparent"
-                                    } ${!isSessionActive ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}
-                                  >
-                                    {isDone && (
-                                      <svg className="w-3.5 h-3.5 stroke-[4.0] text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                      </svg>
-                                    )}
-                                  </button>
-                                </div>
-                              </div>
-                            );
-                          })}
+                        <div className="flex items-center gap-2">
+                          {isUpgraded && (
+                            <span className="px-2 py-0.5 bg-emerald-950/20 border border-emerald-900/60 rounded text-[9px] font-mono text-emerald-400 uppercase font-semibold">
+                              TARGET MET
+                            </span>
+                          )}
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteExercise(ex.id);
+                            }}
+                            className="text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-sm font-bold font-mono"
+                            title="Delete exercise"
+                          >
+                            ×
+                          </button>
                         </div>
                       </div>
-
-
-                      {/* History badges */}
-                      {ex.history.length > 0 && (
-                        <div className="space-y-1.5 mt-1.5">
-                          <span className="text-xs font-mono text-zinc-650 uppercase font-semibold tracking-wider">LOG HISTORY:</span>
-                          <div className="flex flex-wrap gap-2">
-                            {ex.history.map((hist, hidx) => (
-                              <div key={hidx} className="bg-[#000000] border border-zinc-955 px-3 py-1 rounded text-xs font-mono text-zinc-400">
-                                {hist.date}: {hist.weight}kg × {hist.reps}r
-                                {hist.sets && (
-                                  <span className="text-zinc-600 ml-1.5">
-                                    ({hist.sets.map(s => `${s.weight}x${s.reps}`).join(", ")})
-                                  </span>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   );
                 })}
 
                 {gymExercises.length === 0 && (
-                  <div className="text-center py-6 text-xs font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-850 rounded animate-pulse">
+                  <div className="text-center py-6 text-xs font-mono uppercase tracking-widest text-zinc-500 border border-dashed border-zinc-800 rounded animate-pulse">
                     No active gym split logs.
                   </div>
                 )}
@@ -825,7 +767,7 @@ export default function GymView({
                 ))}
 
                 {gymPhotos.length === 0 && (
-                  <div className="text-center py-6 text-xs font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-850 rounded animate-pulse">
+                  <div className="text-center py-6 text-xs font-mono uppercase tracking-widest text-zinc-550 border border-dashed border-zinc-850 rounded animate-pulse">
                     No visual logs.
                   </div>
                 )}
@@ -862,6 +804,249 @@ export default function GymView({
         )}
 
       </div>
+
+      {/* Fullscreen Exercise Detail Overlay View */}
+      {currentExercise && (
+        <div className="fixed inset-0 bg-black z-50 p-6 md:p-8 overflow-y-auto flex flex-col gap-6 animate-slide-in">
+          {/* Overlay Header */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-zinc-800 pb-6 gap-4">
+            <div className="space-y-1">
+              <button
+                onClick={() => setActiveExercise(null)}
+                className="text-xs font-mono font-bold tracking-widest text-zinc-500 hover:text-zinc-300 uppercase transition-colors flex items-center gap-1.5 cursor-pointer"
+              >
+                [ ESC // BACK TO ROUTINE ]
+              </button>
+              <h2 className="text-xl md:text-2xl font-mono font-bold text-white uppercase tracking-widest flex items-center gap-3 mt-2">
+                <Dumbbell className="h-6 w-6 text-zinc-400" />
+                {currentExercise.name}
+              </h2>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-mono text-zinc-400 uppercase tracking-wider">
+                <span>PR: <span className="text-zinc-200 font-bold">{calculatePR(currentExercise)}KG</span></span>
+                <span className="text-zinc-700">//</span>
+                <span>EST. 1RM: <span className="text-zinc-200 font-bold">{calculate1RM(currentExercise)}KG</span></span>
+                <span className="text-zinc-700">//</span>
+                <span>CURRENT SET: <span className="text-zinc-200 font-bold">{currentExercise.weight}kg × {currentExercise.reps} reps</span></span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {isSessionActive ? (
+                <div className="flex items-center gap-4 bg-zinc-950 border border-zinc-850 p-2.5 px-4 rounded-md">
+                  <div className="text-left">
+                    <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">SESSION TIME</span>
+                    <span className="text-sm font-mono font-bold text-emerald-400 animate-pulse">
+                      {formatElapsedTime(sessionElapsedTime)}
+                    </span>
+                  </div>
+                  <button
+                    onClick={finishWorkout}
+                    className="px-4 py-2 bg-red-955/20 hover:bg-red-955/40 border border-red-900 text-red-500 rounded text-xs font-mono font-bold tracking-widest uppercase active:scale-95 transition-all cursor-pointer"
+                  >
+                    Finish Session
+                  </button>
+                </div>
+              ) : (
+                <button
+                  disabled={gymSplit === "rest"}
+                  onClick={startWorkout}
+                  className="px-5 py-3 bg-zinc-150 hover:bg-white text-zinc-950 rounded text-xs font-mono font-bold tracking-widest uppercase active:scale-95 transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  Start Workout
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Detail Canvas Layout Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
+            {/* Panel 1: Active Entry Grid */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-mono font-bold text-zinc-300 uppercase tracking-wider">
+                  Panel 1 // Active Entry Grid
+                </h3>
+                {isSessionActive && (
+                  <span className="text-xs font-mono text-zinc-500">
+                    Adjust parameters to log active sets
+                  </span>
+                )}
+              </div>
+
+              {!isSessionActive ? (
+                <div className="bg-zinc-955/50 border border-zinc-900 rounded-lg p-8 text-center space-y-4">
+                  <AlertCircle className="h-8 w-8 text-zinc-500 mx-auto" />
+                  <div className="space-y-1.5">
+                    <h4 className="text-sm font-mono font-bold text-zinc-300 uppercase">Workout Session Inactive</h4>
+                    <p className="text-xs font-mono text-zinc-500">You must start a workout session to log active sets, adjust parameters, and track progressive overload.</p>
+                  </div>
+                  <button
+                    disabled={gymSplit === "rest"}
+                    onClick={startWorkout}
+                    className="px-6 py-3 bg-zinc-150 hover:bg-white text-zinc-950 rounded font-mono font-bold text-xs tracking-widest uppercase active:scale-95 transition-all cursor-pointer disabled:opacity-35"
+                  >
+                    Start Workout Session
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {(() => {
+                    const activeSets = sessionSets[currentExercise.id] || [];
+                    return activeSets.map((set, setIdx) => {
+                      const isDone = set.done;
+                      const previousDetail = getPreviousSetDetails(currentExercise, setIdx);
+                      return (
+                        <div
+                          key={setIdx}
+                          className={`border rounded-lg p-4 bg-zinc-955 transition-all ${
+                            isDone ? "border-emerald-900 bg-emerald-950/5" : "border-zinc-900"
+                          }`}
+                        >
+                          <div className="flex justify-between items-center mb-3">
+                            <div className="flex items-center gap-3">
+                              <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded ${
+                                isDone ? "bg-emerald-950 text-emerald-400" : "bg-zinc-900 text-zinc-450"
+                              }`}>
+                                SET {setIdx + 1}
+                              </span>
+                              <span className="text-[10px] font-mono text-zinc-500 uppercase">
+                                PREV: {previousDetail}
+                              </span>
+                            </div>
+                            
+                            <button
+                              type="button"
+                              onClick={() => handleToggleSetDone(currentExercise.id, setIdx)}
+                              className={`px-3 py-1.5 rounded font-mono text-xs font-bold tracking-wider uppercase border transition-all cursor-pointer ${
+                                isDone
+                                  ? "bg-emerald-500 border-emerald-400 text-black font-extrabold"
+                                  : "bg-transparent border-zinc-800 text-zinc-300 hover:border-zinc-600"
+                              }`}
+                            >
+                              {isDone ? "✓ DONE" : "MARK DONE"}
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            {/* Weight Adjuster with large touch targets */}
+                            <div className="space-y-1">
+                              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">WEIGHT (KG)</span>
+                              <div className="flex items-center bg-black border border-zinc-800 rounded">
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateSetWeight(currentExercise.id, setIdx, Math.max(0, (set.weight || 0) - 2.5))}
+                                  className="px-3.5 py-2.5 text-zinc-400 hover:text-white border-r border-zinc-800 font-mono font-bold active:scale-90 transition-transform cursor-pointer"
+                                >
+                                  -2.5
+                                </button>
+                                <input
+                                  type="number"
+                                  value={set.weight ?? ""}
+                                  onChange={(e) => handleUpdateSetWeight(currentExercise.id, setIdx, Number(e.target.value))}
+                                  className="w-full bg-transparent text-center font-mono text-sm text-zinc-200 outline-none focus:text-white"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateSetWeight(currentExercise.id, setIdx, (set.weight || 0) + 2.5)}
+                                  className="px-3.5 py-2.5 text-zinc-400 hover:text-white border-l border-zinc-800 font-mono font-bold active:scale-90 transition-transform cursor-pointer"
+                                >
+                                  +2.5
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Reps Adjuster with large touch targets */}
+                            <div className="space-y-1">
+                              <span className="text-[9px] font-mono text-zinc-500 uppercase tracking-widest block">REPS</span>
+                              <div className="flex items-center bg-black border border-zinc-800 rounded">
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateSetReps(currentExercise.id, setIdx, Math.max(0, (set.reps || 0) - 1))}
+                                  className="px-4 py-2.5 text-zinc-400 hover:text-white border-r border-zinc-800 font-mono font-bold active:scale-90 transition-transform cursor-pointer"
+                                >
+                                  -1
+                                </button>
+                                <input
+                                  type="number"
+                                  value={set.reps ?? ""}
+                                  onChange={(e) => handleUpdateSetReps(currentExercise.id, setIdx, Number(e.target.value))}
+                                  className="w-full bg-transparent text-center font-mono text-sm text-zinc-200 outline-none focus:text-white"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateSetReps(currentExercise.id, setIdx, (set.reps || 0) + 1)}
+                                  className="px-4 py-2.5 text-zinc-400 hover:text-white border-l border-zinc-800 font-mono font-bold active:scale-90 transition-transform cursor-pointer"
+                                >
+                                  +1
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              )}
+            </div>
+
+            {/* Panel 2: Analytics Matrix */}
+            <div className="space-y-8">
+              {/* Top Section: 1RM Chart */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-mono font-bold text-zinc-300 uppercase tracking-wider">
+                  Panel 2 // Analytics Matrix
+                </h3>
+                {render1RMChart(currentExercise)}
+              </div>
+
+              {/* Bottom Section: High legibility clean data table */}
+              <div className="space-y-3">
+                <span className="text-[10px] font-mono text-zinc-450 uppercase tracking-wider font-semibold block">
+                  HISTORICAL DATA MATRIX
+                </span>
+                <div className="border border-zinc-850 rounded-md overflow-hidden bg-zinc-950">
+                  <table className="w-full text-left border-collapse text-xs font-mono">
+                    <thead>
+                      <tr className="border-b border-zinc-850 bg-zinc-900/40 text-zinc-400 font-bold uppercase tracking-wider">
+                        <th className="p-3">DATE</th>
+                        <th className="p-3 text-center">SETS COMPLETED</th>
+                        <th className="p-3 text-center">PEAK WEIGHT</th>
+                        <th className="p-3 text-center">PEAK 1RM</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-900/30">
+                      {currentExercise.history.map((hist, hidx) => {
+                        const setsCompleted = getHistorySetsCompleted(hist);
+                        const peakWeight = getHistoryPeakWeight(hist);
+                        const peak1RM = getHistory1RM(hist);
+                        return (
+                          <tr 
+                            key={hidx} 
+                            className="hover:bg-zinc-900/30 transition-colors odd:bg-transparent even:bg-zinc-900/20"
+                          >
+                            <td className="p-3 text-zinc-400">{hist.date}</td>
+                            <td className="p-3 text-center text-zinc-300 font-semibold">{setsCompleted}</td>
+                            <td className="p-3 text-center text-zinc-350">{peakWeight} kg</td>
+                            <td className="p-3 text-center text-zinc-100 font-bold">{peak1RM} kg</td>
+                          </tr>
+                        );
+                      })}
+                      {currentExercise.history.length === 0 && (
+                        <tr>
+                          <td colSpan={4} className="p-8 text-center text-zinc-650 uppercase tracking-widest font-mono text-[10px]">
+                            No historical sessions logged.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -4,8 +4,6 @@ export interface Task {
   completed: boolean;
   queued: boolean;
   date: string; // YYYY-MM-DD
-  energy: "charging" | "draining";
-  revenue: "high" | "low";
   priority: boolean;
 }
 

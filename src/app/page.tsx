@@ -104,13 +104,13 @@ export default function Home() {
   // Seed data generator
   const getSeedState = (actDate: string, tomDate: string): LifeOSState => ({
     tasks: [
-      { id: "1", text: "Complete UI shell integration of Life OS", completed: false, queued: true, date: actDate, energy: "charging", revenue: "high", priority: true },
-      { id: "2", text: "Log nutritional intake & weight metrics", completed: true, queued: false, date: actDate, energy: "charging", revenue: "low", priority: false },
-      { id: "3", text: "Review weekly portfolio balance sheets", completed: false, queued: false, date: actDate, energy: "draining", revenue: "high", priority: false },
-      { id: "4", text: "Execute hypertrophic gym routine", completed: false, queued: true, date: actDate, energy: "draining", revenue: "low", priority: true },
-      { id: "5", text: "Draft project proposal guidelines", completed: false, queued: false, date: actDate, energy: "charging", revenue: "high", priority: false },
-      { id: "6", text: "Prepare healthy breakfast bowls", completed: false, queued: false, date: tomDate, energy: "charging", revenue: "low", priority: false },
-      { id: "7", text: "Sync smart watch with dashboard databases", completed: false, queued: false, date: tomDate, energy: "charging", revenue: "low", priority: false },
+      { id: "1", text: "Complete UI shell integration of Life OS", completed: false, queued: true, date: actDate, priority: true },
+      { id: "2", text: "Log nutritional intake & weight metrics", completed: true, queued: false, date: actDate, priority: false },
+      { id: "3", text: "Review weekly portfolio balance sheets", completed: false, queued: false, date: actDate, priority: false },
+      { id: "4", text: "Execute hypertrophic gym routine", completed: false, queued: true, date: actDate, priority: true },
+      { id: "5", text: "Draft project proposal guidelines", completed: false, queued: false, date: actDate, priority: false },
+      { id: "6", text: "Prepare healthy breakfast bowls", completed: false, queued: false, date: tomDate, priority: false },
+      { id: "7", text: "Sync smart watch with dashboard databases", completed: false, queued: false, date: tomDate, priority: false },
     ],
     stats: { willpower: 8, focus: 7, clarity: 9, energy: 6 },
     skills: [
@@ -688,8 +688,6 @@ export default function Home() {
             updateTasks={updateTasks} 
             activeDate={activeDate} 
             tomorrowDate={tomorrowDate}
-            vision={state.vision}
-            updateVision={updateVision}
             habits={state.habits || []}
             updateHabits={updateHabits}
             focusSessionsLog={state.focusSessionsLog || {}}
@@ -827,8 +825,6 @@ export default function Home() {
             updateTasks={updateTasks} 
             activeDate={activeDate} 
             tomorrowDate={tomorrowDate}
-            vision={state.vision}
-            updateVision={updateVision}
             habits={state.habits || []}
             updateHabits={updateHabits}
             focusSessionsLog={state.focusSessionsLog || {}}
