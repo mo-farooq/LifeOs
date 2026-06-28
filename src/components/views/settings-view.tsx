@@ -126,7 +126,7 @@ export default function SettingsView({
       </div>
 
       {/* Grid Settings Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-10">
         
         {/* Left Column: Dashboard Views Registry (Main & Indented Children) */}
         <div className="md:col-span-2 space-y-8">
@@ -266,7 +266,7 @@ export default function SettingsView({
                   STANDALONE WORKSPACE MODULES
                 </span>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 md:gap-6">
                   {[
                     { key: "salah" as keyof ModuleConfig, label: "Salah Tracker", desc: "Prayer streak & daily compliance log" },
                     { key: "focus" as keyof ModuleConfig, label: "Focus Room", desc: "Pomodoro timers & ambient background music" },
@@ -297,7 +297,7 @@ export default function SettingsView({
         <div className="space-y-10">
           
           {/* Awake hour configuration card */}
-          <div className="p-6 border border-zinc-850 bg-black rounded-md space-y-6">
+          <div className="p-3.5 sm:p-5 md:p-6 border border-zinc-850 bg-black rounded-md space-y-6">
             <div className="flex items-center gap-2.5 border-b border-zinc-900 pb-3">
               <Clock className="h-4.5 w-4.5 text-zinc-400" />
               <span className="text-xs font-mono uppercase tracking-widest text-zinc-450 font-bold">
@@ -353,7 +353,7 @@ export default function SettingsView({
           </div>
 
           {/* Database maintenance backup card */}
-          <div className="p-6 border border-zinc-850 bg-black rounded-md space-y-6">
+          <div className="p-3.5 sm:p-5 md:p-6 border border-zinc-850 bg-black rounded-md space-y-6">
             <div className="flex items-center gap-2.5 border-b border-zinc-900 pb-3">
               <Database className="h-4.5 w-4.5 text-zinc-400" />
               <span className="text-xs font-mono uppercase tracking-widest text-zinc-455 font-bold">
@@ -384,7 +384,7 @@ export default function SettingsView({
           </div>
 
           {/* Sign Out Card */}
-          <div className="p-6 border border-red-950/40 bg-black rounded-md space-y-4">
+          <div className="p-3.5 sm:p-5 md:p-6 border border-red-950/40 bg-black rounded-md space-y-4">
             <span className="text-xs font-mono uppercase tracking-widest text-red-500 font-bold">
               CRITICAL ACTIONS
             </span>

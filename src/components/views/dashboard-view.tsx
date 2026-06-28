@@ -266,10 +266,10 @@ export default function DashboardView({
     const netWorthHistory = getNetWorthHistory();
 
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-slide-in" style={{ animationDelay: "50ms" }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 md:gap-6 animate-slide-in" style={{ animationDelay: "50ms" }}>
         
         {/* Habit Grid */}
-        <div className="border border-zinc-800 rounded-md p-6 bg-[#0a0a0a] flex flex-col h-full transition-all duration-300 hover:border-zinc-700">
+        <div className="border border-zinc-800 rounded-md p-3.5 sm:p-5 md:p-6 bg-[#0a0a0a] flex flex-col h-full transition-all duration-300 hover:border-zinc-700">
           <div className="flex justify-between items-center mb-4 pb-2 border-b border-zinc-900">
             <span className="text-xs font-mono font-bold tracking-widest text-zinc-300 uppercase">30-DAY HABIT CONSISTENCY</span>
           </div>
@@ -360,7 +360,7 @@ export default function DashboardView({
         />
 
         {/* Net Worth Progression */}
-        <div className="border border-zinc-800 rounded-md p-6 bg-[#0a0a0a] flex flex-col justify-between transition-all duration-300 hover:border-zinc-700">
+        <div className="border border-zinc-800 rounded-md p-3.5 sm:p-5 md:p-6 bg-[#0a0a0a] flex flex-col justify-between transition-all duration-300 hover:border-zinc-700">
           <div>
             <div className="flex justify-between items-center mb-3 pb-1.5 border-b border-zinc-900">
               <span className="text-xs font-mono font-bold tracking-widest text-zinc-300 uppercase">NET WORTH PROGRESSION (6M)</span>
@@ -679,7 +679,7 @@ export default function DashboardView({
 
   const renderQuadrant = (title: string, subtitle: string, list: Task[], energyLabel: string, revenueLabel: string) => {
     return (
-      <div className="border border-zinc-800 rounded-md p-6 bg-[#0a0a0a] flex flex-col h-full min-h-[180px] transition-all duration-300 hover:border-zinc-700">
+      <div className="border border-zinc-800 rounded-md p-3.5 sm:p-5 md:p-6 bg-[#0a0a0a] flex flex-col h-full min-h-[180px] transition-all duration-300 hover:border-zinc-700">
         <div className="flex justify-between items-center mb-3 pb-1.5 border-b border-zinc-900 flex-shrink-0">
           <div className="space-y-0.5">
             <span className="text-xs font-mono font-bold tracking-widest text-zinc-200 uppercase">{title}</span>
@@ -782,7 +782,7 @@ export default function DashboardView({
 
       {/* Vision OS Collapsible Panel (Identity-based Goals) */}
       {isVisionOpen && (
-        <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md p-6 space-y-4 animate-slide-in">
+        <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md p-3.5 sm:p-5 md:p-6 space-y-4 animate-slide-in">
           <div className="flex items-center gap-2 pb-2 border-b border-zinc-900">
             <User className="h-5 w-5 text-zinc-450" />
             <span className="text-xs font-mono font-bold tracking-widest text-zinc-200 uppercase">VISION OS & IDENTITY ENGINE</span>
@@ -844,14 +844,14 @@ export default function DashboardView({
       {activeSubView === "history" ? (
         renderHistorySubView()
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-4 md:gap-6">
           
           {/* Left Column: Task System (List/Grid + Tomorrow) */}
-          <div className="lg:col-span-8 space-y-6">
+          <div className="lg:col-span-8 space-y-2 sm:space-y-4 md:space-y-6">
             {activeSubView === "list" ? (
-            <div className="space-y-6 animate-slide-in" style={{ animationDelay: "50ms" }}>
+            <div className="space-y-2 sm:space-y-4 md:space-y-6 animate-slide-in" style={{ animationDelay: "50ms" }}>
               <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-                <CardHeader className="p-6 border-b border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <span className="text-xs font-mono uppercase tracking-widest text-zinc-550 font-bold">TODAY</span>
                     <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">ACTIVE EXECUTION BUFFER</CardTitle>
@@ -985,7 +985,7 @@ export default function DashboardView({
               </Card>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-slide-in" style={{ animationDelay: "50ms" }}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4 md:gap-6 animate-slide-in" style={{ animationDelay: "50ms" }}>
               {renderQuadrant("ZONE OF GENIUS", "CHARGING ENERGY // HIGH REVENUE", geniusTasks, "charging", "high")}
               {renderQuadrant("PASSIONS & GROWTH", "CHARGING ENERGY // LOW REVENUE", passionTasks, "charging", "low")}
               {renderQuadrant("HIGH LEVERAGE", "DRAINING ENERGY // HIGH REVENUE", leverageTasks, "draining", "high")}
@@ -995,7 +995,7 @@ export default function DashboardView({
 
           {/* Plan Tomorrow Card */}
           <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md animate-slide-in" style={{ animationDelay: "100ms" }}>
-            <CardHeader className="p-6 border-b border-zinc-800">
+            <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800">
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
                   <span className="text-xs font-mono uppercase tracking-widest text-zinc-555 font-bold">TOMORROW</span>
@@ -1007,7 +1007,7 @@ export default function DashboardView({
               </div>
             </CardHeader>
             
-            <CardContent className="p-6 space-y-4">
+            <CardContent className="p-3.5 sm:p-5 md:p-6 space-y-4">
               <div className="flex flex-col gap-3.5 pb-4 border-b border-zinc-900 mb-3">
                 <div className="flex gap-2.5">
                   <input
@@ -1092,9 +1092,9 @@ export default function DashboardView({
         </div>
 
         {/* Right Column: Consistency Engine (Habit Tracker) */}
-        <div className="lg:col-span-4 space-y-6">
+        <div className="lg:col-span-4 space-y-2 sm:space-y-4 md:space-y-6">
           <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md animate-slide-in" style={{ animationDelay: "75ms" }}>
-            <CardHeader className="p-6 border-b border-zinc-800">
+            <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800">
               <div className="space-y-1">
                 <span className="text-xs font-mono uppercase tracking-widest text-zinc-550 font-bold font-semibold">CONSISTENCY ENGINE</span>
                 <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">DAILY HABITS TRACKER</CardTitle>
@@ -1410,7 +1410,7 @@ function TrendBarChart({ title, data, yMax, unit = "" }: TrendBarChartProps) {
     : Math.max(1, ...data.map(d => Math.max(d.value, d.target || 0)));
 
   return (
-    <div className="border border-zinc-800 rounded-md p-6 bg-[#0a0a0a] flex flex-col h-full transition-all duration-300 hover:border-zinc-700">
+    <div className="border border-zinc-800 rounded-md p-3.5 sm:p-5 md:p-6 bg-[#0a0a0a] flex flex-col h-full transition-all duration-300 hover:border-zinc-700">
       <div className="flex justify-between items-center mb-4 pb-1.5 border-b border-zinc-900">
         <span className="text-xs font-mono font-bold tracking-widest text-zinc-300 uppercase">{title}</span>
       </div>

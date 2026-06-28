@@ -494,8 +494,8 @@ export default function GymView({
       )}
       
       {/* Gym Settings Selection Header */}
-      <div className="rounded-md border border-zinc-800 bg-[#0a0a0a] p-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="rounded-md border border-zinc-800 bg-[#0a0a0a] p-3.5 sm:p-5 md:p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 sm:gap-4 md:gap-6">
           <div className="space-y-1.5">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-[#000000] border border-zinc-800 text-xs font-mono tracking-widest text-zinc-500 uppercase font-semibold">
               PRESCRIPTION ENGINE
@@ -538,13 +538,13 @@ export default function GymView({
         </div>
       </div>
       {/* Main Grid: Exercises & Photos */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-4 md:gap-6">
         
         {/* Left Column: Exercises */}
         {showWorkoutSplit && (
-          <div className={`${leftSpan} space-y-6`}>
+          <div className={`${leftSpan} space-y-2 sm:space-y-4 md:space-y-6`}>
             <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-            <CardHeader className="p-6 border-b border-zinc-800">
+            <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800">
               <div className="flex justify-between items-center">
                 <div className="space-y-1">
                   <span className="text-xs font-mono uppercase tracking-widest text-zinc-500 font-bold">ROUTINE TRACKER</span>
@@ -557,7 +557,7 @@ export default function GymView({
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-3.5 sm:p-5 md:p-6 space-y-6">
 
               {/* Live Workout Session Banner */}
               <div className="border border-zinc-900 bg-[#000000] p-4.5 rounded-md flex items-center justify-between">
@@ -602,7 +602,7 @@ export default function GymView({
                   const activeSets = sessionSets[ex.id] || getPreviewSets(ex);
 
                   return (
-                    <div key={ex.id} className="group border border-zinc-900 bg-[#000000]/60 p-6 rounded-md flex flex-col gap-3 transition-all hover:border-zinc-800 animate-slide-in">
+                    <div key={ex.id} className="group border border-zinc-900 bg-[#000000]/60 p-3.5 sm:p-5 md:p-6 rounded-md flex flex-col gap-3 transition-all hover:border-zinc-800 animate-slide-in">
                       <div className="flex justify-between items-start border-b border-zinc-900 pb-2.5">
                         <div className="space-y-1">
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -643,70 +643,75 @@ export default function GymView({
                       {/* Expandable trend chart */}
                       {isChartOpen && renderTrendChart(ex)}
 
-                      {/* Multi-Set table */}
-                      <div className="overflow-x-auto border border-zinc-900 rounded-md bg-[#000000]/30 p-3.5">
-                        <table className="w-full text-left border-collapse text-xs font-mono">
-                          <thead>
-                            <tr className="border-b border-zinc-900 text-zinc-500">
-                              <th className="py-1 px-1 font-bold uppercase tracking-wider text-[10px] text-zinc-600">SET</th>
-                              <th className="py-1 px-1 font-bold uppercase tracking-wider text-[10px] text-zinc-600">PREVIOUS</th>
-                              <th className="py-1 px-1 font-bold uppercase tracking-wider text-[10px] text-zinc-600 w-24">KG</th>
-                              <th className="py-1 px-1 font-bold uppercase tracking-wider text-[10px] text-zinc-600 w-24">REPS</th>
-                              <th className="py-1 px-1 font-bold uppercase tracking-wider text-[10px] text-center text-zinc-600 w-20">STATUS</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {activeSets.map((set, setIdx) => {
-                              const isDone = set.done;
-                              const previousDetail = getPreviousSetDetails(ex, setIdx);
-                              return (
-                                <tr key={setIdx} className={`border-b border-zinc-950 last:border-0 ${isDone ? "opacity-30" : ""}`}>
-                                  <td className="py-2.5 px-1.5 text-zinc-550 font-bold">{setIdx + 1}</td>
-                                  <td className="py-2.5 px-1.5 text-zinc-600">{previousDetail}</td>
-                                  <td className="py-1 px-1">
-                                    <input
-                                      type="number"
-                                      disabled={isDone || !isSessionActive}
-                                      value={set.weight || ""}
-                                      placeholder={ex.weight.toString()}
-                                      onChange={(e) => handleUpdateSetWeight(ex.id, setIdx, Number(e.target.value))}
-                                      className="w-20 bg-[#000000] border border-zinc-900 disabled:border-transparent disabled:bg-transparent rounded px-2.5 py-1.5 text-center text-sm text-zinc-200 focus:border-zinc-700 outline-none transition-all"
-                                    />
-                                  </td>
-                                  <td className="py-1 px-1">
-                                    <input
-                                      type="number"
-                                      disabled={isDone || !isSessionActive}
-                                      value={set.reps || ""}
-                                      placeholder={ex.targetReps.toString()}
-                                      onChange={(e) => handleUpdateSetReps(ex.id, setIdx, Number(e.target.value))}
-                                      className="w-20 bg-[#000000] border border-zinc-900 disabled:border-transparent disabled:bg-transparent rounded px-2.5 py-1.5 text-center text-sm text-zinc-200 focus:border-zinc-700 outline-none transition-all"
-                                    />
-                                  </td>
-                                  <td className="py-1 px-1 text-center flex justify-center items-center">
-                                    <button
-                                      type="button"
-                                      disabled={!isSessionActive}
-                                      onClick={() => handleToggleSetDone(ex.id, setIdx)}
-                                      className={`w-5.5 h-5.5 rounded-sm border flex items-center justify-center transition-all ${
-                                        isDone
-                                          ? "bg-zinc-50 border-zinc-150 text-black"
-                                          : "bg-transparent border-zinc-800 hover:border-zinc-600 text-transparent"
-                                      } ${!isSessionActive ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}
-                                    >
-                                      {isDone && (
-                                        <svg className="w-3.5 h-3.5 stroke-[4.0] text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                      )}
-                                    </button>
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
+                      {/* Multi-Set grid columns */}
+                      <div className="border border-zinc-900 rounded-md bg-[#000000]/30 p-2 sm:p-3.5 space-y-2">
+                        {/* Grid Header */}
+                        <div className="grid grid-cols-4 gap-1 sm:gap-3 border-b border-zinc-900 pb-1.5 text-zinc-500 text-[10px] font-bold uppercase tracking-wider">
+                          <div>SET / PREV</div>
+                          <div>KG</div>
+                          <div>REPS</div>
+                          <div className="text-center">STATUS</div>
+                        </div>
+                        {/* Grid Body */}
+                        <div className="space-y-1.5">
+                          {activeSets.map((set, setIdx) => {
+                            const isDone = set.done;
+                            const previousDetail = getPreviousSetDetails(ex, setIdx);
+                            return (
+                              <div 
+                                key={setIdx} 
+                                className={`grid grid-cols-4 gap-1 sm:gap-3 items-center py-1 border-b border-zinc-950 last:border-0 ${
+                                  isDone ? "opacity-30" : ""
+                                }`}
+                              >
+                                <div className="flex flex-col">
+                                  <span className="text-xs font-bold text-zinc-400">Set {setIdx + 1}</span>
+                                  <span className="text-[10px] text-zinc-650 truncate">{previousDetail || "—"}</span>
+                                </div>
+                                <div>
+                                  <input
+                                    type="number"
+                                    disabled={isDone || !isSessionActive}
+                                    value={set.weight || ""}
+                                    placeholder={ex.weight.toString()}
+                                    onChange={(e) => handleUpdateSetWeight(ex.id, setIdx, Number(e.target.value))}
+                                    className="w-full bg-[#000000] border border-zinc-900 disabled:border-transparent disabled:bg-transparent rounded px-2 py-1.5 text-center text-sm text-zinc-200 focus:border-zinc-700 outline-none transition-all"
+                                  />
+                                </div>
+                                <div>
+                                  <input
+                                    type="number"
+                                    disabled={isDone || !isSessionActive}
+                                    value={set.reps || ""}
+                                    placeholder={ex.targetReps.toString()}
+                                    onChange={(e) => handleUpdateSetReps(ex.id, setIdx, Number(e.target.value))}
+                                    className="w-full bg-[#000000] border border-zinc-900 disabled:border-transparent disabled:bg-transparent rounded px-2 py-1.5 text-center text-sm text-zinc-200 focus:border-zinc-700 outline-none transition-all"
+                                  />
+                                </div>
+                                <div className="flex justify-center">
+                                  <button
+                                    type="button"
+                                    disabled={!isSessionActive}
+                                    onClick={() => handleToggleSetDone(ex.id, setIdx)}
+                                    className={`w-5.5 h-5.5 rounded-sm border flex items-center justify-center transition-all ${
+                                      isDone
+                                        ? "bg-zinc-50 border-zinc-150 text-black"
+                                        : "bg-transparent border-zinc-800 hover:border-zinc-600 text-transparent"
+                                    } ${!isSessionActive ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}
+                                  >
+                                    {isDone && (
+                                      <svg className="w-3.5 h-3.5 stroke-[4.0] text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    )}
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
+
 
                       {/* History badges */}
                       {ex.history.length > 0 && (
@@ -784,15 +789,15 @@ export default function GymView({
 
         {/* Right Column: Comparative Progress Photos Panel */}
         {showPhotoMatrix && (
-          <div className={`${rightSpan} space-y-6`}>
+          <div className={`${rightSpan} space-y-2 sm:space-y-4 md:space-y-6`}>
             <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-            <CardHeader className="p-6 border-b border-zinc-800">
+            <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800">
               <span className="text-xs font-mono uppercase tracking-widest text-zinc-500">VISUAL COMPARISON</span>
               <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">
                 PROGRESS PHOTOS MATRIX
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-3.5 sm:p-5 md:p-6 space-y-6">
               
               {/* Comparative side-by-side list */}
               <div className="grid grid-cols-1 gap-3.5 max-h-[300px] overflow-y-auto pr-1">

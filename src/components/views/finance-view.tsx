@@ -367,8 +367,8 @@ export default function FinanceView({
       `}</style>
       
       {/* Net Worth Summary Panel */}
-      <div className="rounded-md border border-zinc-800 bg-[#0a0a0a] p-6 animate-page-fade">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+      <div className="rounded-md border border-zinc-800 bg-[#0a0a0a] p-3.5 sm:p-5 md:p-6 animate-page-fade">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-2 sm:gap-4 md:gap-6">
           <div className="space-y-1 w-full md:w-auto">
             <span className="text-xs font-mono uppercase tracking-widest font-semibold text-zinc-500">LIQUID LEDGER</span>
             <h2 className="text-4xl font-mono font-bold tracking-tight text-zinc-50">
@@ -385,7 +385,7 @@ export default function FinanceView({
 
           {/* SVG concentric Donut chart with interactive hover */}
           {netWorthTotal > 0 && (
-            <div className="flex items-center gap-6 bg-[#000000] border border-zinc-900 px-6 py-5 rounded-md">
+            <div className="flex items-center gap-2 sm:gap-4 md:gap-6 bg-[#000000] border border-zinc-900 p-3 sm:px-6 sm:py-5 flex-wrap sm:flex-nowrap rounded-md">
               <div className="relative w-24 h-24 flex items-center justify-center">
                 <svg className="-rotate-90 w-full h-full" viewBox="0 0 80 80">
                   {/* Bank slice */}
@@ -497,22 +497,22 @@ export default function FinanceView({
       </div>
 
       {/* Main split view grids */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-page-fade" style={{ animationDelay: "50ms" }}>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-4 md:gap-6 animate-page-fade" style={{ animationDelay: "50ms" }}>
         
         {/* Left Column: Asset Allocations */}
         {(showNetWorthProgress || showPurchaseOrders) && (
-          <div className={`${leftSpan} space-y-6`}>
+          <div className={`${leftSpan} space-y-2 sm:space-y-4 md:space-y-6`}>
             
             {/* Asset reserves card */}
             {showNetWorthProgress && (
               <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-            <CardHeader className="p-6 border-b border-zinc-800">
+            <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800">
               <span className="text-xs font-mono uppercase tracking-widest text-zinc-500">CAPITAL RESERVES</span>
               <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">
                 NET WORTH ASSET ALLOCATIONS
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-3.5 sm:p-5 md:p-6 space-y-6">
               
               <div className="space-y-1.5">
                 {assets.map((item) => (
@@ -599,16 +599,16 @@ export default function FinanceView({
           </Card>
           )}
 
-          {/* Balance Deduction Purchase Form */}
-          {showPurchaseOrders && (
-            <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-            <CardHeader className="p-6 border-b border-zinc-800">
-              <span className="text-xs font-mono uppercase tracking-widest text-zinc-500">DEBIT LEDGER ENGINE</span>
-              <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">
-                LOG ORDER PURCHASE (DIRECT BALANCE DEDUCTION)
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6 space-y-6">
+            {/* Balance Deduction Purchase Form */}
+            {showPurchaseOrders && (
+              <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
+              <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800">
+                <span className="text-xs font-mono uppercase tracking-widest text-zinc-500">DEBIT LEDGER ENGINE</span>
+                <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">
+                  LOG ORDER PURCHASE (DIRECT BALANCE DEDUCTION)
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-3.5 sm:p-5 md:p-6 space-y-6">
               
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
                 <input
@@ -686,15 +686,15 @@ export default function FinanceView({
 
         {/* Right Column: Subscriptions */}
         {showRecurringSubs && (
-          <div className={`${rightSpan} space-y-6`}>
+          <div className={`${rightSpan} space-y-2 sm:space-y-4 md:space-y-6`}>
             <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-            <CardHeader className="p-6 border-b border-zinc-800">
+            <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800">
               <span className="text-xs font-mono uppercase tracking-widest text-zinc-500">AUTO-DEBITS</span>
               <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">
                 RECURRING SUBSCRIPTIONS WARNING
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-3.5 sm:p-5 md:p-6 space-y-6">
               
               {/* List subscriptions with warnings */}
               <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">

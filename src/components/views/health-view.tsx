@@ -252,20 +252,20 @@ export default function HealthView({
       )}
 
       {/* Main Grid Structure */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-page-fade">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-4 md:gap-6 animate-page-fade">
         
         {/* Left Column: Character Stats & Skills */}
         {(showSupplement || showWater) && (
-          <div className={`${leftSpan} space-y-6`}>
+          <div className={`${leftSpan} space-y-2 sm:space-y-4 md:space-y-6`}>
             
             {/* Supplement Dispatcher */}
             {showSupplement && (
               <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-            <CardHeader className="p-6 border-b border-zinc-800">
-              <span className="text-xs font-mono uppercase tracking-widest text-zinc-500">SCHEDULING DISPATCHER</span>
+            <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800">
+              <span className="text-xs font-mono uppercase tracking-widest text-zinc-555 font-bold">SCHEDULING DISPATCHER</span>
               <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">DAILY SUPPLEMENT STACK</CardTitle>
             </CardHeader>
-            <CardContent className="p-6 space-y-4">
+            <CardContent className="p-3.5 sm:p-5 md:p-6 space-y-4">
               
               {/* List supplement rows */}
               <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
@@ -377,7 +377,7 @@ export default function HealthView({
           {/* Water Coach Calculator Widget */}
           {showWater && (
             <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-              <CardHeader className="p-6 border-b border-zinc-800 flex justify-between flex-row items-center gap-4">
+            <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800 flex justify-between flex-row items-center gap-4">
               <div className="space-y-1">
                 <span className="text-xs font-mono uppercase tracking-widest text-zinc-500">COACHING ADVISORY</span>
                 <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">SUBSTANCE-AWARE WATER COACH</CardTitle>
@@ -393,16 +393,16 @@ export default function HealthView({
                 </button>
                 <button
                   onClick={() => handleLogWater(-250)}
-                  className="p-1.5 border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-zinc-450 rounded transition-colors active:scale-95"
+                  className="p-1.5 border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-zinc-455 rounded transition-colors active:scale-95"
                 >
                   <Minus className="h-4 w-4" />
                 </button>
               </div>
             </CardHeader>
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-3.5 sm:p-5 md:p-6 space-y-6">
               
               {/* Water logging stats */}
-              <div className="flex flex-col items-center justify-center p-6 border border-zinc-900 bg-[#000000]/60 rounded-md gap-3">
+              <div className="flex flex-col items-center justify-center p-3.5 sm:p-5 md:p-6 border border-zinc-900 bg-[#000000]/60 rounded-md gap-3">
                 <div className="flex items-center gap-2.5">
                   <Droplet className="h-6 w-6 text-zinc-450 animate-bounce" />
                   <span className="text-2xl font-bold font-mono tracking-tight text-zinc-100">
@@ -500,7 +500,7 @@ export default function HealthView({
           
           {/* Nutritional Macro Monitor Widget */}
           <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-            <CardHeader className="p-6 border-b border-zinc-800 flex justify-between flex-row items-center gap-4">
+            <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800 flex justify-between flex-row items-center gap-4">
               <div className="space-y-1">
                 <span className="text-xs font-mono uppercase tracking-widest text-zinc-500">METABOLIC LEDGER</span>
                 <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">NUTRITIONAL MACRO MONITOR</CardTitle>
@@ -517,12 +517,12 @@ export default function HealthView({
                     setEditingNutritionTargets(true);
                   }
                 }}
-                className="px-3.5 py-1.5 border border-zinc-850 bg-[#000000] hover:bg-[#0a0a0a] text-zinc-400 rounded text-xs font-mono font-bold uppercase transition-colors active:scale-95"
+                className="px-3.5 py-1.5 border border-zinc-850 bg-[#000000] hover:bg-[#0a0a0a] text-zinc-450 rounded text-xs font-mono font-bold uppercase transition-colors active:scale-95"
               >
                 {editingNutritionTargets ? "Save Targets" : "Edit Targets"}
               </button>
             </CardHeader>
-            <CardContent className="p-6 space-y-6">
+            <CardContent className="p-3.5 sm:p-5 md:p-6 space-y-6">
               {editingNutritionTargets ? (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 border border-zinc-900 bg-[#000000]/60 p-4.5 rounded-md">
                   <div className="space-y-2">
@@ -565,7 +565,7 @@ export default function HealthView({
               ) : (
                 <>
                   {/* Calorie Progress Ring or Bar */}
-                  <div className="flex flex-col items-center justify-center p-6 border border-zinc-900 bg-[#000000]/60 rounded-md gap-3">
+                  <div className="flex flex-col items-center justify-center p-3.5 sm:p-5 md:p-6 border border-zinc-900 bg-[#000000]/60 rounded-md gap-3">
                     <div className="flex items-center gap-2.5">
                       <Flame className="h-6 w-6 text-zinc-455 animate-pulse" />
                       <span className="text-2xl font-bold font-mono tracking-tight text-zinc-100">

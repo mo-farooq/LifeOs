@@ -213,15 +213,15 @@ export default function SalahView({ salah, updateSalah, activeDate }: SalahViewP
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 animate-page-fade">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-4 md:gap-6 animate-page-fade">
         {/* Left Column: Prayer Checklists */}
-        <div className="lg:col-span-7 space-y-4">
+        <div className="lg:col-span-7 space-y-2 sm:space-y-4">
           <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-            <CardHeader className="p-4 border-b border-zinc-800">
+            <CardHeader className="p-3 sm:p-4 border-b border-zinc-800">
               <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">DAILY SPIRITUAL AUDIT</span>
               <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-widest">SALAH DAILY LEDGER</CardTitle>
             </CardHeader>
-            <CardContent className="p-4 space-y-3">
+            <CardContent className="p-3 sm:p-4 space-y-3">
               {[
                 { key: "fajr" as keyof SalahLog, label: "Fajr (Dawn Prayer)" },
                 { key: "dhuhr" as keyof SalahLog, label: "Dhuhr (Midday Prayer)" },
@@ -322,13 +322,13 @@ export default function SalahView({ salah, updateSalah, activeDate }: SalahViewP
         </div>
 
         {/* Right Column: Streaks & GitHub Contribution Grid */}
-        <div className="lg:col-span-5 space-y-4">
+        <div className="lg:col-span-5 space-y-2 sm:space-y-4">
           <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-            <CardHeader className="p-4 border-b border-zinc-800">
+            <CardHeader className="p-3 sm:p-4 border-b border-zinc-800">
               <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">GAMIFIED STREAKS</span>
               <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-widest">CONSISTENCY COUNTERS</CardTitle>
             </CardHeader>
-            <CardContent className="p-4 space-y-4">
+            <CardContent className="p-3 sm:p-4 space-y-4">
               <div className="grid grid-cols-2 gap-3 text-center">
                 <div className="border border-zinc-900 bg-[#000000]/60 p-3 rounded-md space-y-1.5">
                   <span className="text-[8px] font-mono text-zinc-550 uppercase tracking-wider block font-bold">ACTIVE STREAK</span>
@@ -353,11 +353,11 @@ export default function SalahView({ salah, updateSalah, activeDate }: SalahViewP
 
           {/* Grid view */}
           <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
-            <CardHeader className="p-4 border-b border-zinc-800">
+            <CardHeader className="p-3 sm:p-4 border-b border-zinc-800">
               <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">PRAYER HISTORY</span>
               <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-widest">30-DAY COMPLIANCE GRID</CardTitle>
             </CardHeader>
-            <CardContent className="p-4 space-y-3.5">
+            <CardContent className="p-3 sm:p-4 space-y-3.5">
               <div className="grid grid-cols-6 gap-1.5 p-3 border border-zinc-900 bg-[#000000]/60 rounded-md w-fit mx-auto animate-page-fade">
                 {calendarDates.map((dateStr) => {
                   const log = salah[dateStr];

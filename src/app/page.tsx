@@ -942,7 +942,7 @@ export default function Home() {
         </header>
 
         {/* Scrollable Content Workspace */}
-        <main className="flex-1 overflow-y-auto px-8 py-8 pb-28 md:pb-12 relative z-10 bg-[#000000]">
+        <main className="flex-1 overflow-y-auto px-2 py-4 sm:px-6 sm:py-6 md:px-8 md:py-8 pb-28 md:pb-12 relative z-10 bg-[#000000]">
           <div className="max-w-7xl mx-auto">
             {renderActiveView()}
           </div>
