@@ -566,7 +566,7 @@ export default function FinanceView({
                 <select
                   value={newAssetCategory}
                   onChange={(e) => setNewAssetCategory(e.target.value as any)}
-                  className="bg-[#000000] border border-zinc-800 rounded px-3.5 py-2.5 text-sm font-mono text-zinc-400 outline-none"
+                  className="h-12 bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-250 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none cursor-pointer"
                 >
                   <option value="bank">BANK</option>
                   <option value="stocks">STOCKS</option>
@@ -578,18 +578,18 @@ export default function FinanceView({
                   value={newAssetName}
                   onChange={(e) => setNewAssetName(e.target.value)}
                   placeholder="ASSET NAME..."
-                  className="flex-grow bg-transparent border border-zinc-800 rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                  className="h-12 flex-grow bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                 />
                 <input
                   type="number"
                   value={newAssetAmount}
                   onChange={(e) => setNewAssetAmount(e.target.value === "" ? "" : Number(e.target.value))}
                   placeholder="AMOUNT..."
-                  className="w-28 bg-transparent border border-zinc-800 rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                  className="h-12 w-28 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                 />
                 <button
                   onClick={handleAddAsset}
-                  className="px-5 py-2.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all"
+                  className="h-12 px-6 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer flex-shrink-0 flex items-center justify-center gap-2"
                 >
                   Add
                 </button>
@@ -616,19 +616,19 @@ export default function FinanceView({
                   placeholder="PURCHASE ITEM NAME (e.g. Mechanical Keyboard)..."
                   value={newOrderName}
                   onChange={(e) => setNewOrderName(e.target.value)}
-                  className="sm:col-span-6 bg-transparent border border-zinc-800 rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                  className="h-12 sm:col-span-6 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                 />
                 <input
                   type="number"
                   placeholder="COST..."
                   value={newOrderCost}
                   onChange={(e) => setNewOrderCost(e.target.value === "" ? "" : Number(e.target.value))}
-                  className="sm:col-span-3 bg-transparent border border-zinc-800 rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                  className="h-12 sm:col-span-3 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                 />
                 <select
                   value={newOrderLinkedAsset}
                   onChange={(e) => setNewOrderLinkedAsset(e.target.value)}
-                  className="sm:col-span-3 bg-[#000000] border border-zinc-800 rounded px-3.5 py-2.5 text-sm font-mono text-zinc-400 outline-none focus:border-zinc-700"
+                  className="h-12 sm:col-span-3 bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none cursor-pointer"
                 >
                   <option value="">DEDUCT FROM...</option>
                   {assets.filter(a => a.category === "bank" || a.category === "crypto").map((asset) => (
@@ -643,7 +643,7 @@ export default function FinanceView({
                 <button
                   onClick={handleLogPurchase}
                   disabled={!newOrderName.trim() || newOrderCost === "" || !newOrderLinkedAsset}
-                  className="px-5 py-2.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all disabled:opacity-40"
+                  className="h-12 px-6 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer disabled:opacity-40 flex items-center justify-center gap-2"
                 >
                   Deduct and Log Order
                 </button>
@@ -756,13 +756,13 @@ export default function FinanceView({
 
               {/* Add Subscription Form */}
               <div className="flex flex-col gap-3 pt-4 border-t border-zinc-900 mt-3">
-                <span className="text-xs font-mono uppercase tracking-widest font-semibold text-zinc-500">REGISTER NEW AUTO-DEBIT</span>
+                <span className="text-[11px] font-mono uppercase tracking-widest font-semibold text-zinc-500">REGISTER NEW AUTO-DEBIT</span>
                 <input
                   type="text"
                   placeholder="SUBSCRIPTION SERVICE (e.g. Netflix)..."
                   value={newSubName}
                   onChange={(e) => setNewSubName(e.target.value)}
-                  className="bg-transparent border border-zinc-800 rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                  className="h-12 w-full bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                 />
                 
                 <div className="grid grid-cols-2 gap-3.5">
@@ -771,12 +771,12 @@ export default function FinanceView({
                     placeholder="COST..."
                     value={newSubCost}
                     onChange={(e) => setNewSubCost(e.target.value === "" ? "" : Number(e.target.value))}
-                    className="bg-transparent border border-zinc-800 rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                    className="h-12 w-full bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                   />
                   <select
                     value={newSubPeriod}
                     onChange={(e) => setNewSubPeriod(e.target.value as any)}
-                    className="bg-[#000000] border border-zinc-800 rounded px-3.5 py-2.5 text-sm font-mono text-zinc-400 outline-none focus:border-zinc-700"
+                    className="h-12 bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none cursor-pointer"
                   >
                     <option value="monthly">MONTHLY</option>
                     <option value="yearly">YEARLY</option>
@@ -788,12 +788,12 @@ export default function FinanceView({
                     type="date"
                     value={newSubRenewal}
                     onChange={(e) => setNewSubRenewal(e.target.value)}
-                    className="bg-[#000000] border border-zinc-800 rounded px-3.5 py-2.5 text-sm font-mono text-zinc-400 outline-none focus:border-zinc-700"
+                    className="h-12 bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none cursor-pointer"
                   />
                   <select
                     value={newSubLinkedAsset}
                     onChange={(e) => setNewSubLinkedAsset(e.target.value)}
-                    className="bg-[#000000] border border-zinc-800 rounded px-3.5 py-2.5 text-sm font-mono text-zinc-400 outline-none focus:border-zinc-700"
+                    className="h-12 bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none cursor-pointer"
                   >
                     <option value="">DEBIT FROM...</option>
                     {assets.filter(a => a.category === "bank").map((asset) => (
@@ -807,7 +807,7 @@ export default function FinanceView({
                 <button
                   onClick={handleAddSubscription}
                   disabled={!newSubName.trim() || newSubCost === "" || !newSubRenewal || !newSubLinkedAsset}
-                  className="px-5 py-2.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all disabled:opacity-40 mt-1 cursor-pointer"
+                  className="h-12 w-full rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer disabled:opacity-40 flex items-center justify-center gap-2"
                 >
                   Register Auto-Debit
                 </button>

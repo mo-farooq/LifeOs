@@ -767,49 +767,49 @@ export default function DashboardView({
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
             {/* Identity Statement */}
-            <div className="md:col-span-12 space-y-1.5">
-              <label className="text-[10px] font-mono text-zinc-550 uppercase font-bold tracking-wider">Aspirational Identity Statement</label>
+            <div className="md:col-span-12 space-y-2">
+              <label className="text-[11px] font-mono text-zinc-500 uppercase font-bold tracking-widest">Aspirational Identity Statement</label>
               <input
                 type="text"
                 value={vision.identity}
                 onChange={(e) => updateVision({ ...vision, identity: e.target.value })}
-                className="w-full bg-[#000000] border border-zinc-900 rounded-md px-4 py-2.5 text-sm font-mono text-zinc-250 outline-none focus:border-zinc-800"
+                className="h-12 w-full bg-[#000000] border border-zinc-900 rounded-md px-4 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                 placeholder="I am..."
               />
             </div>
 
             {/* Outcome Goal */}
-            <div className="md:col-span-4 space-y-1.5">
-              <label className="text-[10px] font-mono text-zinc-550 uppercase font-bold tracking-wider">Outcome Goal (Outcome)</label>
+            <div className="md:col-span-4 space-y-2">
+              <label className="text-[11px] font-mono text-zinc-500 uppercase font-bold tracking-widest">Outcome Goal (Outcome)</label>
               <textarea
                 value={vision.outcomeGoal}
                 onChange={(e) => updateVision({ ...vision, outcomeGoal: e.target.value })}
                 rows={2}
-                className="w-full bg-[#000000] border border-zinc-900 rounded-md px-4 py-2.5 text-sm font-mono text-zinc-250 outline-none focus:border-zinc-800 resize-none"
+                className="w-full bg-[#000000] border border-zinc-900 rounded-md px-4 py-2.5 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none resize-none"
                 placeholder="What is the result..."
               />
             </div>
 
             {/* Output Milestone */}
-            <div className="md:col-span-4 space-y-1.5">
-              <label className="text-[10px] font-mono text-zinc-550 uppercase font-bold tracking-wider">Milestone Metric (Output)</label>
+            <div className="md:col-span-4 space-y-2">
+              <label className="text-[11px] font-mono text-zinc-500 uppercase font-bold tracking-widest">Milestone Metric (Output)</label>
               <textarea
                 value={vision.outputMilestone}
                 onChange={(e) => updateVision({ ...vision, outputMilestone: e.target.value })}
                 rows={2}
-                className="w-full bg-[#000000] border border-zinc-900 rounded-md px-4 py-2.5 text-sm font-mono text-zinc-250 outline-none focus:border-zinc-800 resize-none"
+                className="w-full bg-[#000000] border border-zinc-900 rounded-md px-4 py-2.5 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none resize-none"
                 placeholder="What is the milestone..."
               />
             </div>
 
             {/* Input Habit */}
-            <div className="md:col-span-4 space-y-1.5">
-              <label className="text-[10px] font-mono text-zinc-550 uppercase font-bold tracking-wider">Daily Input Habit (Input)</label>
+            <div className="md:col-span-4 space-y-2">
+              <label className="text-[11px] font-mono text-zinc-500 uppercase font-bold tracking-widest">Daily Input Habit (Input)</label>
               <textarea
                 value={vision.inputHabit}
                 onChange={(e) => updateVision({ ...vision, inputHabit: e.target.value })}
                 rows={2}
-                className="w-full bg-[#000000] border border-zinc-900 rounded-md px-4 py-2.5 text-sm font-mono text-zinc-250 outline-none focus:border-zinc-800 resize-none"
+                className="w-full bg-[#000000] border border-zinc-900 rounded-md px-4 py-2.5 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none resize-none"
                 placeholder="What is the daily focus..."
               />
             </div>
@@ -866,37 +866,37 @@ export default function DashboardView({
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-2 pt-3 border-t border-zinc-900 mt-2">
-                    <div className="flex gap-2">
+                  <div className="flex flex-col gap-3.5 pt-4 border-t border-zinc-900 mt-3">
+                    <div className="flex gap-2.5">
                       <input
                         type="text"
                         value={todayInput}
                         onChange={(e) => setTodayInput(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && handleAddTodayTask()}
-                        placeholder="ENTER TODAY'S TASK..."
-                        className="flex-1 bg-transparent border border-zinc-800 rounded-md px-3 py-1.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-750 transition-all duration-150"
+                        placeholder="ENTER TODAY'S TASK OBJECTIVE..."
+                        className="h-12 flex-1 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                       />
                       
                       <button
                         onClick={handlePolish}
                         disabled={isPolishing || !todayInput.trim()}
-                        className="px-3 rounded-md border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-zinc-400 hover:text-zinc-250 disabled:opacity-40 flex items-center justify-center transition-all duration-150 active:scale-95"
+                        className="h-12 w-12 rounded-md border border-zinc-800 bg-[#000000] hover:bg-zinc-900/60 hover:border-zinc-700 text-zinc-400 hover:text-zinc-250 disabled:opacity-40 flex items-center justify-center transition-all duration-100 active:scale-[0.98] cursor-pointer flex-shrink-0"
                         title="Polish Task with AI"
                       >
                         {isPolishing ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          <Sparkles className="h-3.5 w-3.5 text-zinc-450 hover:text-zinc-200" />
+                          <Sparkles className="h-4 w-4 text-zinc-450 hover:text-zinc-200" />
                         )}
                       </button>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-between gap-2.5">
-                      <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-2.5">
                         <div className="flex items-center gap-1 bg-[#000000] border border-zinc-900 p-0.5 rounded">
                           <button
                             onClick={() => setTodayEnergy("charging")}
-                            className={`px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
+                            className={`px-2.5 py-1 text-[9px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all duration-100 active:scale-[0.98] cursor-pointer ${
                               todayEnergy === "charging" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-400"
                             }`}
                           >
@@ -904,7 +904,7 @@ export default function DashboardView({
                           </button>
                           <button
                             onClick={() => setTodayEnergy("draining")}
-                            className={`px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
+                            className={`px-2.5 py-1 text-[9px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all duration-100 active:scale-[0.98] cursor-pointer ${
                               todayEnergy === "draining" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-400"
                             }`}
                           >
@@ -915,7 +915,7 @@ export default function DashboardView({
                         <div className="flex items-center gap-1 bg-[#000000] border border-zinc-900 p-0.5 rounded">
                           <button
                             onClick={() => setTodayRevenue("high")}
-                            className={`px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
+                            className={`px-2.5 py-1 text-[9px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all duration-100 active:scale-[0.98] cursor-pointer ${
                               todayRevenue === "high" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-400"
                             }`}
                           >
@@ -923,7 +923,7 @@ export default function DashboardView({
                           </button>
                           <button
                             onClick={() => setTodayRevenue("low")}
-                            className={`px-2 py-0.5 text-[8px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
+                            className={`px-2.5 py-1 text-[9px] font-mono font-bold tracking-widest uppercase rounded-sm transition-all duration-100 active:scale-[0.98] cursor-pointer ${
                               todayRevenue === "low" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-400"
                             }`}
                           >
@@ -933,25 +933,25 @@ export default function DashboardView({
 
                         <button
                           onClick={() => setTodayPriority(!todayPriority)}
-                          className={`px-2 py-1 text-[8px] font-mono font-bold tracking-widest uppercase rounded border transition-all duration-150 active:scale-95 ${
-                            todayPriority ? "border-yellow-900/40 text-yellow-500 bg-yellow-950/10 font-bold" : "border-zinc-900 text-zinc-500 hover:border-zinc-800"
+                          className={`px-2.5 py-1 text-[9px] font-mono font-bold tracking-widest uppercase rounded border transition-all duration-100 active:scale-[0.98] cursor-pointer ${
+                            todayPriority ? "border-yellow-900/40 text-yellow-500 bg-yellow-950/10 font-bold" : "border-zinc-900 text-zinc-500 hover:border-zinc-800 hover:bg-zinc-900/60"
                           }`}
                         >
                           Priority
                         </button>
                       </div>
 
-                      <div className="flex items-center gap-3.5">
+                      <div className="flex items-center gap-3">
                         <button
                           onClick={pushRemainingToTomorrow}
                           disabled={todayTasks.filter(t => !t.completed).length === 0}
-                          className="px-4.5 py-2.5 rounded-md border border-zinc-800 bg-[#000000] hover:bg-[#0a0a0a] text-zinc-455 hover:text-zinc-100 text-xs font-mono font-bold tracking-widest uppercase disabled:opacity-40 transition-all duration-150 active:scale-95 cursor-pointer"
+                          className="h-12 px-5 rounded-md border border-zinc-800 bg-[#000000] hover:bg-zinc-900/60 hover:border-zinc-700 text-zinc-455 hover:text-zinc-100 text-xs font-mono font-bold tracking-widest uppercase disabled:opacity-40 transition-all duration-100 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
                         >
                           Push Remaining
                         </button>
                         <button
                           onClick={handleAddTodayTask}
-                          className="px-5 py-2.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-150 active:scale-95 cursor-pointer"
+                          className="h-12 px-6 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
                         >
                           Add Today
                         </button>
@@ -994,7 +994,7 @@ export default function DashboardView({
                 )}
               </div>
 
-              <div className="flex flex-col gap-3 pt-4 border-t border-zinc-900 mt-3">
+              <div className="flex flex-col gap-3.5 pt-4 border-t border-zinc-900 mt-3">
                 <div className="flex gap-2.5">
                   <input
                     type="text"
@@ -1002,16 +1002,16 @@ export default function DashboardView({
                     onChange={(e) => setTomorrowInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleAddTomorrowTask()}
                     placeholder="ENTER TOMORROW'S TASK OBJECTIVE..."
-                    className="flex-1 bg-transparent border border-zinc-800 rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all duration-150"
+                    className="h-12 flex-1 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                   />
                 </div>
 
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex flex-wrap items-center gap-2.5">
-                    <div className="flex items-center gap-1.5 bg-[#000000] border border-zinc-900 p-0.5 rounded">
+                    <div className="flex items-center gap-1 bg-[#000000] border border-zinc-900 p-0.5 rounded">
                       <button
                         onClick={() => setTomorrowEnergy("charging")}
-                        className={`px-3 py-1 text-xs font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
+                        className={`px-3 py-1.5 text-xs font-mono font-bold tracking-widest uppercase rounded-sm transition-all duration-100 active:scale-[0.98] cursor-pointer ${
                           tomorrowEnergy === "charging" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-400"
                         }`}
                       >
@@ -1019,7 +1019,7 @@ export default function DashboardView({
                       </button>
                       <button
                         onClick={() => setTomorrowEnergy("draining")}
-                        className={`px-3 py-1 text-xs font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
+                        className={`px-3 py-1.5 text-xs font-mono font-bold tracking-widest uppercase rounded-sm transition-all duration-100 active:scale-[0.98] cursor-pointer ${
                           tomorrowEnergy === "draining" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-400"
                         }`}
                       >
@@ -1027,10 +1027,10 @@ export default function DashboardView({
                       </button>
                     </div>
 
-                    <div className="flex items-center gap-1.5 bg-[#000000] border border-zinc-900 p-0.5 rounded">
+                    <div className="flex items-center gap-1 bg-[#000000] border border-zinc-900 p-0.5 rounded">
                       <button
                         onClick={() => setTomorrowRevenue("high")}
-                        className={`px-3 py-1 text-xs font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
+                        className={`px-3 py-1.5 text-xs font-mono font-bold tracking-widest uppercase rounded-sm transition-all duration-100 active:scale-[0.98] cursor-pointer ${
                           tomorrowRevenue === "high" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-400"
                         }`}
                       >
@@ -1038,7 +1038,7 @@ export default function DashboardView({
                       </button>
                       <button
                         onClick={() => setTomorrowRevenue("low")}
-                        className={`px-3 py-1 text-xs font-mono font-bold tracking-widest uppercase rounded-sm transition-all ${
+                        className={`px-3 py-1.5 text-xs font-mono font-bold tracking-widest uppercase rounded-sm transition-all duration-100 active:scale-[0.98] cursor-pointer ${
                           tomorrowRevenue === "low" ? "bg-zinc-800 text-zinc-100 font-bold" : "text-zinc-650 hover:text-zinc-400"
                         }`}
                       >
@@ -1048,8 +1048,8 @@ export default function DashboardView({
 
                     <button
                       onClick={() => setTomorrowPriority(!tomorrowPriority)}
-                      className={`px-3.5 py-1.5 text-xs font-mono font-bold tracking-widest uppercase rounded border transition-all duration-150 active:scale-95 ${
-                        tomorrowPriority ? "border-yellow-900/40 text-yellow-500 bg-yellow-950/10 font-bold" : "border-zinc-900 text-zinc-500 hover:border-zinc-800"
+                      className={`px-3.5 py-2 text-xs font-mono font-bold tracking-widest uppercase rounded border transition-all duration-100 active:scale-[0.98] cursor-pointer ${
+                        tomorrowPriority ? "border-yellow-900/40 text-yellow-500 bg-yellow-950/10 font-bold" : "border-zinc-900 text-zinc-500 hover:border-zinc-800 hover:bg-zinc-900/60"
                       }`}
                     >
                       Priority
@@ -1058,7 +1058,7 @@ export default function DashboardView({
 
                   <button
                     onClick={handleAddTomorrowTask}
-                    className="px-5 py-2.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-150 active:scale-95 cursor-pointer"
+                    className="h-12 px-6 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
                   >
                     Plan Tomorrow
                   </button>
@@ -1180,20 +1180,19 @@ export default function DashboardView({
                   </div>
                 )}
               </div>
-
-              {/* Add habit input form */}
+               {/* Add habit input form */}
               <div className="flex gap-2.5 pt-4 border-t border-zinc-900 mt-3">
                 <input
                   type="text"
                   value={newHabitName}
                   onChange={(e) => setNewHabitName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleAddHabit()}
-                  placeholder="NEW HABIT..."
-                  className="flex-1 bg-transparent border border-zinc-800 rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-zinc-750 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                  placeholder="ENTER NEW HABIT..."
+                  className="h-12 flex-1 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                 />
                 <button
                   onClick={handleAddHabit}
-                  className="px-5 py-2.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-150 active:scale-95 cursor-pointer flex-shrink-0"
+                  className="h-12 px-6 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer flex-shrink-0 flex items-center justify-center gap-2"
                 >
                   Add
                 </button>

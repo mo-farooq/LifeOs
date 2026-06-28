@@ -342,8 +342,8 @@ export default function HealthView({
                   type="text"
                   value={newSupName}
                   onChange={(e) => setNewSupName(e.target.value)}
-                  placeholder="SUPPLEMENT NAME..."
-                  className="bg-transparent border border-zinc-800 rounded-md px-4 py-2 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                  placeholder="ENTER SUPPLEMENT NAME..."
+                  className="h-12 w-full bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                 />
                 <div className="flex flex-col sm:flex-row gap-2.5">
                   <input
@@ -351,12 +351,12 @@ export default function HealthView({
                     value={newSupDose}
                     onChange={(e) => setNewSupDose(e.target.value)}
                     placeholder="DOSE (e.g. 500mg)..."
-                    className="flex-1 bg-transparent border border-zinc-800 rounded-md px-4 py-2 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                    className="h-12 flex-1 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                   />
                   <select
                     value={newSupWindow}
                     onChange={(e) => setNewSupWindow(e.target.value as any)}
-                    className="bg-[#000000] border border-zinc-800 rounded px-3 py-2 text-sm font-mono text-zinc-450 outline-none"
+                    className="h-12 bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none cursor-pointer"
                   >
                     <option value="morning">MORNING (7-10 AM)</option>
                     <option value="lunch">LUNCH (12-2 PM)</option>
@@ -364,7 +364,7 @@ export default function HealthView({
                   </select>
                   <button
                     onClick={handleAddSupplement}
-                    className="px-5 py-2 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all"
+                    className="h-12 px-6 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
                   >
                     Add
                   </button>
@@ -428,58 +428,58 @@ export default function HealthView({
 
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
                   {/* Weight */}
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-zinc-550 uppercase font-bold">WEIGHT (KG)</label>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-mono text-zinc-500 uppercase font-bold tracking-widest">WEIGHT (KG)</label>
                     <input
                       type="number"
                       value={water.weightKg}
                       onChange={(e) => updateWater({ ...water, weightKg: Number(e.target.value) })}
-                      className="w-full bg-[#000000] border border-zinc-850 rounded px-3.5 py-2 text-sm font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                      className="h-12 w-full bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                     />
                   </div>
                   
                   {/* Age */}
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-zinc-555 uppercase font-bold">AGE (YRS)</label>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-mono text-zinc-500 uppercase font-bold tracking-widest">AGE (YRS)</label>
                     <input
                       type="number"
                       value={water.age}
                       onChange={(e) => updateWater({ ...water, age: Number(e.target.value) })}
-                      className="w-full bg-[#000000] border border-zinc-850 rounded px-3.5 py-2 text-sm font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                      className="h-12 w-full bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                     />
                   </div>
 
                   {/* Training hours */}
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-zinc-555 uppercase font-bold">TRAIN (HRS/D)</label>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-mono text-zinc-500 uppercase font-bold tracking-widest">TRAIN (HRS/D)</label>
                     <input
                       type="number"
                       value={water.trainingHrs}
                       step="0.5"
                       onChange={(e) => updateWater({ ...water, trainingHrs: Number(e.target.value) })}
-                      className="w-full bg-[#000000] border border-zinc-850 rounded px-3.5 py-2 text-sm font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                      className="h-12 w-full bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                     />
                   </div>
 
                   {/* Caffeine */}
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-zinc-555 uppercase font-bold">CAFFEINE (MG)</label>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-mono text-zinc-500 uppercase font-bold tracking-widest">CAFFEINE (MG)</label>
                     <input
                       type="number"
                       value={water.caffeineMg}
                       onChange={(e) => updateWater({ ...water, caffeineMg: Number(e.target.value) })}
-                      className="w-full bg-[#000000] border border-zinc-855 rounded px-3.5 py-2 text-sm font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                      className="h-12 w-full bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                     />
                   </div>
 
                   {/* Active Meds */}
-                  <div className="space-y-1 col-span-2 sm:col-span-1">
-                    <label className="text-[10px] font-mono text-zinc-555 uppercase font-bold">MEDS/DEHYD</label>
+                  <div className="space-y-2 col-span-2 sm:col-span-1">
+                    <label className="text-[11px] font-mono text-zinc-500 uppercase font-bold tracking-widest">MEDS/DEHYD</label>
                     <input
                       type="number"
                       value={water.activeMedsCount}
                       onChange={(e) => updateWater({ ...water, activeMedsCount: Number(e.target.value) })}
-                      className="w-full bg-[#000000] border border-zinc-850 rounded px-3.5 py-2 text-sm font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                      className="h-12 w-full bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                     />
                   </div>
                 </div>
@@ -525,40 +525,40 @@ export default function HealthView({
             <CardContent className="p-6 space-y-6">
               {editingNutritionTargets ? (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 border border-zinc-900 bg-[#000000]/60 p-4.5 rounded-md">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-zinc-555 uppercase font-bold">TARGET CALORIES</label>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-mono text-zinc-500 uppercase font-bold tracking-widest">TARGET CALORIES</label>
                     <input
                       type="number"
                       value={targetCalInput}
                       onChange={(e) => setTargetCalInput(e.target.value === "" ? "" : Number(e.target.value))}
-                      className="w-full bg-[#000000] border border-zinc-855 rounded px-3.5 py-2 text-sm font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                      className="h-12 w-full bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-zinc-555 uppercase font-bold">TARGET PRO (G)</label>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-mono text-zinc-500 uppercase font-bold tracking-widest">TARGET PRO (G)</label>
                     <input
                       type="number"
                       value={targetProtInput}
                       onChange={(e) => setTargetProtInput(e.target.value === "" ? "" : Number(e.target.value))}
-                      className="w-full bg-[#000000] border border-zinc-855 rounded px-3.5 py-2 text-sm font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                      className="h-12 w-full bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-zinc-555 uppercase font-bold">TARGET CARB (G)</label>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-mono text-zinc-500 uppercase font-bold tracking-widest">TARGET CARB (G)</label>
                     <input
                       type="number"
                       value={targetCarbInput}
                       onChange={(e) => setTargetCarbInput(e.target.value === "" ? "" : Number(e.target.value))}
-                      className="w-full bg-[#000000] border border-zinc-855 rounded px-3.5 py-2 text-sm font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                      className="h-12 w-full bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-zinc-555 uppercase font-bold">TARGET FAT (G)</label>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-mono text-zinc-500 uppercase font-bold tracking-widest">TARGET FAT (G)</label>
                     <input
                       type="number"
                       value={targetFatInput}
                       onChange={(e) => setTargetFatInput(e.target.value === "" ? "" : Number(e.target.value))}
-                      className="w-full bg-[#000000] border border-zinc-855 rounded px-3.5 py-2 text-sm font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                      className="h-12 w-full bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                     />
                   </div>
                 </div>
@@ -631,50 +631,50 @@ export default function HealthView({
                 </span>
 
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-zinc-555 uppercase font-bold">CALORIES</label>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-mono text-zinc-500 uppercase font-bold tracking-widest">CALORIES</label>
                     <input
                       type="number"
                       placeholder="kcal"
                       value={logCalInput}
                       onChange={(e) => setLogCalInput(e.target.value === "" ? "" : Number(e.target.value))}
-                      className="w-full bg-[#000000] border border-zinc-855 rounded px-3.5 py-2 text-sm font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                      className="h-12 w-full bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-zinc-555 uppercase font-bold">PRO (G)</label>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-mono text-zinc-500 uppercase font-bold tracking-widest">PRO (G)</label>
                     <input
                       type="number"
                       placeholder="grams"
                       value={logProtInput}
                       onChange={(e) => setLogProtInput(e.target.value === "" ? "" : Number(e.target.value))}
-                      className="w-full bg-[#000000] border border-zinc-855 rounded px-3.5 py-2 text-sm font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                      className="h-12 w-full bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-zinc-555 uppercase font-bold">CARB (G)</label>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-mono text-zinc-500 uppercase font-bold tracking-widest">CARB (G)</label>
                     <input
                       type="number"
                       placeholder="grams"
                       value={logCarbInput}
                       onChange={(e) => setLogCarbInput(e.target.value === "" ? "" : Number(e.target.value))}
-                      className="w-full bg-[#000000] border border-zinc-855 rounded px-3.5 py-2 text-sm font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                      className="h-12 w-full bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-mono text-zinc-555 uppercase font-bold">FAT (G)</label>
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-mono text-zinc-500 uppercase font-bold tracking-widest">FAT (G)</label>
                     <input
                       type="number"
                       placeholder="grams"
                       value={logFatInput}
                       onChange={(e) => setLogFatInput(e.target.value === "" ? "" : Number(e.target.value))}
-                      className="w-full bg-[#000000] border border-zinc-855 rounded px-3.5 py-2 text-sm font-mono text-zinc-200 outline-none focus:border-zinc-700"
+                      className="h-12 w-full bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                     />
                   </div>
                   <div className="flex items-end">
                     <button
                       onClick={handleCustomLog}
-                      className="w-full h-9.5 bg-zinc-100 hover:bg-white text-zinc-950 rounded text-xs font-mono font-bold uppercase tracking-wider transition-colors"
+                      className="h-12 w-full rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
                     >
                       LOG
                     </button>

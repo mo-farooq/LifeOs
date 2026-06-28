@@ -879,13 +879,13 @@ export default function Home() {
                 d.setDate(d.getDate() - 1);
                 setActiveDateOverride(d.toISOString().split("T")[0]);
               }}
-              className="p-1.5 rounded bg-[#0a0a0a] border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors"
+              className="h-11 w-11 flex items-center justify-center transition-all duration-100 active:scale-[0.98] cursor-pointer rounded bg-[#0a0a0a] border border-zinc-800 hover:bg-zinc-900/60 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200"
               title="Previous Day"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4.5 w-4.5" />
             </button>
             
-            <div className="relative flex items-center gap-2 px-3 py-1.5 rounded bg-[#0a0a0a] border border-zinc-800 text-xs font-mono text-zinc-300 uppercase tracking-wider font-bold hover:border-zinc-700 transition-colors">
+            <div className="relative flex items-center gap-2 px-4 h-11 rounded bg-[#0a0a0a] border border-zinc-800 text-xs font-mono text-zinc-300 uppercase tracking-wider font-bold hover:border-zinc-700 hover:bg-zinc-900/60 transition-colors">
               <input
                 type="date"
                 value={activeDate}
@@ -905,16 +905,16 @@ export default function Home() {
                 d.setDate(d.getDate() + 1);
                 setActiveDateOverride(d.toISOString().split("T")[0]);
               }}
-              className="p-1.5 rounded bg-[#0a0a0a] border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors"
+              className="h-11 w-11 flex items-center justify-center transition-all duration-100 active:scale-[0.98] cursor-pointer rounded bg-[#0a0a0a] border border-zinc-800 hover:bg-zinc-900/60 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200"
               title="Next Day"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4.5 w-4.5" />
             </button>
 
             {activeDateOverride && (
               <button
                 onClick={() => setActiveDateOverride(null)}
-                className="px-3 py-1.5 rounded bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-mono font-bold uppercase tracking-widest transition-all active:scale-95"
+                className="h-11 px-4 flex items-center justify-center rounded bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-mono font-bold uppercase tracking-widest transition-all duration-100 active:scale-[0.98] cursor-pointer"
                 title="Reset to Live Date"
               >
                 LIVE
@@ -922,19 +922,19 @@ export default function Home() {
             )}
           </div>
             
-            {/* Quick User Profile & Settings */}
-            <div className="flex items-center gap-3 pl-3 border-l border-zinc-900">
-              <button
-                onClick={() => setActiveTab("settings")}
-                className="p-2 rounded bg-[#0a0a0a] border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-zinc-200 transition-colors duration-150"
-                title="System Settings"
-              >
-                <Settings className="h-4 w-4" />
-              </button>
-              <div className="w-8 h-8 rounded bg-[#0a0a0a] border border-zinc-800 flex items-center justify-center text-zinc-300 font-bold text-xs select-none">
-                MF
-              </div>
+          {/* Quick User Profile & Settings */}
+          <div className="flex items-center gap-3 pl-3 border-l border-zinc-900">
+            <button
+              onClick={() => setActiveTab("settings")}
+              className="h-11 w-11 flex items-center justify-center rounded bg-[#0a0a0a] border border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 transition-all duration-100 active:scale-[0.98] cursor-pointer"
+              title="System Settings"
+            >
+              <Settings className="h-4.5 w-4.5" />
+            </button>
+            <div className="w-11 h-11 rounded bg-[#0a0a0a] border border-zinc-800 flex items-center justify-center text-zinc-300 font-bold text-xs select-none">
+              MF
             </div>
+          </div>
         </header>
 
         {/* Scrollable Content Workspace */}

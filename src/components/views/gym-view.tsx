@@ -744,7 +744,7 @@ export default function GymView({
                   value={newExName}
                   onChange={(e) => setNewExName(e.target.value)}
                   placeholder="EXERCISE NAME (e.g. Overhead Press)..."
-                  className="bg-transparent border border-zinc-800 rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                  className="h-12 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                 />
                 <div className="grid grid-cols-3 gap-2.5">
                   <input
@@ -752,26 +752,26 @@ export default function GymView({
                     value={newExWeight}
                     onChange={(e) => setNewExWeight(e.target.value === "" ? "" : Number(e.target.value))}
                     placeholder="WEIGHT (KG)..."
-                    className="bg-transparent border border-zinc-800 rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                    className="h-12 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                   />
                   <input
                     type="number"
                     value={newExReps}
                     onChange={(e) => setNewExReps(e.target.value === "" ? "" : Number(e.target.value))}
                     placeholder="REPS..."
-                    className="bg-transparent border border-zinc-800 rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                    className="h-12 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                   />
                   <input
                     type="number"
                     value={newExTarget}
                     onChange={(e) => setNewExTarget(e.target.value === "" ? "" : Number(e.target.value))}
                     placeholder="TARGET REPS..."
-                    className="bg-transparent border border-zinc-800 rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                    className="h-12 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                   />
                 </div>
                 <button
                   onClick={handleAddExercise}
-                  className="px-5 py-2.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-150 active:scale-95 mt-1 cursor-pointer"
+                  className="h-12 w-full rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
                 >
                   Add Exercise
                 </button>
@@ -828,13 +828,13 @@ export default function GymView({
 
               {/* Add photo mockup input form */}
               <div className="flex flex-col gap-2.5 pt-4 border-t border-zinc-900 mt-3">
-                <span className="text-xs font-mono uppercase tracking-widest font-semibold text-zinc-500">MOCK UPLOAD PANEL</span>
+                <span className="text-[11px] font-mono uppercase tracking-widest font-semibold text-zinc-500">MOCK UPLOAD PANEL</span>
                 <input
                   type="text"
                   value={newPhotoUrl}
                   onChange={(e) => setNewPhotoUrl(e.target.value)}
-                  placeholder="IMAGE URL..."
-                  className="bg-transparent border border-zinc-800 rounded-md px-4 py-2.5 text-xs font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                  placeholder="ENTER IMAGE URL..."
+                  className="h-12 w-full bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                 />
                 <div className="flex gap-2.5">
                   <input
@@ -842,11 +842,11 @@ export default function GymView({
                     value={newPhotoLabel}
                     onChange={(e) => setNewPhotoLabel(e.target.value)}
                     placeholder="LABEL (e.g. Current)..."
-                    className="flex-grow bg-transparent border border-zinc-800 rounded-md px-4 py-2.5 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus:border-zinc-700 transition-all"
+                    className="h-12 flex-grow bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                   />
                   <button
                     onClick={handleAddPhoto}
-                    className="px-5 py-2.5 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-150 active:scale-95"
+                    className="h-12 px-6 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 flex-shrink-0"
                   >
                     Add
                   </button>
