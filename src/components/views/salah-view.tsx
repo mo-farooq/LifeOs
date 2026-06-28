@@ -208,8 +208,7 @@ export default function SalahView({ salah, updateSalah, activeDate }: SalahViewP
       {/* Header */}
       <div className="flex justify-between items-center pb-2 border-b border-zinc-900 animate-page-fade">
         <div>
-          <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-555 font-bold">SPIRITUAL DISCIPLINE</span>
-          <h1 className="text-sm font-bold font-mono text-zinc-100 uppercase tracking-widest">SALAH TRACKER & CONSISTENCY</h1>
+          <h1 className="text-sm font-bold font-mono text-zinc-100 uppercase tracking-widest">Salah Tracker</h1>
         </div>
       </div>
 
@@ -218,8 +217,7 @@ export default function SalahView({ salah, updateSalah, activeDate }: SalahViewP
         <div className="lg:col-span-7 space-y-2 sm:space-y-4">
           <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
             <CardHeader className="p-3 sm:p-4 border-b border-zinc-800">
-              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">DAILY SPIRITUAL AUDIT</span>
-              <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-widest">SALAH DAILY LEDGER</CardTitle>
+              <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-widest">Today's Prayers</CardTitle>
             </CardHeader>
             <CardContent className="p-3 sm:p-4 space-y-3">
               {[
@@ -262,9 +260,8 @@ export default function SalahView({ salah, updateSalah, activeDate }: SalahViewP
           {/* Gamified Level Progress */}
           <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
             <CardHeader className="p-4 border-b border-zinc-800">
-              <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-500">GAMIFIED RANK PROGRESSION</span>
               <CardTitle className="text-xs font-mono font-bold text-zinc-100 uppercase tracking-widest flex items-center justify-between">
-                <span>SPIRITUAL LEVEL LEVEL</span>
+                <span>Your Rank</span>
                 <span className="text-[9px] text-zinc-400 font-bold bg-[#000000] border border-zinc-850 px-1.5 py-0.5 rounded">LVL {lvl.level}</span>
               </CardTitle>
             </CardHeader>

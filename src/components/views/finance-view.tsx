@@ -370,14 +370,10 @@ export default function FinanceView({
       <div className="rounded-md border border-zinc-800 bg-[#0a0a0a] p-3.5 sm:p-5 md:p-6 animate-page-fade">
         <div className="flex flex-col md:flex-row justify-between items-center gap-2 sm:gap-4 md:gap-6">
           <div className="space-y-1 w-full md:w-auto">
-            <span className="text-xs font-mono uppercase tracking-widest font-semibold text-zinc-500">LIQUID LEDGER</span>
+            <span className="text-xs font-mono uppercase tracking-widest font-semibold text-zinc-500">Total Balance</span>
             <h2 className="text-4xl font-mono font-bold tracking-tight text-zinc-50">
               {formatMoney(netWorthTotal)}
             </h2>
-            <div className="flex items-center gap-2 text-xs font-mono text-zinc-550 uppercase tracking-wide">
-              <TrendingUp className="h-4 w-4 text-zinc-450" />
-              <span>Global reserves tracking active</span>
-            </div>
             
             {/* Embedded area chart */}
             {renderHistoricalChart()}
@@ -507,9 +503,8 @@ export default function FinanceView({
             {showNetWorthProgress && (
               <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
             <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800">
-              <span className="text-xs font-mono uppercase tracking-widest text-zinc-500">CAPITAL RESERVES</span>
               <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">
-                NET WORTH ASSET ALLOCATIONS
+                My Assets
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3.5 sm:p-5 md:p-6 space-y-6">
@@ -689,9 +684,8 @@ export default function FinanceView({
           <div className={`${rightSpan} space-y-2 sm:space-y-4 md:space-y-6`}>
             <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
             <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800">
-              <span className="text-xs font-mono uppercase tracking-widest text-zinc-500">AUTO-DEBITS</span>
               <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">
-                RECURRING SUBSCRIPTIONS WARNING
+                Subscriptions
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3.5 sm:p-5 md:p-6 space-y-6">

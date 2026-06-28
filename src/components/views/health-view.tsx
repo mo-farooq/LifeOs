@@ -262,8 +262,7 @@ export default function HealthView({
             {showSupplement && (
               <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
             <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800">
-              <span className="text-xs font-mono uppercase tracking-widest text-zinc-555 font-bold">SCHEDULING DISPATCHER</span>
-              <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">DAILY SUPPLEMENT STACK</CardTitle>
+              <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">Daily Supplements</CardTitle>
             </CardHeader>
             <CardContent className="p-3.5 sm:p-5 md:p-6 space-y-4">
               
@@ -502,8 +501,7 @@ export default function HealthView({
           <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
             <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800 flex justify-between flex-row items-center gap-4">
               <div className="space-y-1">
-                <span className="text-xs font-mono uppercase tracking-widest text-zinc-500">METABOLIC LEDGER</span>
-                <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">NUTRITIONAL MACRO MONITOR</CardTitle>
+                <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">Nutrition Tracker</CardTitle>
               </div>
               <button
                 onClick={() => {

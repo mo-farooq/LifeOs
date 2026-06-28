@@ -631,9 +631,8 @@ export default function DashboardView({
       {/* View Toggle Bar */}
       <div className="flex flex-col lg:flex-row gap-4 justify-between lg:items-center bg-[#0a0a0a] border border-zinc-800 px-6 py-4 rounded-md animate-slide-in">
         <div className="space-y-1">
-          <span className="text-xs font-mono uppercase tracking-widest font-semibold text-zinc-555 font-bold">TASK HUB</span>
           <h1 className="text-base font-mono tracking-widest font-bold text-zinc-150 uppercase flex items-center gap-2.5">
-            <Target className="h-5 w-5 text-zinc-300" /> THE DRIP MATRIX
+            <Target className="h-5 w-5 text-zinc-300" /> Tasks
           </h1>
         </div>
 
@@ -672,8 +671,7 @@ export default function DashboardView({
               <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
                 <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
-                    <span className="text-xs font-mono uppercase tracking-widest text-zinc-555 font-bold">TODAY</span>
-                    <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">ACTIVE EXECUTION BUFFER</CardTitle>
+                    <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">Today's List</CardTitle>
                   </div>
 
                   {/* Segmented Progress Tracker Bar */}
@@ -733,9 +731,9 @@ export default function DashboardView({
                   <div className="flex items-center justify-between pt-2 border-t border-zinc-900/50">
                     <button 
                       onClick={() => setTodayInputOpen(!todayInputOpen)} 
-                      className="text-xs font-mono text-zinc-500 hover:text-zinc-200"
+                      className="mt-4 px-3 py-1.5 border border-zinc-800 bg-zinc-900/40 text-xs font-mono text-zinc-400 hover:text-white hover:border-zinc-700 hover:bg-zinc-900 rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
                     >
-                      [ + add task ]
+                      + add task
                     </button>
 
                     {/* Right Side: Push Remaining layout block */}
@@ -756,8 +754,7 @@ export default function DashboardView({
               <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800">
                 <div className="flex justify-between items-center">
                   <div className="space-y-1">
-                    <span className="text-xs font-mono uppercase tracking-widest text-zinc-555 font-bold">TOMORROW</span>
-                    <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">NEXT DAY STRATEGY BUFFER</CardTitle>
+                    <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">Tomorrow's Plan</CardTitle>
                   </div>
                   <div className="px-3.5 py-1 rounded border border-zinc-900 bg-[#000000] text-[10px] font-mono text-zinc-550 uppercase tracking-widest font-bold">
                     ACTIVATES AT 6 AM TOMORROW
@@ -800,9 +797,9 @@ export default function DashboardView({
                 <div className="flex items-center justify-between pt-2 border-t border-zinc-900/50">
                   <button 
                     onClick={() => setTomorrowInputOpen(!tomorrowInputOpen)} 
-                    className="text-xs font-mono text-zinc-500 hover:text-zinc-200"
+                    className="mt-4 px-3 py-1.5 border border-zinc-800 bg-zinc-900/40 text-xs font-mono text-zinc-400 hover:text-white hover:border-zinc-700 hover:bg-zinc-900 rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
                   >
-                    [ + add tomorrow task ]
+                    + add tomorrow task
                   </button>
                 </div>
               </CardContent>
@@ -814,8 +811,7 @@ export default function DashboardView({
             <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md animate-slide-in" style={{ animationDelay: "75ms" }}>
               <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800">
                 <div className="space-y-1">
-                  <span className="text-xs font-mono uppercase tracking-widest text-zinc-550 font-bold">CONSISTENCY ENGINE</span>
-                  <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">DAILY HABITS TRACKER</CardTitle>
+                  <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">Habits</CardTitle>
                 </div>
 
                 {/* Progress Tracker Bar */}
