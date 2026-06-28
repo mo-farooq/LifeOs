@@ -598,16 +598,15 @@ export default function GymView({
         </div>
       </div>
 
-      {/* Main Grid: Exercises & Photos */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-4 md:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         
         {/* Left Column: Exercises */}
         {showWorkoutSplit && (
-          <div className={`${leftSpan} space-y-2 sm:space-y-4 md:space-y-6`}>
+          <div className={`${leftSpan} space-y-4`}>
             {gymSplit === "rest" ? (
               <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
                 <CardContent className="p-8 text-center text-zinc-400 font-mono text-sm uppercase leading-relaxed">
-                  REST PROFILE ACTIVE // Focus on sleep metrics, mobility workflows, and active hydration pacing today.
+                  Rest Day - Focus on sleep, mobility, and hydration.
                 </CardContent>
               </Card>
             ) : (
@@ -679,7 +678,7 @@ export default function GymView({
                                 {ex.name}
                               </h3>
                               <span className="text-[10px] text-zinc-500 font-mono tracking-wider">
-                                [PR: {calculatePR(ex)}KG // 1RM: {calculate1RM(ex)}KG]
+                                 PR: {calculatePR(ex)}KG | 1RM: {calculate1RM(ex)}KG
                               </span>
                             </div>
                             <div className="flex items-center gap-3 text-xs font-mono text-zinc-400 uppercase">
@@ -765,7 +764,7 @@ export default function GymView({
 
         {/* Right Column: Comparative Progress Photos Panel */}
         {showPhotoMatrix && (
-          <div className={`${rightSpan} space-y-2 sm:space-y-4 md:space-y-6`}>
+          <div className={`${rightSpan} space-y-4`}>
             <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
             <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800">
               <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">
@@ -840,7 +839,7 @@ export default function GymView({
 
       {/* Fullscreen Exercise Detail Overlay View */}
       {currentExercise && (
-        <div className="fixed inset-0 md:left-64 bg-black z-50 p-6 md:p-12 max-w-7xl mx-auto w-full overflow-y-auto flex flex-col gap-6 animate-slide-in">
+        <div className="fixed top-0 left-0 w-screen h-screen min-h-screen bg-black/95 z-[9999] overflow-y-auto p-6 md:p-12 flex flex-col gap-6 animate-slide-in">
           {/* Overlay Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-zinc-800 pb-6 gap-4">
             <div className="space-y-1">
@@ -848,7 +847,7 @@ export default function GymView({
                 onClick={() => setActiveExercise(null)}
                 className="text-xs font-mono font-bold tracking-widest text-zinc-500 hover:text-zinc-300 uppercase transition-colors flex items-center gap-1.5 cursor-pointer"
               >
-                [ ESC // BACK TO ROUTINE ]
+                Back to Routine (ESC)
               </button>
               <h2 className="text-xl md:text-2xl font-mono font-bold text-white uppercase tracking-widest flex items-center gap-3 mt-2">
                 <Dumbbell className="h-6 w-6 text-zinc-400" />
@@ -856,10 +855,10 @@ export default function GymView({
               </h2>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-mono text-zinc-400 uppercase tracking-wider">
                 <span>PR: <span className="text-zinc-200 font-bold">{calculatePR(currentExercise)}KG</span></span>
-                <span className="text-zinc-700">{"//"}</span>
-                <span>EST. 1RM: <span className="text-zinc-200 font-bold">{calculate1RM(currentExercise)}KG</span></span>
-                <span className="text-zinc-700">{"//"}</span>
-                <span>CURRENT SET: <span className="text-zinc-200 font-bold">{currentExercise.weight}kg × {currentExercise.reps} reps</span></span>
+                <span className="text-zinc-600">|</span>
+                <span>Est. 1RM: <span className="text-zinc-200 font-bold">{calculate1RM(currentExercise)}KG</span></span>
+                <span className="text-zinc-600">|</span>
+                <span>Current Set: <span className="text-zinc-200 font-bold">{currentExercise.weight}kg × {currentExercise.reps} reps</span></span>
               </div>
             </div>
 
@@ -897,7 +896,7 @@ export default function GymView({
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-mono font-bold text-zinc-300 uppercase tracking-wider">
-                  Panel 1 // Active Entry Grid
+                  Log Today's Set
                 </h3>
                 {isSessionActive && (
                   <span className="text-xs font-mono text-zinc-500">
@@ -1041,7 +1040,7 @@ export default function GymView({
               {/* Top Section: 1RM Chart */}
               <div className="space-y-3">
                 <h3 className="text-sm font-mono font-bold text-zinc-300 uppercase tracking-wider">
-                  Panel 2 // Analytics Matrix
+                  History & Progress
                 </h3>
                 {render1RMChart(currentExercise)}
               </div>
@@ -1049,7 +1048,7 @@ export default function GymView({
               {/* Bottom Section: High legibility clean data table */}
               <div className="space-y-3">
                 <span className="text-[10px] font-mono text-zinc-450 uppercase tracking-wider font-semibold block">
-                  HISTORICAL DATA MATRIX
+                  Historical Data
                 </span>
                 <div className="border border-zinc-850 rounded-md overflow-hidden bg-zinc-950">
                   <table className="w-full text-left border-collapse text-xs font-mono">

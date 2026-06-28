@@ -601,7 +601,7 @@ export default function DashboardView({
   };
 
   return (
-    <div className="space-y-5 text-zinc-200 font-mono">
+    <div className="space-y-4 text-zinc-200 font-mono">
       {/* CSS Keyframe Animations injection */}
       <style jsx global>{`
         @keyframes slideIn {
@@ -663,11 +663,11 @@ export default function DashboardView({
       {activeSubView === "history" ? (
         renderHistorySubView()
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-4 md:gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           
           {/* Left Column: Task System */}
-          <div className="lg:col-span-8 space-y-2 sm:space-y-4 md:space-y-6">
-            <div className="space-y-2 sm:space-y-4 md:space-y-6 animate-slide-in" style={{ animationDelay: "50ms" }}>
+          <div className="lg:col-span-8 space-y-4">
+            <div className="space-y-4 animate-slide-in" style={{ animationDelay: "50ms" }}>
               <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md">
                 <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
@@ -697,13 +697,15 @@ export default function DashboardView({
                 </CardHeader>
 
                 <CardContent className="p-4 space-y-4">
-                  <div className="space-y-1">
-                    {todayTasks.map((t) => renderTaskRow(t))}
-                    {todayTasks.length === 0 && (
-                      <div className="text-center py-6 text-[10px] font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-850 rounded animate-pulse">
-                        No active objectives registered for today.
-                      </div>
-                    )}
+                  <div className="border border-zinc-900 bg-zinc-900/10 rounded-xl p-2">
+                    <div className="space-y-1">
+                      {todayTasks.map((t) => renderTaskRow(t))}
+                      {todayTasks.length === 0 && (
+                        <div className="text-center py-6 text-[10px] font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-850 rounded animate-pulse">
+                          No active objectives registered for today.
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Interactive Inline Text Input for Today */}
@@ -763,14 +765,16 @@ export default function DashboardView({
               </CardHeader>
               
               <CardContent className="p-3.5 sm:p-5 md:p-6 space-y-4">
-                <div className="space-y-1.5">
-                  {tomorrowTasks.map((t) => renderTaskRow(t, true))}
-                  {tomorrowTasks.length === 0 && (
-                    <div className="text-center py-6 text-xs font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-850 rounded animate-pulse">
-                      No next-day strategy registered.
+                  <div className="border border-zinc-900 bg-zinc-900/10 rounded-xl p-2">
+                    <div className="space-y-1.5">
+                      {tomorrowTasks.map((t) => renderTaskRow(t, true))}
+                      {tomorrowTasks.length === 0 && (
+                        <div className="text-center py-6 text-xs font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-850 rounded animate-pulse">
+                          No next-day strategy registered.
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  </div>
 
                 {/* Interactive Inline Text Input for Tomorrow */}
                 {tomorrowInputOpen && (
@@ -807,7 +811,7 @@ export default function DashboardView({
           </div>
 
           {/* Right Column: Consistency Engine (Habit Tracker) */}
-          <div className="lg:col-span-4 space-y-2 sm:space-y-4 md:space-y-6">
+          <div className="lg:col-span-4 space-y-4">
             <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md animate-slide-in" style={{ animationDelay: "75ms" }}>
               <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800">
                 <div className="space-y-1">
@@ -930,7 +934,7 @@ export default function DashboardView({
                   />
                   <button
                     onClick={handleAddHabit}
-                    className="h-12 px-6 rounded-md bg-zinc-100 hover:bg-white text-zinc-955 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer flex-shrink-0 flex items-center justify-center gap-2"
+                    className="bg-zinc-100 text-zinc-950 font-mono text-xs font-bold px-4 h-11 rounded-lg hover:bg-white transition-colors cursor-pointer flex-shrink-0 flex items-center justify-center gap-2"
                   >
                     Add
                   </button>
