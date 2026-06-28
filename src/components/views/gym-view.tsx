@@ -836,21 +836,19 @@ export default function GymView({
                   placeholder="ENTER IMAGE URL..."
                   className="h-12 w-full bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                 />
-                <div className="flex gap-2.5">
-                  <input
-                    type="text"
-                    value={newPhotoLabel}
-                    onChange={(e) => setNewPhotoLabel(e.target.value)}
-                    placeholder="LABEL (e.g. Current)..."
-                    className="h-12 flex-grow bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
-                  />
-                  <button
-                    onClick={handleAddPhoto}
-                    className="h-12 px-6 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 flex-shrink-0"
-                  >
-                    Add
-                  </button>
-                </div>
+                <input
+                  type="text"
+                  value={newPhotoLabel}
+                  onChange={(e) => setNewPhotoLabel(e.target.value)}
+                  placeholder="LABEL (e.g. Current)..."
+                  className="h-12 w-full bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
+                />
+                <button
+                  onClick={handleAddPhoto}
+                  className="h-12 w-full rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
+                >
+                  Add Photo
+                </button>
               </div>
 
             </CardContent>

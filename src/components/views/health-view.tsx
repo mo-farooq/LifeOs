@@ -345,13 +345,13 @@ export default function HealthView({
                   placeholder="ENTER SUPPLEMENT NAME..."
                   className="h-12 w-full bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                 />
-                <div className="flex flex-col sm:flex-row gap-2.5">
+                <div className="grid grid-cols-2 gap-2.5">
                   <input
                     type="text"
                     value={newSupDose}
                     onChange={(e) => setNewSupDose(e.target.value)}
                     placeholder="DOSE (e.g. 500mg)..."
-                    className="h-12 flex-1 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
+                    className="h-12 w-full bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
                   />
                   <select
                     value={newSupWindow}
@@ -362,13 +362,13 @@ export default function HealthView({
                     <option value="lunch">LUNCH (12-2 PM)</option>
                     <option value="evening">EVENING (9-11 PM)</option>
                   </select>
-                  <button
-                    onClick={handleAddSupplement}
-                    className="h-12 px-6 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    Add
-                  </button>
                 </div>
+                <button
+                  onClick={handleAddSupplement}
+                  className="h-12 w-full rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
+                >
+                  Add Supplement
+                </button>
               </div>
             </CardContent>
           </Card>

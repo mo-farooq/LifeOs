@@ -562,11 +562,11 @@ export default function FinanceView({
               </div>
 
               {/* Add asset form */}
-              <div className="flex flex-col sm:flex-row gap-2.5 pt-4 border-t border-zinc-900 mt-3">
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 pt-4 border-t border-zinc-900 mt-3">
                 <select
                   value={newAssetCategory}
                   onChange={(e) => setNewAssetCategory(e.target.value as any)}
-                  className="h-12 bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-250 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none cursor-pointer"
+                  className="h-12 col-span-12 sm:col-span-4 bg-[#000000] border border-zinc-800 rounded-md px-4 text-sm font-mono text-zinc-250 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none cursor-pointer w-full"
                 >
                   <option value="bank">BANK</option>
                   <option value="stocks">STOCKS</option>
@@ -578,20 +578,20 @@ export default function FinanceView({
                   value={newAssetName}
                   onChange={(e) => setNewAssetName(e.target.value)}
                   placeholder="ASSET NAME..."
-                  className="h-12 flex-grow bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
+                  className="h-12 col-span-12 sm:col-span-8 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none w-full"
                 />
                 <input
                   type="number"
                   value={newAssetAmount}
                   onChange={(e) => setNewAssetAmount(e.target.value === "" ? "" : Number(e.target.value))}
                   placeholder="AMOUNT..."
-                  className="h-12 w-28 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none"
+                  className="h-12 col-span-12 sm:col-span-8 bg-transparent border border-zinc-800 rounded-md px-4 text-sm font-mono placeholder:text-zinc-700 text-zinc-200 outline-none focus-visible:ring-1 focus-visible:ring-zinc-400 focus-visible:border-zinc-400 bg-black/40 transition-all focus:outline-none w-full"
                 />
                 <button
                   onClick={handleAddAsset}
-                  className="h-12 px-6 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer flex-shrink-0 flex items-center justify-center gap-2"
+                  className="h-12 col-span-12 sm:col-span-4 rounded-md bg-zinc-100 hover:bg-white text-zinc-950 font-mono font-bold text-xs tracking-widest uppercase transition-all duration-100 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 w-full"
                 >
-                  Add
+                  Add Asset
                 </button>
               </div>
 
