@@ -844,7 +844,7 @@ export default function Home() {
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} currentTime={currentTime} modules={state.modules} sleepConfig={state.sleepConfig} />
 
       {/* Main Layout Container */}
-      <div className="flex-1 flex flex-col min-w-0 h-full relative">
+      <div className="flex-1 flex flex-col min-w-0 h-full relative z-40">
         
         {/* Master LED Ticker Bar */}
         <div className="w-full bg-[#000000] border-b border-zinc-800 py-3.5 px-8 flex items-center justify-between z-20 text-xs font-mono text-zinc-400 select-none flex-shrink-0">

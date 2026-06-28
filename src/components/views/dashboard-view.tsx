@@ -750,64 +750,6 @@ export default function DashboardView({
                 </CardContent>
               </Card>
             </div>
-
-            {/* Plan Tomorrow Card */}
-            <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md animate-slide-in" style={{ animationDelay: "100ms" }}>
-              <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800">
-                <div className="flex justify-between items-center">
-                  <div className="space-y-1">
-                    <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">Tomorrow's Plan</CardTitle>
-                  </div>
-                  <div className="px-3.5 py-1 rounded border border-zinc-900 bg-[#000000] text-[10px] font-mono text-zinc-550 uppercase tracking-widest font-bold">
-                    ACTIVATES AT 6 AM TOMORROW
-                  </div>
-                </div>
-              </CardHeader>
-              
-              <CardContent className="p-3.5 sm:p-5 md:p-6 space-y-4">
-                  <div className="border border-zinc-900 bg-zinc-900/10 rounded-xl p-2">
-                    <div className="space-y-1.5">
-                      {tomorrowTasks.map((t) => renderTaskRow(t, true))}
-                      {tomorrowTasks.length === 0 && (
-                        <div className="text-center py-6 text-xs font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-850 rounded animate-pulse">
-                          No next-day strategy registered.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                {/* Interactive Inline Text Input for Tomorrow */}
-                {tomorrowInputOpen && (
-                  <div className="pt-2 animate-slide-in">
-                    <input
-                      type="text"
-                      autoFocus
-                      value={tomorrowInput}
-                      onChange={(e) => setTomorrowInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          handleAddTomorrowTask();
-                        } else if (e.key === "Escape") {
-                          setTomorrowInputOpen(false);
-                        }
-                      }}
-                      placeholder="Enter tomorrow's task objective..."
-                      className="w-full bg-transparent border-b border-zinc-800 py-2 text-sm font-mono focus:outline-none focus:border-zinc-500 text-zinc-200"
-                    />
-                  </div>
-                )}
-
-                {/* Lower Boundary Button */}
-                <div className="flex items-center justify-between pt-2 border-t border-zinc-900/50">
-                  <button 
-                    onClick={() => setTomorrowInputOpen(!tomorrowInputOpen)} 
-                    className="mt-4 px-3 py-1.5 border border-zinc-800 bg-zinc-900/40 text-xs font-mono text-zinc-400 hover:text-white hover:border-zinc-700 hover:bg-zinc-900 rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
-                  >
-                    + add tomorrow task
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Right Column: Consistency Engine (Habit Tracker) */}
@@ -937,6 +879,64 @@ export default function DashboardView({
                     className="bg-zinc-100 text-zinc-950 font-mono text-xs font-bold px-4 h-11 rounded-lg hover:bg-white transition-colors cursor-pointer flex-shrink-0 flex items-center justify-center gap-2"
                   >
                     Add
+                  </button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Plan Tomorrow Card */}
+            <Card className="bg-[#0a0a0a] border-zinc-800 rounded-md animate-slide-in" style={{ animationDelay: "100ms" }}>
+              <CardHeader className="p-3.5 sm:p-5 md:p-6 border-b border-zinc-800">
+                <div className="flex justify-between items-center">
+                  <div className="space-y-1">
+                    <CardTitle className="text-sm font-mono font-bold text-zinc-100 uppercase tracking-widest">Tomorrow's Plan</CardTitle>
+                  </div>
+                  <div className="px-3.5 py-1 rounded border border-zinc-900 bg-[#000000] text-[10px] font-mono text-zinc-550 uppercase tracking-widest font-bold">
+                    ACTIVATES AT 6 AM TOMORROW
+                  </div>
+                </div>
+              </CardHeader>
+              
+              <CardContent className="p-3.5 sm:p-5 md:p-6 space-y-4">
+                <div className="border border-zinc-900 bg-zinc-900/10 rounded-xl p-2">
+                  <div className="space-y-1.5">
+                    {tomorrowTasks.map((t) => renderTaskRow(t, true))}
+                    {tomorrowTasks.length === 0 && (
+                      <div className="text-center py-6 text-xs font-mono uppercase tracking-widest text-zinc-650 border border-dashed border-zinc-850 rounded animate-pulse">
+                        No next-day strategy registered.
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Interactive Inline Text Input for Tomorrow */}
+                {tomorrowInputOpen && (
+                  <div className="pt-2 animate-slide-in">
+                    <input
+                      type="text"
+                      autoFocus
+                      value={tomorrowInput}
+                      onChange={(e) => setTomorrowInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleAddTomorrowTask();
+                        } else if (e.key === "Escape") {
+                          setTomorrowInputOpen(false);
+                        }
+                      }}
+                      placeholder="Enter tomorrow's task objective..."
+                      className="w-full bg-transparent border-b border-zinc-800 py-2 text-sm font-mono focus:outline-none focus:border-zinc-500 text-zinc-200"
+                    />
+                  </div>
+                )}
+
+                {/* Lower Boundary Button */}
+                <div className="flex items-center justify-between pt-2 border-t border-zinc-900/50">
+                  <button 
+                    onClick={() => setTomorrowInputOpen(!tomorrowInputOpen)} 
+                    className="mt-4 px-3 py-1.5 border border-zinc-800 bg-zinc-900/40 text-xs font-mono text-zinc-400 hover:text-white hover:border-zinc-700 hover:bg-zinc-900 rounded-lg transition-all inline-flex items-center gap-1 cursor-pointer"
+                  >
+                    + add tomorrow task
                   </button>
                 </div>
               </CardContent>
